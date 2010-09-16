@@ -70,32 +70,34 @@ class Loader(object):
         """
         # Open
         self.file = open(self.filename)
-        # TODO: try
-        # Header 1
-        line = self.file.readline()
-        self.load_header1(line.rstrip())
-        # Second XML metadata
-        line = self.file.readline()
-        self.load_xml(line.rstrip())
-        # Functions
-        function_profiles = [self.file.readline().rstrip()
-                             for i in xrange(self.func_num)]
-        print function_profiles
-        [self.load_function(func) for func in function_profiles]
-        # Misc Info
-        lines = [self.file.readline().rstrip() for i in xrange(2)]
-        self.load_miscinfo(lines)
-        # TODO: there seems only "0 aggregates" for now. if error, check.
-        # UserEvents
-        cols = self.file.readline().rstrip()
-        self.userevents.columns = cols
-        lines = [self.file.readline().rstrip()
-                 for i in xrange(self.userevents.count)]
-        self.load_userevents(lines)
-        # TODO: finally
-        # Close
-        self.file.close()
-        self.file = None
+        try:
+            # Header 1
+            line = self.file.readline()
+            self.load_header1(line.rstrip())
+            # Second XML metadata
+            line = self.file.readline()
+            self.load_xml(line.rstrip())
+            # Functions
+            function_profiles = [self.file.readline().rstrip()
+                                 for i in xrange(self.func_num)]
+            print function_profiles
+            [self.load_function(func) for func in function_profiles]
+            # Misc Info
+            lines = [self.file.readline().rstrip() for i in xrange(2)]
+            self.load_miscinfo(lines)
+            # TODO: there seems only "0 aggregates" for now. if error, check.
+            # UserEvents
+            cols = self.file.readline().rstrip()
+            self.userevents.columns = cols
+            lines = [self.file.readline().rstrip()
+                     for i in xrange(self.userevents.count)]
+            self.load_userevents(lines)
+        except AttributeError:
+            raise
+        finally:
+            # Close
+            self.file.close()
+            self.file = None
 
     def load_header1(self, line):
         """Load the first line in the header.
