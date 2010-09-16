@@ -1,0 +1,133 @@
+102 templated_functions_MULTI_TIME
+# Name Calls Subrs Excl Incl ProfileCalls # <metadata><attribute><name>Metric Name</name><value>TIME</value></attribute><attribute><name>CPU Cores</name><value>4</value></attribute><attribute><name>CPU MHz</name><value>2393.997</value></attribute><attribute><name>CPU Type</name><value>Intel(R) Xeon(R) CPU E5530 @ 2.40GHz</value></attribute><attribute><name>CPU Vendor</name><value>GenuineIntel</value></attribute><attribute><name>CWD</name><value>/home/kabe/dmi_kabe/tmp</value></attribute><attribute><name>Cache Size</name><value>8192 KB</value></attribute><attribute><name>Command Line</name><value>./solver_mpi_tau_pdt medium_2 3</value></attribute><attribute><name>Executable</name><value>/home/kabe/dmi_kabe/tmp/solver_mpi_tau_pdt</value></attribute><attribute><name>Hostname</name><value>hosei001</value></attribute><attribute><name>Local Time</name><value>2010-09-08T22:08:56+09:00</value></attribute><attribute><name>MPI Processor Name</name><value>hosei001</value></attribute><attribute><name>Memory Size</name><value>24739768 kB</value></attribute><attribute><name>Node Name</name><value>hosei001</value></attribute><attribute><name>OS Machine</name><value>x86_64</value></attribute><attribute><name>OS Name</name><value>Linux</value></attribute><attribute><name>OS Release</name><value>2.6.26-2-amd64</value></attribute><attribute><name>OS Version</name><value>#1 SMP Tue Mar 9 22:29:32 UTC 2010</value></attribute><attribute><name>Starting Timestamp</name><value>1283951262395992</value></attribute><attribute><name>TAU Architecture</name><value>x86_64</value></attribute><attribute><name>TAU Config</name><value> -mpi -mpiinc=/home/kabe/local/build/mpich2-hydra/include -mpilib=/home/kabe/local/build/mpich2-hydra/lib/ -prefix=/home/kabe/local/build/tau_pdt -pdt=/home/kabe/local/build/pdt</value></attribute><attribute><name>TAU Makefile</name><value>/home/kabe/local/build/tau_pdt/x86_64/lib/Makefile.tau-mpi-pdt</value></attribute><attribute><name>TAU MetaData Merge Time</name><value>8.3E-05 seconds</value></attribute><attribute><name>TAU Version</name><value>tau-2.19.2</value></attribute><attribute><name>TAU_CALLPATH</name><value>on</value></attribute><attribute><name>TAU_CALLPATH_DEPTH</name><value>4</value></attribute><attribute><name>TAU_COMM_MATRIX</name><value>on</value></attribute><attribute><name>TAU_COMPENSATE</name><value>off</value></attribute><attribute><name>TAU_PROFILE</name><value>on</value></attribute><attribute><name>TAU_PROFILE_FORMAT</name><value>profile</value></attribute><attribute><name>TAU_SAMPLING</name><value>off</value></attribute><attribute><name>TAU_SYNCHRONIZE_CLOCKS</name><value>on</value></attribute><attribute><name>TAU_THROTTLE</name><value>on</value></attribute><attribute><name>TAU_THROTTLE_NUMCALLS</name><value>100000</value></attribute><attribute><name>TAU_THROTTLE_PERCALL</name><value>10</value></attribute><attribute><name>TAU_TRACE</name><value>on</value></attribute><attribute><name>TAU_TRACK_HEADROOM</name><value>off</value></attribute><attribute><name>TAU_TRACK_HEAP</name><value>off</value></attribute><attribute><name>TAU_TRACK_MEMORY_LEAKS</name><value>off</value></attribute><attribute><name>TAU_TRACK_MESSAGE</name><value>on</value></attribute><attribute><name>Timestamp</name><value>1283951336129545</value></attribute><attribute><name>UTC Time</name><value>2010-09-08T13:08:56Z</value></attribute><attribute><name>pid</name><value>17290</value></attribute><attribute><name>username</name><value>kabe</value></attribute></metadata>
+"addr=<0x41f085>" 1 4138 524191 73757465 0 GROUP="TAU_DEFAULT" 
+"MPI_Init()  " 1 0 389026 389026 0 GROUP="MPI" 
+"addr=<0x41f085> => MPI_Init()  " 1 0 389026 389026 0 GROUP="TAU_CALLPATH | MPI" 
+"MPI_Comm_rank()  " 1 0 9 9 0 GROUP="MPI" 
+"addr=<0x41f085> => MPI_Comm_rank()  " 1 0 9 9 0 GROUP="TAU_CALLPATH | MPI" 
+"MPI_Comm_size()  " 1 0 4 4 0 GROUP="MPI" 
+"addr=<0x41f085> => MPI_Comm_size()  " 1 0 4 4 0 GROUP="TAU_CALLPATH | MPI" 
+"addr=<0x42662d>" 1 136 154 7975 0 GROUP="TAU_DEFAULT" 
+"addr=<0x41f085> => addr=<0x42662d>" 1 136 154 7975 0 GROUP="TAU_CALLPATH | TAU_DEFAULT" 
+"addr=<0x41e610>" 59 0 336 336 0 GROUP="TAU_DEFAULT" 
+"addr=<0x41f085> => addr=<0x42662d> => addr=<0x41e610>" 2 0 10 10 0 GROUP="TAU_CALLPATH | TAU_DEFAULT" 
+"MPI_Gather()  " 1 0 4050 4050 0 GROUP="MPI" 
+"addr=<0x41f085> => addr=<0x42662d> => MPI_Gather()  " 1 0 4050 4050 0 GROUP="TAU_CALLPATH | MPI" 
+"addr=<0x41e1cf>" 128 0 423 423 0 GROUP="TAU_DEFAULT" 
+"addr=<0x41f085> => addr=<0x42662d> => addr=<0x41e1cf>" 128 0 423 423 0 GROUP="TAU_CALLPATH | TAU_DEFAULT" 
+"addr=<0x41e2d5>" 197 0 11641 11641 0 GROUP="TAU_DEFAULT" 
+"addr=<0x41f085> => addr=<0x42662d> => addr=<0x41e2d5>" 2 0 24 24 0 GROUP="TAU_CALLPATH | TAU_DEFAULT" 
+"addr=<0x41e76f>" 63 0 24370 24370 0 GROUP="TAU_DEFAULT" 
+"addr=<0x41f085> => addr=<0x42662d> => addr=<0x41e76f>" 2 0 8 8 0 GROUP="TAU_CALLPATH | TAU_DEFAULT" 
+"MPI_Barrier()  " 6 0 11380150 11380150 0 GROUP="MPI" 
+"addr=<0x41f085> => addr=<0x42662d> => MPI_Barrier()  " 1 0 3306 3306 0 GROUP="TAU_CALLPATH | MPI" 
+"addr=<0x41f085> => addr=<0x41e2d5>" 195 0 11617 11617 0 GROUP="TAU_CALLPATH | TAU_DEFAULT" 
+"addr=<0x42005d>" 1 32 168835 169029 0 GROUP="TAU_DEFAULT" 
+"addr=<0x41f085> => addr=<0x42005d>" 1 32 168835 169029 0 GROUP="TAU_CALLPATH | TAU_DEFAULT" 
+"addr=<0x41f085> => addr=<0x42005d> => addr=<0x41e610>" 32 0 194 194 0 GROUP="TAU_CALLPATH | TAU_DEFAULT" 
+"addr=<0x41f085> => addr=<0x41e610>" 15 0 83 83 0 GROUP="TAU_CALLPATH | TAU_DEFAULT" 
+"addr=<0x41f085> => MPI_Barrier()  " 5 0 11376844 11376844 0 GROUP="TAU_CALLPATH | MPI" 
+"addr=<0x41e81b>" 5826 0 11210 11210 0 GROUP="TAU_DEFAULT" 
+"addr=<0x41f085> => addr=<0x41e81b>" 179 0 421 421 0 GROUP="TAU_CALLPATH | TAU_DEFAULT" 
+"addr=<0x421af4>" 1 49613 3967024 4291807 0 GROUP="TAU_DEFAULT" 
+"addr=<0x41f085> => addr=<0x421af4>" 1 49613 3967024 4291807 0 GROUP="TAU_CALLPATH | TAU_DEFAULT" 
+"addr=<0x41f085> => addr=<0x421af4> => addr=<0x41e610>" 10 0 49 49 0 GROUP="TAU_CALLPATH | TAU_DEFAULT" 
+"addr=<0x41e6e9>" 49596 0 318756 318756 0 GROUP="TAU_DEFAULT" 
+"addr=<0x41f085> => addr=<0x421af4> => addr=<0x41e6e9>" 49596 0 318756 318756 0 GROUP="TAU_CALLPATH | TAU_DEFAULT" 
+"addr=<0x41f085> => addr=<0x421af4> => addr=<0x41e76f>" 7 0 5978 5978 0 GROUP="TAU_CALLPATH | TAU_DEFAULT" 
+"addr=<0x425ad0>" 1 0 432 432 0 GROUP="TAU_DEFAULT" 
+"addr=<0x41f085> => addr=<0x425ad0>" 1 0 432 432 0 GROUP="TAU_CALLPATH | TAU_DEFAULT" 
+"addr=<0x4264cd>" 180 900 16089 135804 0 GROUP="TAU_DEFAULT" 
+"addr=<0x41f085> => addr=<0x4264cd>" 180 900 16089 135804 0 GROUP="TAU_CALLPATH | TAU_DEFAULT" 
+"addr=<0x41f085> => addr=<0x4264cd> => addr=<0x41e81b>" 360 0 590 590 0 GROUP="TAU_CALLPATH | TAU_DEFAULT" 
+"addr=<0x41e900>" 5823 0 20976 20976 0 GROUP="TAU_DEFAULT" 
+"addr=<0x41f085> => addr=<0x4264cd> => addr=<0x41e900>" 360 0 963 963 0 GROUP="TAU_CALLPATH | TAU_DEFAULT" 
+"MPI_Allreduce()  " 1410 0 11305074 11305074 0 GROUP="MPI" 
+"addr=<0x41f085> => addr=<0x4264cd> => MPI_Allreduce()  " 180 0 118162 118162 0 GROUP="TAU_CALLPATH | MPI" 
+"addr=<0x42417a>" 356 8900 4215214 22330646 0 GROUP="TAU_DEFAULT" 
+"addr=<0x41f085> => addr=<0x42417a>" 356 8900 4215214 22330646 0 GROUP="TAU_CALLPATH | TAU_DEFAULT" 
+"addr=<0x41f085> => addr=<0x42417a> => addr=<0x41e81b>" 712 0 1372 1372 0 GROUP="TAU_CALLPATH | TAU_DEFAULT" 
+"MPI_Isend()  " 4963 0 65580 65580 0 GROUP="MPI" 
+"addr=<0x41f085> => addr=<0x42417a> => MPI_Isend()  " 2492 0 33924 33924 0 GROUP="TAU_CALLPATH | MPI" 
+"MPI_Recv()  " 4963 0 18597870 18597870 0 GROUP="MPI" 
+"addr=<0x41f085> => addr=<0x42417a> => MPI_Recv()  " 2492 0 18073673 18073673 0 GROUP="TAU_CALLPATH | MPI" 
+"MPI_Wait()  " 4963 0 5995 5995 0 GROUP="MPI" 
+"addr=<0x41f085> => addr=<0x42417a> => MPI_Wait()  " 2492 0 2948 2948 0 GROUP="TAU_CALLPATH | MPI" 
+"addr=<0x41f085> => addr=<0x42417a> => addr=<0x41e900>" 712 0 3515 3515 0 GROUP="TAU_CALLPATH | TAU_DEFAULT" 
+"addr=<0x424bac>" 353 8825 22297024 22862305 0 GROUP="TAU_DEFAULT" 
+"addr=<0x41f085> => addr=<0x424bac>" 353 8825 22297024 22862305 0 GROUP="TAU_CALLPATH | TAU_DEFAULT" 
+"addr=<0x41f085> => addr=<0x424bac> => addr=<0x41e81b>" 706 0 1300 1300 0 GROUP="TAU_CALLPATH | TAU_DEFAULT" 
+"addr=<0x41f085> => addr=<0x424bac> => MPI_Isend()  " 2471 0 31656 31656 0 GROUP="TAU_CALLPATH | MPI" 
+"addr=<0x41f085> => addr=<0x424bac> => MPI_Recv()  " 2471 0 524197 524197 0 GROUP="TAU_CALLPATH | MPI" 
+"addr=<0x41f085> => addr=<0x424bac> => MPI_Wait()  " 2471 0 3047 3047 0 GROUP="TAU_CALLPATH | MPI" 
+"addr=<0x41f085> => addr=<0x424bac> => addr=<0x41e900>" 706 0 5081 5081 0 GROUP="TAU_CALLPATH | TAU_DEFAULT" 
+"addr=<0x4262bf>" 2 0 311 311 0 GROUP="TAU_DEFAULT" 
+"addr=<0x41f085> => addr=<0x4262bf>" 2 0 311 311 0 GROUP="TAU_CALLPATH | TAU_DEFAULT" 
+"addr=<0x426359>" 1230 6150 126919 11325379 0 GROUP="TAU_DEFAULT" 
+"addr=<0x41f085> => addr=<0x426359>" 1230 6150 126919 11325379 0 GROUP="TAU_CALLPATH | TAU_DEFAULT" 
+"addr=<0x41f085> => addr=<0x426359> => addr=<0x41e81b>" 2460 0 4483 4483 0 GROUP="TAU_CALLPATH | TAU_DEFAULT" 
+"addr=<0x41f085> => addr=<0x426359> => addr=<0x41e900>" 2460 0 7065 7065 0 GROUP="TAU_CALLPATH | TAU_DEFAULT" 
+"addr=<0x41f085> => addr=<0x426359> => MPI_Allreduce()  " 1230 0 11186912 11186912 0 GROUP="TAU_CALLPATH | MPI" 
+"addr=<0x425fff>" 352 704 62073 63780 0 GROUP="TAU_DEFAULT" 
+"addr=<0x41f085> => addr=<0x425fff>" 352 704 62073 63780 0 GROUP="TAU_CALLPATH | TAU_DEFAULT" 
+"addr=<0x41f085> => addr=<0x425fff> => addr=<0x41e81b>" 352 0 922 922 0 GROUP="TAU_CALLPATH | TAU_DEFAULT" 
+"addr=<0x41f085> => addr=<0x425fff> => addr=<0x41e900>" 352 0 785 785 0 GROUP="TAU_CALLPATH | TAU_DEFAULT" 
+"addr=<0x42613f>" 352 704 62428 64244 0 GROUP="TAU_DEFAULT" 
+"addr=<0x41f085> => addr=<0x42613f>" 352 704 62428 64244 0 GROUP="TAU_CALLPATH | TAU_DEFAULT" 
+"addr=<0x41f085> => addr=<0x42613f> => addr=<0x41e81b>" 352 0 796 796 0 GROUP="TAU_CALLPATH | TAU_DEFAULT" 
+"addr=<0x41f085> => addr=<0x42613f> => addr=<0x41e900>" 352 0 1020 1020 0 GROUP="TAU_CALLPATH | TAU_DEFAULT" 
+"addr=<0x425d1b>" 352 704 56996 59016 0 GROUP="TAU_DEFAULT" 
+"addr=<0x41f085> => addr=<0x425d1b>" 352 704 56996 59016 0 GROUP="TAU_CALLPATH | TAU_DEFAULT" 
+"addr=<0x41f085> => addr=<0x425d1b> => addr=<0x41e81b>" 352 0 681 681 0 GROUP="TAU_CALLPATH | TAU_DEFAULT" 
+"addr=<0x41f085> => addr=<0x425d1b> => addr=<0x41e900>" 352 0 1339 1339 0 GROUP="TAU_CALLPATH | TAU_DEFAULT" 
+"addr=<0x425e87>" 352 704 61866 63346 0 GROUP="TAU_DEFAULT" 
+"addr=<0x41f085> => addr=<0x425e87>" 352 704 61866 63346 0 GROUP="TAU_CALLPATH | TAU_DEFAULT" 
+"addr=<0x41f085> => addr=<0x425e87> => addr=<0x41e81b>" 352 0 639 639 0 GROUP="TAU_CALLPATH | TAU_DEFAULT" 
+"addr=<0x41f085> => addr=<0x425e87> => addr=<0x41e900>" 352 0 841 841 0 GROUP="TAU_CALLPATH | TAU_DEFAULT" 
+"addr=<0x41f085> => addr=<0x41e900>" 176 0 362 362 0 GROUP="TAU_CALLPATH | TAU_DEFAULT" 
+"addr=<0x425bfb>" 1 2 232 243 0 GROUP="TAU_DEFAULT" 
+"addr=<0x41f085> => addr=<0x425bfb>" 1 2 232 243 0 GROUP="TAU_CALLPATH | TAU_DEFAULT" 
+"addr=<0x41f085> => addr=<0x425bfb> => addr=<0x41e81b>" 1 0 6 6 0 GROUP="TAU_CALLPATH | TAU_DEFAULT" 
+"addr=<0x41f085> => addr=<0x425bfb> => addr=<0x41e900>" 1 0 5 5 0 GROUP="TAU_CALLPATH | TAU_DEFAULT" 
+"addr=<0x41e89f>" 8 0 15 15 0 GROUP="TAU_DEFAULT" 
+"addr=<0x41f085> => addr=<0x41e89f>" 8 0 15 15 0 GROUP="TAU_CALLPATH | TAU_DEFAULT" 
+"MPI_Reduce()  " 5 0 152 152 0 GROUP="MPI" 
+"addr=<0x41f085> => MPI_Reduce()  " 5 0 152 152 0 GROUP="TAU_CALLPATH | MPI" 
+"addr=<0x4240f3>" 1 7 9 5968 0 GROUP="TAU_DEFAULT" 
+"addr=<0x41f085> => addr=<0x4240f3>" 1 7 9 5968 0 GROUP="TAU_CALLPATH | TAU_DEFAULT" 
+"addr=<0x41f085> => addr=<0x4240f3> => addr=<0x41e76f>" 7 0 5959 5959 0 GROUP="TAU_CALLPATH | TAU_DEFAULT" 
+"addr=<0x41f085> => addr=<0x41e76f>" 15 0 204 204 0 GROUP="TAU_CALLPATH | TAU_DEFAULT" 
+"addr=<0x42191f>" 1 32 30 12251 0 GROUP="TAU_DEFAULT" 
+"addr=<0x41f085> => addr=<0x42191f>" 1 32 30 12251 0 GROUP="TAU_CALLPATH | TAU_DEFAULT" 
+"addr=<0x41f085> => addr=<0x42191f> => addr=<0x41e76f>" 32 0 12221 12221 0 GROUP="TAU_CALLPATH | TAU_DEFAULT" 
+"MPI_Finalize()  " 1 0 62001 62001 0 GROUP="MPI" 
+"addr=<0x41f085> => MPI_Finalize()  " 1 0 62001 62001 0 GROUP="TAU_CALLPATH | MPI" 
+0 aggregates
+26 userevents
+# eventname numevents max min mean sumsqr
+"Message size for gather" 1 32 32 32 1024
+"Message size for all-reduce" 1410 8 8 8 90240
+"Message size sent to node 1" 709 27696 27696 27696 543851506944
+"Message size sent to node 2" 709 14544 14544 14544 149973306624
+"Message size sent to node 3" 709 2208 2208 2208 3456562176
+"Message size sent to node 4" 709 14976 14976 14976 159014928384
+"Message size sent to node 5" 709 1152 1152 1152 940916736
+"Message size sent to node 6" 709 1296 1296 1296 1190847744
+"Message size sent to node 7" 709 96 96 96 6534144
+"Message size sent to all nodes" 4963 27696 96 8852.571428571429 858434602752
+"Message size sent to node 1 : addr=<0x41f085>  => addr=<0x42417a>  => MPI_Isend()  " 356 27696 27696 27696 273076356096
+"Message size sent to node 2 : addr=<0x41f085>  => addr=<0x42417a>  => MPI_Isend()  " 356 14544 14544 14544 75303945216
+"Message size sent to node 3 : addr=<0x41f085>  => addr=<0x42417a>  => MPI_Isend()  " 356 2208 2208 2208 1735593984
+"Message size sent to node 4 : addr=<0x41f085>  => addr=<0x42417a>  => MPI_Isend()  " 356 14976 14976 14976 79843885056
+"Message size sent to node 5 : addr=<0x41f085>  => addr=<0x42417a>  => MPI_Isend()  " 356 1152 1152 1152 472449024
+"Message size sent to node 6 : addr=<0x41f085>  => addr=<0x42417a>  => MPI_Isend()  " 356 1296 1296 1296 597943296
+"Message size sent to node 7 : addr=<0x41f085>  => addr=<0x42417a>  => MPI_Isend()  " 356 96 96 96 3280896
+"Message size received from all nodes" 4963 27696 96 9037.714285714286 885013867008
+"Message size sent to node 1 : addr=<0x41f085>  => addr=<0x424bac>  => MPI_Isend()  " 353 27696 27696 27696 270775150848
+"Message size sent to node 2 : addr=<0x41f085>  => addr=<0x424bac>  => MPI_Isend()  " 353 14544 14544 14544 74669361408
+"Message size sent to node 3 : addr=<0x41f085>  => addr=<0x424bac>  => MPI_Isend()  " 353 2208 2208 2208 1720968192
+"Message size sent to node 4 : addr=<0x41f085>  => addr=<0x424bac>  => MPI_Isend()  " 353 14976 14976 14976 79171043328
+"Message size sent to node 5 : addr=<0x41f085>  => addr=<0x424bac>  => MPI_Isend()  " 353 1152 1152 1152 468467712
+"Message size sent to node 6 : addr=<0x41f085>  => addr=<0x424bac>  => MPI_Isend()  " 353 1296 1296 1296 592904448
+"Message size sent to node 7 : addr=<0x41f085>  => addr=<0x424bac>  => MPI_Isend()  " 353 96 96 96 3253248
+"Message size for reduce" 5 8 8 8 320
