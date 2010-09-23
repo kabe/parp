@@ -189,12 +189,12 @@ class Loader(object):
         ...        "\\"hoge => fuga\\" 3 4 5 6 7 GROUP=\\"TAU | HOGE\\"")
         """
         r = re.compile(r"\"(?P<funcname>.+?)\" " + \
-                           r"(?P<calls>\d+) (?P<subrs>\d+) " + \
-                           r"(?P<excl>\d+) (?P<incl>\d+) " + \
+                           r"(?P<calls>\d+) (?P<subrs>[\d\.E]+) " + \
+                           r"(?P<excl>[\d\.E]+) (?P<incl>[\d\.E]+) " + \
                            r"(?P<profcalls>\d+) " + \
                            r"GROUP=\"(?P<group>.+?)\"")
         m = r.match(line)
-        print m.groups()
+        return m
 
     def load_miscinfo(self, lines):
         """Load Miscelloneous information.
@@ -228,9 +228,9 @@ class Loader(object):
         - `lines`: arrays of lines with userevents information
         """
         r = re.compile(r"\"(?P<eventname>.+?)\" " + \
-                           r"(?P<numevents>\d+) " + \
-                           r"(?P<max>\d+) (?P<min>\d+) " + \
-                           r"(?P<mean>[\d\.]+) (?P<sumsqr>\d+)")
+                           r"(?P<numevents>[\d\.E]+) " + \
+                           r"(?P<max>[\d\.E]+) (?P<min>[\d\.E]+) " + \
+                           r"(?P<mean>[\d\.]+) (?P<sumsqr>[\d\.E]+)")
         self.userevents.events = [r.match(line).groups() for line in lines]
         assert(len(self.userevents.events) == self.userevents.count)
 

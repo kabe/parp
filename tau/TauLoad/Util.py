@@ -4,6 +4,7 @@
 # TauLoad.Util
 #
 
+import sys
 import re
 
 
@@ -15,8 +16,12 @@ def sharp_div(line):
 
     >>> sharp_div("# hoge fuga piyo # <metadata> # foo </metadata>")
     ('hoge fuga piyo', '<metadata> # foo </metadata>')
+    >>> sharp_div("# hoge fuga piyo<metadata> # foo </metadata>")
+    ('hoge fuga piyo', '<metadata> # foo </metadata>')
     """
-    r = re.compile(r"# (?P<column>[\w\s]+) # (?P<xml>.+$)")
+    #print line
+    r = re.compile(r"# (?P<column>[\w\s]+)( # )?" + \
+                       r"(?P<xml><metadata>.+</metadata>$)")
     m = r.match(line)
     return m.group("column"), m.group("xml")
 
