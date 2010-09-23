@@ -39,6 +39,57 @@ class UserEvents(object):
         pass
 
 
+class Profile(object):
+    """Profile Class
+    """
+
+    def _set_function(self, value):
+        self._function = value
+
+    def _get_function(self):
+        return self._function
+
+    function = property(_get_function, _set_function)
+
+    class Prof(object):
+        """Profile of a function
+        """
+
+        def _set_attr(self, value):
+            self._attr = value
+
+        def _get_attr(self):
+            return self._attr
+
+        attr = property(_get_attr, _set_attr)
+
+        def __init__(self, mo):
+            """
+            """
+            self.attr = dict()
+            for attr in ("funcname", "group"):
+                self.attr[attr] = mo.group(attr)
+            for attr in ("calls", "subrs", "excl", "incl", "profcalls"):
+                self.attr[attr] = float(mo.group(attr))
+            self.funcname = self.attr["funcname"]
+
+    def __init__(self, ):
+        """Initialisation.
+        """
+        self.funcname = ""
+        self.function = dict()
+
+    def add(self, funcs):
+        """Add functions profiles.
+
+        Arguments:
+        - `funcs`: arrays of MatchObject for each function
+        """
+        for f in funcs:
+            profobj = Profile.Prof(f)
+            self.function[profobj.funcname] = profobj
+
+
 class Loader(object):
     """
     """
@@ -63,6 +114,7 @@ class Loader(object):
         - `filename`: File name of profile data.
         """
         self._filename = filename
+        self.profile = Profile()
         self.userevents = UserEvents()
 
     def load_all(self, ):
@@ -78,10 +130,9 @@ class Loader(object):
             line = self.file.readline()
             self.load_xml(line.rstrip())
             # Functions
-            function_profiles = [self.file.readline().rstrip()
-                                 for i in xrange(self.func_num)]
-            print function_profiles
-            [self.load_function(func) for func in function_profiles]
+            lines = [self.file.readline().rstrip()
+                     for i in xrange(self.func_num)]
+            self.profile.add(self.load_function(func) for func in lines)
             # Misc Info
             lines = [self.file.readline().rstrip() for i in xrange(2)]
             self.load_miscinfo(lines)
@@ -93,6 +144,7 @@ class Loader(object):
                      for i in xrange(self.userevents.count)]
             self.load_userevents(lines)
         except AttributeError:
+            print self.filename
             raise
         finally:
             # Close
