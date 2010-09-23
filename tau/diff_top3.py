@@ -61,7 +61,7 @@ def main(argv):
                          cmp((maxmintable[x][0] - maxmintable[x][1]),
                              (maxmintable[y][0] - maxmintable[y][1])),
                      reverse=True)
-    print "# FUNCTION MAX-MIN[us] MAX[us] MIN[us]"
+    print "FUNCTION,MAX-MIN[us],MAX[us],MIN[us]"
     for f in ranking:
         if f.find("=>") == -1:
             print "%s,%.1f,%.1f,%.1f" % \
