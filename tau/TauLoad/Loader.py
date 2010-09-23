@@ -63,12 +63,20 @@ class Profile(object):
 
         attr = property(_get_attr, _set_attr)
 
-        def __init__(self, mo):
+        def __init__(self, mo, funcmap):
             """
+            Arguments:
+            - `mo`: match object
+            - `funcmap`: function2addr map
             """
             self.attr = dict()
-            for attr in ("funcname", "group"):
-                self.attr[attr] = mo.group(attr)
+            # funcname
+            self.attr["funcname"] = Util.repl_func(mo.group("funcname"),
+                                                   funcmap)
+            # group
+            self.attr["group"] = mo.group("group")
+            #for attr in ("funcname", "group"):
+            #    self.attr[attr] = mo.group(attr)
             for attr in ("calls", "subrs", "excl", "incl", "profcalls"):
                 self.attr[attr] = float(mo.group(attr))
             self.funcname = self.attr["funcname"]
@@ -79,14 +87,15 @@ class Profile(object):
         self.funcname = ""
         self.function = dict()
 
-    def add(self, funcs):
+    def add(self, funcs, funcmap):
         """Add functions profiles.
 
         Arguments:
         - `funcs`: arrays of MatchObject for each function
+        - `funcmap`: function2addr map
         """
         for f in funcs:
-            profobj = Profile.Prof(f)
+            profobj = Profile.Prof(f, funcmap)
             self.function[profobj.funcname] = profobj
 
 
@@ -107,13 +116,20 @@ class Loader(object):
 
     file = property(_get_file, _set_file)
 
-    def __init__(self, filename):
+    def _get_funcmap(self):
+        return self._funcmap
+
+    funcmap = property(_get_funcmap)
+
+    def __init__(self, filename, funcmap):
         """
 
         Arguments:
         - `filename`: File name of profile data.
+        - `funcmap`: Function map loader object.
         """
         self._filename = filename
+        self._funcmap = funcmap
         self.profile = Profile()
         self.userevents = UserEvents()
 
@@ -132,7 +148,8 @@ class Loader(object):
             # Functions
             lines = [self.file.readline().rstrip()
                      for i in xrange(self.func_num)]
-            self.profile.add(self.load_function(func) for func in lines)
+            self.profile.add((self.load_function(func) for func in lines),
+                             self.funcmap)
             # Misc Info
             lines = [self.file.readline().rstrip() for i in xrange(2)]
             self.load_miscinfo(lines)
@@ -157,7 +174,10 @@ class Loader(object):
         Arguments:
         - `line`: line of first line in the profile file.
 
-        >>> loader = Loader("testcase/profile.0.0.0")
+        >>> import nm.loader
+        >>> mloader = nm.loader.Loader("testcase/solver_mpi_tau_pdt.map")
+        >>> mloader.load_all()
+        >>> loader = Loader("testcase/profile.0.0.0", mloader)
         >>> loader.load_header1("102 templated_functions_MULTI_TIME")
         >>> loader.func_num
         102
@@ -184,9 +204,32 @@ class Loader(object):
         Arguments:
         - `line`:
 
-        >>> loader = Loader("testcase/profile.0.0.0")
-        >>> loader.load_function(
-        ...        "\\"hoge => fuga\\" 3 4 5 6 7 GROUP=\\"TAU | HOGE\\"")
+        Returns MatchObject
+
+        >>> import nm.loader
+        >>> mloader = nm.loader.Loader("testcase/solver_mpi_tau_pdt.map")
+        >>> mloader.load_all()
+        >>> loader = Loader("testcase/profile.0.0.0", mloader)
+        >>> m = loader.load_function(
+        ...            "\\"hoge => fuga\\" 3 4 5 6 7 GROUP=\\"TAU | HOGE\\"")
+        >>> m.group("excl")
+        '5'
+        >>> m = loader.load_function(
+        ...            "\\"hoge => fuga\\" 3 4.0 5.0 6 7 " + \\
+        ...            "GROUP=\\"TAU | HOGE\\"")
+        >>> m.group("subrs")
+        '4.0'
+        >>> m.group("excl")
+        '5.0'
+        >>> m.group("incl")
+        '6'
+        >>> m = loader.load_function(
+        ...            "\\"hoge => fuga\\" 3 4 5.0E6 6.3E7 7 " + \\
+        ...            "GROUP=\\"TAU | HOGE\\"")
+        >>> m.group("excl")
+        '5.0E6'
+        >>> m.group("incl")
+        '6.3E7'
         """
         r = re.compile(r"\"(?P<funcname>.+?)\" " + \
                            r"(?P<calls>\d+) (?P<subrs>[\d\.E]+) " + \
@@ -205,7 +248,10 @@ class Loader(object):
         Arguments:
         - `lines`: arrays of two lines like above
 
-        >>> loader = Loader("testcase/profile.0.0.0")
+        >>> import nm.loader
+        >>> mloader = nm.loader.Loader("testcase/solver_mpi_tau_pdt.map")
+        >>> mloader.load_all()
+        >>> loader = Loader("testcase/profile.0.0.0", mloader)
         >>> loader.load_miscinfo(['3 aggregates', '26 userevents'])
         >>> loader.aggregates
         3
@@ -242,5 +288,8 @@ class Loader(object):
 
 if __name__ == '__main__':
     # doctest
-    loader = Loader("testcase/profile.0.0.0")
+    import nm.loader
+    maploader = nm.loader.Loader("testcase/solver_mpi_tau_pdt.map")
+    maploader.load_all()
+    loader = Loader("testcase/profile.0.0.0", maploader)
     loader._test()
