@@ -9,7 +9,6 @@
 import sys
 import os
 import os.path
-import dircache
 
 from TauLoad.Loader import Loader
 import nm.loader
@@ -26,7 +25,7 @@ def main(argv):
         sys.exit(1)
     logdir = argv[1]
     funcmapfile = argv[2]
-    dir_contents = dircache.listdir(logdir)
+    dir_contents = os.listdir(logdir)
     funcmap = nm.loader.Loader(funcmapfile)
     funcmap.load_all()
     profs = [Loader(os.path.join(logdir, f), funcmap)
