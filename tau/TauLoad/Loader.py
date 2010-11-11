@@ -215,8 +215,10 @@ class Loader(object):
         >>> m.group("excl")
         '5'
         >>> m = loader.load_function(
-        ...            "\\"hoge => fuga\\" 3 4.0 5.0 6 7 " + \\
+        ...            "\\"hoge => fuga \\" 3 4.0 5.0 6 7 " + \\
         ...            "GROUP=\\"TAU | HOGE\\"")
+        >>> m.group("funcname")
+        'hoge => fuga'
         >>> m.group("subrs")
         '4.0'
         >>> m.group("excl")
@@ -231,7 +233,7 @@ class Loader(object):
         >>> m.group("incl")
         '6.3E7'
         """
-        r = re.compile(r"\"(?P<funcname>.+?)\" " + \
+        r = re.compile(r"\"(?P<funcname>.+?)\s*\" " + \
                            r"(?P<calls>\d+) (?P<subrs>[\d\.E]+) " + \
                            r"(?P<excl>[\d\.E]+) (?P<incl>[\d\.E]+) " + \
                            r"(?P<profcalls>\d+) " + \
