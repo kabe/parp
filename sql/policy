@@ -1,0 +1,37 @@
+-*- org -*-
+
+* 初期化
+psql < create_profgroup.sql
+psql < create_funcmap.sql
+psql < create_profile.sql
+psql < create_userevent.sql
+によりテーブル作成
+psql < create_view_*.sql
+によりビュー作成
+
+* 通常運用
+以後のtransaction
+** profgroup の作成
+insert into profgroup
+** 内部データの登録
+ BEGIN;
+ for rank in ranks:
+     for profile in profiles:
+         INSERT INTO profile (funcname, calls, subrs, ...) VALUES ("MPI_Send", 100, 104, ...);
+     for ev in userevents:
+         INSERT INTO userevent (eventname, numevents, maxtime, ...) VALUES ("SendOP", 100, 104, ...);
+ COMMIT;
+** profgroup 1つ分をまとめて DB に登録
+./register_profgroup.py /home/kabe/null/dmi_kabe/kyutech_mpilog/ ./testcase/solver_mpi_tau_pdt.map
+** 問い合わせ SQL
+   - 各関数についてランクごとに実行時間の和を求め, profgroup ごとに実行時間の絶対値差が大きい順に表示
+ SELECT a.funcname,
+        a.sum sum_a,
+        b.sum sum_b,
+        b.sum-a.sum diff,
+        b.sum / a.sum ratio
+ FROM funcranksum a, funcranksum b
+ WHERE     a.funcname=b.funcname
+       and a.profgroup_id=1
+       and b.profgroup_id=5
+ ORDER BY ABS(b.sum-a.sum) DESC;
