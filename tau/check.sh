@@ -11,3 +11,5 @@ python test.py testcase/profile.0.0.0 testcase/solver_mpi_tau_pdt.map
 python TauLoad/Loader.py
 python TauLoad/Util.py
 #python register_profgroup.py
+
+python db/__init__.py

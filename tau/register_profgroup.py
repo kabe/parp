@@ -10,7 +10,7 @@ import os
 import os.path
 import re
 
-import pg
+import db
 
 from TauLoad.Loader import Loader
 import nm.loader
@@ -43,6 +43,42 @@ def filename2rank(filename):
     return m.group(1)
 
 
+def insert_profile(profs, group_id, conn):
+    """Insert profiles.
+
+    Arguments:
+    - `profs`:
+    - `group_id`:
+    - `conn`:
+    """
+    for loader in profs:
+    # Insert profile info
+        rank = filename2rank(loader.filename)
+        for funcname, func in loader.profile.function.iteritems():
+            pdic = dict()
+            pdic["rank"] = rank
+            #print "Processing %s ..." % (funcname)
+            pdic["funcname"] = funcname
+            pdic["profgroup_id"] = group_id
+            try:
+                pdic["incl"] = func.attr["incl"]
+                pdic["excl"] = func.attr["excl"]
+                pdic["subrs"] = func.attr["subrs"]
+                pdic["calls"] = func.attr["calls"]
+                pdic["group_s"] = func.attr["group"]
+            except KeyError, e:
+                raise
+            try:
+                rdic = conn.insert("profile", pdic)
+                #print rdic
+            finally:
+                pass
+        # Insert userevent info (not implemented yet)
+        #print loader.userevents.columns
+        #for eventname, event in loader.userevents.iteritems():
+        #    print (eventname, event)
+
+
 def main(argv):
     """Main
 
@@ -68,14 +104,15 @@ def main(argv):
              if attr.find("name").string == "Node Name"]
     nodeset = set(nodes)
     # DB prepare
-    #conn = pg.connect("kabe", "127.0.0.1")
-    db = pg.DB("kabe", "127.0.0.1")
+    conn = db.init("postgres", username="kabe", hostname="127.0.0.1")
+    #conn = db.init("sqlite3", dbfile="/home/kabe/Archives/prof.db")
     # Register
     # Profgroup
     profgroup_dic = dict()
     profgroup_dic["procs"] = len(profs)
     #loader = profs[0]
-    lcands = filter(lambda prof: prof.filename.endswith("profile.0.0.0"), profs)
+    lcands = filter(lambda prof: prof.filename.endswith("profile.0.0.0"),
+                    profs)
     assert(len(lcands) == 1)
     loader = lcands[0]
     # print loader.filename
@@ -84,47 +121,22 @@ def main(argv):
         #print [attr.find("name").string, attr.find("value").string]
         if attr.find("name").string == "Executable":
             appname = attr.find("value").string
-            profgroup_dic["application"] = db.escape_string(appname)
+            profgroup_dic["application"] = appname
         if attr.find("name").string == "Hostname":
             cl_name = hostname2clustername(attr.find("value").string)
-            profgroup_dic["place"] = db.escape_string(cl_name)
+            profgroup_dic["place"] = cl_name
         #if attr.find("name").string == "Hostname":
     profgroup_dic["nodes"] = len(nodeset)
     print "Insert %s" % (str(profgroup_dic))
-    rdic = db.insert("profgroup", profgroup_dic)
-    print rdic
+    rdic = conn.insert("profgroup", profgroup_dic)
+    #print rdic
     group_id = rdic["id"]
-    print "ID=%d" % (rdic["id"])
+    #print "ID=%d" % (rdic["id"])
     # Profile
     #group_id = 100
-    for loader in profs:
-        # Insert profile info
-        rank = filename2rank(loader.filename)
-        for funcname, func in loader.profile.function.iteritems():
-            pdic = dict()
-            pdic["rank"] = rank
-            #print "Processing %s ..." % (funcname)
-            pdic["funcname"] = funcname
-            pdic["profgroup_id"] = group_id
-            try:
-                pdic["incl"] = func.attr["incl"]
-                pdic["excl"] = func.attr["excl"]
-                pdic["subrs"] = func.attr["subrs"]
-                pdic["calls"] = func.attr["calls"]
-                pdic["group_s"] = func.attr["group"]
-            except KeyError, e:
-                raise
-            try:
-                rdic = db.insert("profile", pdic)
-                #print rdic
-            finally:
-                pass
-        # Insert userevent info (not implemented yet)
-        #print loader.userevents.columns
-        #for eventname, event in loader.userevents.iteritems():
-        #    print (eventname, event)
+    insert_profile(profs, group_id, conn)
     # Finalization
-    db.close()
+    conn.close()
 
 if __name__ == '__main__':
     main(sys.argv)
