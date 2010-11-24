@@ -1,11 +1,12 @@
 CREATE TABLE userevent (
-    eventname text,
-    numevents int,
-    maxtime int,
-    mintime int,
-    mean int,
-    sumsqr int,
-    profgroup_id int REFERENCES profgroup(id),
-    rank int,
-    PRIMARY KEY (profgroup_id, rank, eventname)
+    eventname TEXT,
+    numevents INTEGER,
+    maxtime INTEGER,
+    mintime INTEGER,
+    mean INTEGER,
+    sumsqr INTEGER,
+    profgroup_id INTEGER,
+    rank INTEGER,
+    PRIMARY KEY (profgroup_id, rank, eventname),
+    FOREIGN KEY (profgroup_id) REFERENCES profgroup(id)
 );

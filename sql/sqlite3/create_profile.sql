@@ -1,11 +1,12 @@
 CREATE TABLE profile (
-    funcname text,
-    calls int,
-    subrs int,
-    excl double precision,
-    incl double precision,
-    group_s text,
-    profgroup_id int REFERENCES profgroup(id),
-    rank int,
-    PRIMARY KEY (profgroup_id, rank, funcname)
+    funcname TEXT,
+    calls INTEGER,
+    subrs INTEGER,
+    excl DOUBLE PRECISION,
+    incl DOUBLE PRECISION,
+    group_s TEXT,
+    profgroup_id INTEGER,
+    rank INTEGER,
+    PRIMARY KEY (profgroup_id, rank, funcname),
+    FOREIGN KEY (profgroup_id)  REFERENCES profgroup(id)
 );

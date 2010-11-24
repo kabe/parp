@@ -35,3 +35,11 @@ insert into profgroup
        and a.profgroup_id=1
        and b.profgroup_id=5
  ORDER BY ABS(b.sum-a.sum) DESC;
+
+* 方針
+
+* TODO
+
+同じ条件の profgroup でも複数のプロファイルを格納したい
+profgroup は一意にするかも
+profile と profgroup の間に1個テーブル入れて複数のプロファイル使えるようにするか？

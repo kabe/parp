@@ -1,6 +1,6 @@
 CREATE TABLE funcmap (
-    funcname text,
-    addr int,
-    application text,
+    funcname TEXT,
+    addr INTEGER,
+    application TEXT,
     PRIMARY KEY (application, funcname)
 );

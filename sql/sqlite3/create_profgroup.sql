@@ -1,9 +1,9 @@
 CREATE TABLE profgroup (
-    application text,
-    nodes int,
-    procs int,
-    place text,
-    library text,
-    id int AUTO_INCREMENT PRIMARY KEY UNIQUE,
+    application TEXT,
+    nodes INTEGER,
+    procs INTEGER,
+    place TEXT,
+    library TEXT,
+    id INTEGER PRIMARY KEY AUTOINCREMENT UNIQUE,
     CONSTRAINT profgroup_unique UNIQUE (application, nodes, procs, place)
 );
