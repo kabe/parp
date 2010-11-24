@@ -36,10 +36,11 @@ class SQLite3Handler(object):
         # Additional dictionary
         for k, v in kywds.iteritems():
             idict[k] = v
+        # SQL w/ Place holder
         sql = "INSERT INTO %s (%s) VALUES (%s)" % (
             table,
             ", ".join(idict.keys()),
-            ", ".join(("?", ) * len(idict))  # Place holder
+            ", ".join(("?", ) * len(idict)))
         #print sql
         #print idict
         self.cur.execute(sql, idict.values())
