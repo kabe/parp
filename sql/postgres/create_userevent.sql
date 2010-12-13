@@ -5,7 +5,7 @@ CREATE TABLE userevent (
     mintime int,
     mean int,
     sumsqr int,
-    profgroup_id int REFERENCES profgroup(id),
+    profexec_id int REFERENCES profexec(id),
     rank int,
-    PRIMARY KEY (profgroup_id, rank, eventname)
+    PRIMARY KEY (profexec_id, rank, eventname)
 );

@@ -5,8 +5,8 @@ CREATE TABLE profile (
     excl DOUBLE PRECISION,
     incl DOUBLE PRECISION,
     group_s TEXT,
-    profgroup_id INTEGER,
+    profexec_id INTEGER,
     rank INTEGER,
-    PRIMARY KEY (profgroup_id, rank, funcname),
-    FOREIGN KEY (profgroup_id)  REFERENCES profgroup(id)
+    PRIMARY KEY (profexec_id, rank, funcname),
+    FOREIGN KEY (profexec_id)  REFERENCES profexec(id)
 );

@@ -5,8 +5,8 @@ CREATE TABLE userevent (
     mintime INTEGER,
     mean INTEGER,
     sumsqr INTEGER,
-    profgroup_id INTEGER,
+    profexec_id INTEGER,
     rank INTEGER,
-    PRIMARY KEY (profgroup_id, rank, eventname),
-    FOREIGN KEY (profgroup_id) REFERENCES profgroup(id)
+    PRIMARY KEY (profexec_id, rank, eventname),
+    FOREIGN KEY (profexec_id) REFERENCES profexec(id)
 );

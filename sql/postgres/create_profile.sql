@@ -1,3 +1,5 @@
+-- Maintains a profile for each function and each execution
+
 CREATE TABLE profile (
     funcname text,
     calls int,
@@ -5,7 +7,7 @@ CREATE TABLE profile (
     excl double precision,
     incl double precision,
     group_s text,
-    profgroup_id int REFERENCES profgroup(id),
+    profexec_id int REFERENCES profexec(id),
     rank int,
-    PRIMARY KEY (profgroup_id, rank, funcname)
+    PRIMARY KEY (profexec_id, rank, funcname)
 );

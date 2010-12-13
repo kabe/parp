@@ -1,4 +1,7 @@
+-- Memo: I don't know if this makes sense
+-- View providing aggregations for each execution
+
 CREATE VIEW funcranksum AS
-SELECT funcname, profgroup_id, SUM(excl) sum, MAX(excl) max, MIN(excl) min, AVG(excl) avg
+SELECT funcname, profexec_id, SUM(excl) rank_sum, MAX(excl) rank_max, MIN(excl) rank_min, AVG(excl) rank_avg
 FROM funcprofile
-GROUP BY funcname, profgroup_id;
+GROUP BY funcname, profexec_id;

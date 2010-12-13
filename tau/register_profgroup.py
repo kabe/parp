@@ -43,12 +43,12 @@ def filename2rank(filename):
     return m.group(1)
 
 
-def insert_profile(profs, group_id, conn):
+def insert_profile(profs, exec_id, conn):
     """Insert profiles.
 
     Arguments:
     - `profs`:
-    - `group_id`:
+    - `exec_id`:
     - `conn`:
     """
     for loader in profs:
@@ -59,7 +59,7 @@ def insert_profile(profs, group_id, conn):
             pdic["rank"] = rank
             #print "Processing %s ..." % (funcname)
             pdic["funcname"] = funcname
-            pdic["profgroup_id"] = group_id
+            pdic["profexec_id"] = exec_id
             try:
                 pdic["incl"] = func.attr["incl"]
                 pdic["excl"] = func.attr["excl"]
@@ -70,13 +70,62 @@ def insert_profile(profs, group_id, conn):
                 raise
             try:
                 rdic = conn.insert("profile", pdic)
-                #print rdic
             finally:
                 pass
         # Insert userevent info (not implemented yet)
         #print loader.userevents.columns
         #for eventname, event in loader.userevents.iteritems():
         #    print (eventname, event)
+
+
+def load_profs(logdir, funcmapfile):
+    dir_contents = os.listdir(logdir)
+    funcmap = nm.loader.Loader(funcmapfile)
+    funcmap.load_all()
+    profs = [Loader(os.path.join(logdir, f), funcmap)
+             for f in dir_contents if f.startswith("profile")]
+    [loader.load_all() for loader in profs]
+    return profs, loader
+
+
+def add_profexec(conn, group_id, exec_time):
+    """Insert a record of profexec table.
+    Returns the id of profexec table.
+
+    Arguments:
+    - `conn`:
+    - `group_id`:
+    - `exec_time`:
+    """
+    i_dic = {"profgroup_id": group_id, "exec_time": exec_time}
+    rdic = conn.insert("profexec", i_dic)
+    return rdic["id"]
+
+
+def soup2dic(soup, pg_dic):
+    """Select values from soup and register them to pg_dic.
+
+    Arguments:
+    - `soup`:
+    - `pg_dic`:
+    """
+    start_time = 0
+    end_time = 0
+    for attr in soup.findAll("attribute"):
+        attrname = attr.find("name").string
+        attrvalue = attr.find("value").string
+        if attrname == "Executable":
+            appname = attrvalue
+            pg_dic["application"] = appname
+        if attrname == "Hostname":
+            cl_name = hostname2clustername(attrvalue)
+            pg_dic["place"] = cl_name
+        if attrname == "Starting Timestamp":
+            start_time = int(attrvalue)
+        if attrname == "Timestamp":
+            end_time = int(attrvalue)
+    pg_dic["exec_time"] = (end_time - start_time) / 1e6
+    return pg_dic
 
 
 def main(argv):
@@ -91,12 +140,7 @@ def main(argv):
     # Data Prepare
     logdir = argv[1]
     funcmapfile = argv[2]
-    dir_contents = os.listdir(logdir)
-    funcmap = nm.loader.Loader(funcmapfile)
-    funcmap.load_all()
-    profs = [Loader(os.path.join(logdir, f), funcmap)
-             for f in dir_contents if f.startswith("profile")]
-    [loader.load_all() for loader in profs]
+    profs, loader = load_profs(logdir, funcmapfile)
     # Unique nodes list
     nodes = [attr.find("value").string
              for loader in profs
@@ -110,31 +154,23 @@ def main(argv):
     # Profgroup
     profgroup_dic = dict()
     profgroup_dic["procs"] = len(profs)
-    #loader = profs[0]
     lcands = filter(lambda prof: prof.filename.endswith("profile.0.0.0"),
                     profs)
     assert(len(lcands) == 1)
-    loader = lcands[0]
-    # print loader.filename
-    #print loader.soup
-    for attr in loader.soup.findAll("attribute"):
-        #print [attr.find("name").string, attr.find("value").string]
-        if attr.find("name").string == "Executable":
-            appname = attr.find("value").string
-            profgroup_dic["application"] = appname
-        if attr.find("name").string == "Hostname":
-            cl_name = hostname2clustername(attr.find("value").string)
-            profgroup_dic["place"] = cl_name
-        #if attr.find("name").string == "Hostname":
+    main_loader = lcands[0]
+    soup2dic(main_loader.soup, profgroup_dic)
     profgroup_dic["nodes"] = len(nodeset)
     print "Insert %s" % (str(profgroup_dic))
     rdic = conn.insert("profgroup", profgroup_dic)
     #print rdic
     group_id = rdic["id"]
     #print "ID=%d" % (rdic["id"])
+    # ProfExec Insert
+    profexec_id = add_profexec(conn, group_id, profgroup_dic["exec_time"])
+    print (group_id, profexec_id)
     # Profile
     #group_id = 100
-    insert_profile(profs, group_id, conn)
+    insert_profile(profs, profexec_id, conn)
     # Finalization
     conn.close()
 
