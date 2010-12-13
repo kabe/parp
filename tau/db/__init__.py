@@ -4,6 +4,10 @@
 dbmap = {"sqlite3": 1, "postgres": 2}
 
 
+class ProgrammingError(Exception):
+    pass
+
+
 def init(dbtype, **kywds):
     """Initialize Database handler.
 
