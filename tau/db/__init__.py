@@ -31,7 +31,7 @@ def init(dbtype, **kywds):
     if dbtype == "sqlite3":
         import sqlite3
         import kp_sqlite3
-        conn = sqlite3.connect(kywds["dbfile"])
+        conn = sqlite3.connect(kywds["dbfile"], isolation_level=None)
         return kp_sqlite3.SQLite3Handler(conn)
     elif dbtype == "postgres":
         import pg

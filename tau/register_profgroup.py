@@ -97,8 +97,14 @@ def add_profexec(conn, group_id, exec_time):
     - `group_id`:
     - `exec_time`:
     """
-    i_dic = {"profgroup_id": group_id, "exec_time": exec_time}
-    rdic = conn.insert("profexec", i_dic)
+    i_dic = {
+        "profgroup_id": group_id,
+        "exec_time": exec_time}
+    try:
+        rdic = conn.insert("profexec", i_dic)
+    except Exception, e:
+        print "Profexec insertion failed"
+        raise e
     return rdic["id"]
 
 
@@ -108,12 +114,16 @@ def soup2dic(soup, pg_dic):
     Arguments:
     - `soup`:
     - `pg_dic`:
+    Returns:
+    - `pg_dic`: modified version of the argument
+    - `exec_time`:
     """
     start_time = 0
     end_time = 0
     for attr in soup.findAll("attribute"):
         attrname = attr.find("name").string
         attrvalue = attr.find("value").string
+        pg_dic[attrname] = attrvalue
         if attrname == "Executable":
             appname = attrvalue
             pg_dic["application"] = appname
@@ -148,31 +158,59 @@ def main(argv):
              if attr.find("name").string == "Node Name"]
     nodeset = set(nodes)
     # DB prepare
-    conn = db.init("postgres", username="kabe", hostname="127.0.0.1")
-    #conn = db.init("sqlite3", dbfile="/home/kabe/Archives/prof.db")
+    #conn = db.init("postgres", username="kabe", hostname="127.0.0.1")
+    conn = db.init("sqlite3", dbfile="/home/kabe/Archives/prof.db")
+    conn.begin_transaction()
     # Register
-    # Profgroup
-    profgroup_dic = dict()
-    profgroup_dic["procs"] = len(profs)
-    lcands = filter(lambda prof: prof.filename.endswith("profile.0.0.0"),
-                    profs)
-    assert(len(lcands) == 1)
-    main_loader = lcands[0]
-    soup2dic(main_loader.soup, profgroup_dic)
-    profgroup_dic["nodes"] = len(nodeset)
-    print "Insert %s" % (str(profgroup_dic))
-    rdic = conn.insert("profgroup", profgroup_dic)
-    #print rdic
-    group_id = rdic["id"]
-    #print "ID=%d" % (rdic["id"])
-    # ProfExec Insert
-    profexec_id = add_profexec(conn, group_id, profgroup_dic["exec_time"])
-    print (group_id, profexec_id)
-    # Profile
-    #group_id = 100
-    insert_profile(profs, profexec_id, conn)
+    try:
+        # Profgroup
+        profgroup_dic = dict()
+        profgroup_dic["procs"] = len(profs)
+        lcands = filter(lambda prof: prof.filename.endswith("profile.0.0.0"),
+                        profs)
+        assert(len(lcands) == 1)
+        main_loader = lcands[0]
+        soup2dic(main_loader.soup, profgroup_dic)
+        profgroup_dic["nodes"] = len(nodeset)
+        sql_s = """SELECT id
+                   FROM profgroup
+                   WHERE
+                       application = ?
+                   AND nodes = ?
+                   AND procs = ?
+                   AND place = ?;
+                   """
+        rtup = conn.select(sql_s,
+                           (profgroup_dic["application"].encode('utf_8'),
+                            profgroup_dic["nodes"],
+                            profgroup_dic["procs"],
+                            profgroup_dic["place"].encode('utf_8')))
+        if len(rtup) == 0:
+            print "No such profgroup. will newly insert..."
+            pginsert = dict(((k, str(v)) for k, v in profgroup_dic.iteritems()
+                             if k in
+                             ("application", "nodes", "procs", "place")))
+            rdic = conn.insert("profgroup", pginsert)
+            rt = rdic["id"]
+            print "New profgroup %d: %s" % (rt, pginsert)
+        else:
+            print "Using existing profgroup ..."
+            rt = rtup[0][0]
+        group_id = rt
+        # ProfExec Insert
+        profexec_id = add_profexec(conn, group_id, profgroup_dic["exec_time"])
+        print (group_id, profexec_id)
+        # Profile
+        #group_id = 100
+        insert_profile(profs, profexec_id, conn)
+    except Exception, e:
+       print "Exception in main", e
+       conn.rollback_transaction()
+       raise e
     # Finalization
+    conn.commit_transaction()
     conn.close()
+    print "Commit OK"
 
 if __name__ == '__main__':
     main(sys.argv)
