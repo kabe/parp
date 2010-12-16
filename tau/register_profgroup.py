@@ -88,6 +88,43 @@ def load_profs(logdir, funcmapfile):
     return profs, loader
 
 
+def add_profgroup(conn, profgroup_dic):
+    """Safely insert profgroup.
+    If a record with the same profgroup condition exists,
+    it only returns the id column of that,
+    otherwise it inserts a new record and returns the id.
+
+    Arguments:
+    - `conn`:
+    - `profgroup_dic`:
+    """
+    sql_s = """SELECT id
+               FROM profgroup
+               WHERE
+                   application = ?
+               AND nodes = ?
+               AND procs = ?
+               AND place = ?;
+               """
+    rtup = conn.select(sql_s,
+                       (profgroup_dic["application"].encode('utf_8'),
+                        profgroup_dic["nodes"],
+                        profgroup_dic["procs"],
+                        profgroup_dic["place"].encode('utf_8')))
+    if len(rtup) == 0:
+        print "No such profgroup. will newly insert..."
+        pginsert = dict(((k, str(v)) for k, v in profgroup_dic.iteritems()
+                         if k in
+                         ("application", "nodes", "procs", "place")))
+        rdic = conn.insert("profgroup", pginsert)
+        rt = rdic["id"]
+        print "New profgroup %d: %s" % (rt, pginsert)
+    else:
+        print "Using existing profgroup ..."
+        rt = rtup[0][0]
+    return rt
+
+
 def add_profexec(conn, group_id, exec_time):
     """Insert a record of profexec table.
     Returns the id of profexec table.
@@ -172,30 +209,7 @@ def main(argv):
         main_loader = lcands[0]
         soup2dic(main_loader.soup, profgroup_dic)
         profgroup_dic["nodes"] = len(nodeset)
-        sql_s = """SELECT id
-                   FROM profgroup
-                   WHERE
-                       application = ?
-                   AND nodes = ?
-                   AND procs = ?
-                   AND place = ?;
-                   """
-        rtup = conn.select(sql_s,
-                           (profgroup_dic["application"].encode('utf_8'),
-                            profgroup_dic["nodes"],
-                            profgroup_dic["procs"],
-                            profgroup_dic["place"].encode('utf_8')))
-        if len(rtup) == 0:
-            print "No such profgroup. will newly insert..."
-            pginsert = dict(((k, str(v)) for k, v in profgroup_dic.iteritems()
-                             if k in
-                             ("application", "nodes", "procs", "place")))
-            rdic = conn.insert("profgroup", pginsert)
-            rt = rdic["id"]
-            print "New profgroup %d: %s" % (rt, pginsert)
-        else:
-            print "Using existing profgroup ..."
-            rt = rtup[0][0]
+        rt = add_profgroup(conn, profgroup_dic)
         group_id = rt
         # ProfExec Insert
         profexec_id = add_profexec(conn, group_id, profgroup_dic["exec_time"])
