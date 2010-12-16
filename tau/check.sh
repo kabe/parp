@@ -12,4 +12,9 @@ python TauLoad/Loader.py
 python TauLoad/Util.py
 #python register_profgroup.py
 
+pep8 db/__init__.py
+pep8 db/kp_sqlite3.py
+pep8 db/kp_postgres.py
 python db/__init__.py
+python db/kp_postgres.py
+python db/kp_sqlite3.py
