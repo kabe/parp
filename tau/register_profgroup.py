@@ -88,7 +88,32 @@ def load_profs(logdir, funcmapfile):
     return profs, loader
 
 
-def add_profgroup(conn, profgroup_dic):
+def add_profgroup(profs, conn, nodeset):
+    """Prepares to add a profgroup.
+
+    Gets some information needed to insert a new profgroup record.
+    Arguments:
+    - `profs`: list of profiles
+    - `conn`: connection object to the database
+    - `nodeset`: set of node names
+    Returns: (profgroup_dic, group_id)
+    - `profgroup_dic`: dictionary of profile metadata
+    - `group_id`: group id to insert
+    """
+    profgroup_dic = dict()
+    profgroup_dic["procs"] = len(profs)
+    lcands = filter(lambda prof: prof.filename.endswith("profile.0.0.0"),
+                    profs)
+    assert(len(lcands) == 1)
+    main_loader = lcands[0]
+    soup2dic(main_loader.soup, profgroup_dic)
+    profgroup_dic["nodes"] = len(nodeset)
+    rt = _add_profgroup(conn, profgroup_dic)
+    group_id = rt
+    return profgroup_dic, group_id
+
+
+def _add_profgroup(conn, profgroup_dic):
     """Safely insert profgroup.
     If a record with the same profgroup condition exists,
     it only returns the id column of that,
@@ -125,24 +150,33 @@ def add_profgroup(conn, profgroup_dic):
     return rt
 
 
-def add_profexec(conn, group_id, exec_time):
+def add_profexec(conn, group_id, profgroup_dic):
     """Insert a record of profexec table.
     Returns the id of profexec table.
 
     Arguments:
     - `conn`:
     - `group_id`:
-    - `exec_time`:
+    - `profgroup_dic`:
     """
+    exec_time = profgroup_dic["exec_time"]
+    start_ts = int(profgroup_dic["Starting Timestamp"])
     i_dic = {
         "profgroup_id": group_id,
-        "exec_time": exec_time}
-    try:
+        "exec_time": exec_time,
+        "start_ts": start_ts}
+    sql_s = """SELECT id FROM profexec
+               WHERE profgroup_id = ?
+                 AND start_ts = ?;"""
+    # large integer has suffix "L", which should be removed by str()
+    rtup = conn.select(sql_s, (group_id, str(start_ts)))
+    if len(rtup) == 0:
+        print "No such profgroup. will newly insert..."
         rdic = conn.insert("profexec", i_dic)
-    except Exception, e:
-        print "Profexec insertion failed"
-        raise e
-    return rdic["id"]
+        exec_id = rdic["id"]
+        return exec_id
+    else:
+        raise Exception("Same Profexec exists, aborting")
 
 
 def soup2dic(soup, pg_dic):
@@ -202,20 +236,11 @@ def main(argv):
     # Register
     try:
         # Profgroup
-        profgroup_dic = dict()
-        profgroup_dic["procs"] = len(profs)
-        lcands = filter(lambda prof: prof.filename.endswith("profile.0.0.0"),
-                        profs)
-        assert(len(lcands) == 1)
-        main_loader = lcands[0]
-        soup2dic(main_loader.soup, profgroup_dic)
-        profgroup_dic["nodes"] = len(nodeset)
-        rt = add_profgroup(conn, profgroup_dic)
-        group_id = rt
+        profgroup_dic, group_id = add_profgroup(profs, conn, nodeset)
         # ProfExec Insert
-        profexec_id = add_profexec(conn, group_id, profgroup_dic["exec_time"])
+        profexec_id = add_profexec(conn, group_id, profgroup_dic)
         print (group_id, profexec_id)
-        # Profile
+        # Profile Insert
         #group_id = 100
         insert_profile(profs, profexec_id, conn)
     except Exception, e:

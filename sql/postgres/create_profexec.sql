@@ -1,7 +1,9 @@
 -- Maintains an execution of an application
 
 CREATE TABLE profexec (
-    id SERIAL PRIMARY KEY UNIQUE,
-    profgroup_id int REFERENCES profgroup(id),
-    exec_time DOUBLE PRECISION NOT NULL
+    id SERIAL PRIMARY KEY,
+    profgroup_id INT REFERENCES profgroup(id),
+    exec_time DOUBLE PRECISION NOT NULL,
+    start_ts BIGINT,
+    UNIQUE (profgroup_id, start_ts)
 );
