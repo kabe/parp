@@ -171,7 +171,7 @@ def add_profexec(conn, group_id, profgroup_dic):
     # large integer has suffix "L", which should be removed by str()
     rtup = conn.select(sql_s, (group_id, str(start_ts)))
     if len(rtup) == 0:
-        print "No such profgroup. will newly insert..."
+        print "No such profexec. will newly insert..."
         rdic = conn.insert("profexec", i_dic)
         exec_id = rdic["id"]
         return exec_id
