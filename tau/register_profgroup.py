@@ -197,6 +197,7 @@ def main(argv):
     # DB prepare
     #conn = db.init("postgres", username="kabe", hostname="127.0.0.1")
     conn = db.init("sqlite3", dbfile="/home/kabe/Archives/prof.db")
+    ### BEGIN TRANSACTION ###
     conn.begin_transaction()
     # Register
     try:
@@ -218,11 +219,12 @@ def main(argv):
         #group_id = 100
         insert_profile(profs, profexec_id, conn)
     except Exception, e:
-       print "Exception in main", e
-       conn.rollback_transaction()
-       raise e
+        print "Exception in main", e
+        conn.rollback_transaction()
+        raise e
     # Finalization
     conn.commit_transaction()
+    ### COMMIT TRANSACTION ###
     conn.close()
     print "Commit OK"
 

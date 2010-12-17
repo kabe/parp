@@ -38,7 +38,7 @@ class SQLite3Handler(object):
     def commit_transaction(self, ):
         """COMMIT TRANSACTION.
         """
-        self.conn.execute("COMMIT;")
+        self.conn.execute("COMMIT TRANSACTION;")
 
     def rollback_transaction(self, ):
         """ROLLBACK TRANSACTION.
@@ -48,7 +48,7 @@ class SQLite3Handler(object):
             self.conn.execute("ROLLBACK TRANSACTION;")
         except:
             pass
-    
+
     def insert(self, table, idict, **kywds):
         """Insert a column to the database.
         Returns dictionary of the iniserted column.
@@ -83,7 +83,7 @@ class SQLite3Handler(object):
 
     def select(self, stmt, phs=None):
         """Issue a select statement.
-        
+
         Arguments:
         - `stmt`: select statement
         - `phs`: values for place holders
@@ -98,7 +98,7 @@ class SQLite3Handler(object):
 
     def get(self, table, arg, keyname=None):
         """Get a row from a database or view.
-        
+
         Arguments:
         - `table`:
         - `arg`:
@@ -109,7 +109,7 @@ class SQLite3Handler(object):
 
     def query(self, q, args=()):
         """Issue a query.
-        
+
         Arguments:
         - `q`: Query string (place holder "?" may appear)
         - `*args`: Place holder string
