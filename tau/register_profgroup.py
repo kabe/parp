@@ -241,7 +241,6 @@ def main(argv):
         profexec_id = add_profexec(conn, group_id, profgroup_dic)
         print (group_id, profexec_id)
         # Profile Insert
-        #group_id = 100
         insert_profile(profs, profexec_id, conn)
     except Exception, e:
         print "Exception in main", e

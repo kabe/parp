@@ -139,9 +139,7 @@ class PostgreSQLHandler(object):
         """
         if phs:
             prepare_stmt = "PREPARE plan_%d AS %s" % (self.plan_nr, q)
-            #print prepare_stmt
             self.db.query(self._prepare(prepare_stmt))
-            #print "EXECUTE plan_%d %s" % (self.plan_nr, phs)
             result = self.db.query("EXECUTE plan_%d %s"
                                    % (self.plan_nr, phs))
             self.plan_nr += 1
