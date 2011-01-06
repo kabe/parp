@@ -10,6 +10,7 @@ pep8 register_profgroup.py
 python test.py testcase/profile.0.0.0 testcase/solver_mpi_tau_pdt.map
 python TauLoad/Loader.py
 python TauLoad/Util.py
+python util.py
 #python register_profgroup.py
 
 pep8 db/__init__.py

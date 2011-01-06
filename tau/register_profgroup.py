@@ -14,33 +14,7 @@ import db
 
 from TauLoad.Loader import Loader
 import nm.loader
-
-
-def hostname2clustername(hostname):
-    """Convert hostname to cluster name.
-
-    Arguments:
-    - `hostname`: hostname in string
-    >>> hostname2clustername("hongo100")
-    'hongo'
-    >>> hostname2clustername("hongo")
-    'hongo'
-    """
-    r = re.compile(r"^([a-zA-Z]+)(\d+)?$")
-    m = r.match(hostname)
-    return m.groups()[0]
-
-
-def filename2rank(filename):
-    """Pick up the rank of the process.
-
-    Arguments:
-    - `filename`:
-    """
-    #print filename
-    r = re.compile(r".*profile\.(\d+)\.(\d+).(\d+)$")
-    m = r.match(filename)
-    return m.group(1)
+import util
 
 
 def insert_profile(profs, exec_id, conn):
@@ -53,7 +27,7 @@ def insert_profile(profs, exec_id, conn):
     """
     for loader in profs:
     # Insert profile info
-        rank = filename2rank(loader.filename)
+        rank = util.filename2rank(loader.filename)
         for funcname, func in loader.profile.function.iteritems():
             pdic = dict()
             pdic["rank"] = rank
@@ -106,7 +80,7 @@ def add_profgroup(profs, conn, nodeset):
                     profs)
     assert(len(lcands) == 1)
     main_loader = lcands[0]
-    soup2dic(main_loader.soup, profgroup_dic)
+    util.soup2dic(main_loader.soup, profgroup_dic)
     profgroup_dic["nodes"] = len(nodeset)
     rt = _add_profgroup(conn, profgroup_dic)
     group_id = rt
@@ -177,36 +151,6 @@ def add_profexec(conn, group_id, profgroup_dic):
         return exec_id
     else:
         raise Exception("Same Profexec exists, aborting")
-
-
-def soup2dic(soup, pg_dic):
-    """Select values from soup and register them to pg_dic.
-
-    Arguments:
-    - `soup`:
-    - `pg_dic`:
-    Returns:
-    - `pg_dic`: modified version of the argument
-    - `exec_time`:
-    """
-    start_time = 0
-    end_time = 0
-    for attr in soup.findAll("attribute"):
-        attrname = attr.find("name").string
-        attrvalue = attr.find("value").string
-        pg_dic[attrname] = attrvalue
-        if attrname == "Executable":
-            appname = attrvalue
-            pg_dic["application"] = appname
-        if attrname == "Hostname":
-            cl_name = hostname2clustername(attrvalue)
-            pg_dic["place"] = cl_name
-        if attrname == "Starting Timestamp":
-            start_time = int(attrvalue)
-        if attrname == "Timestamp":
-            end_time = int(attrvalue)
-    pg_dic["exec_time"] = (end_time - start_time) / 1e6
-    return pg_dic
 
 
 def main(argv):
