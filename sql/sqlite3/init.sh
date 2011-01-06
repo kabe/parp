@@ -38,3 +38,5 @@ echo CREATING VIEW FUNCRANKSUM
 $SQLITE3 < create_view_funcranksum.sql
 echo CREATING VIEW GROUPEXECMERGE
 $SQLITE3 < create_view_groupexecmerge.sql
+echo CREATING VIEW PGROUP_META
+$SQLITE3 < create_view_pgroup_meta.sql
