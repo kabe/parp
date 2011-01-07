@@ -15,15 +15,36 @@ import db
 from TauLoad.Loader import Loader
 import nm.loader
 
-
+## regex for cluster environment
+cluster_re = re.compile(r"^(?P<cname>[a-zA-Z]+)(?P<nodenum>\d+)?$")
+## regex for HA8000 supercomputer
 r_ha8000cluster = re.compile(r"^(?P<batchname>[a-zA-z_])(?P<nodenum>\d+)$")
+
+
+def getplacename(options, infodic):
+    """Convert hostname to cluster name.
+
+    @param options command-line options
+    @param infodic dictionary containing all information
+    """
+    hostname = infodic["soupdic"]["Node Name"]
+    m = r_ha8000cluster.match(hostname)
+    if m:
+        assert(m.group("batchname") == "b")
+        if int(m.group("nodenum")) in (201, 202, 203, 204):
+            return "HA8000-S004"
+        if int(m.group("nodenum")) in (205, 206, 207, 208):
+            return "HA8000-S008"
+    else:
+        return hostname2clustername(hostname)
+    return m.groups()[0]
 
 
 def hostname2clustername(hostname):
     """Convert hostname to cluster name.
 
-    Arguments:
-    - `hostname`: hostname in string
+    @param hostname host name
+
     >>> hostname2clustername("hongo100")
     'hongo'
     >>> hostname2clustername("hongo")
@@ -32,79 +53,58 @@ def hostname2clustername(hostname):
     'HA8000-S004'
     >>> hostname2clustername("b205")
     'HA8000-S008'
-     """
-    m = r_ha8000cluster.match(hostname)
-    if m:
-        assert(m.group("batchname") == "b")
-        if int(m.group("nodenum")) in (201, 202, 203, 204):
-            return "HA8000-S004"
-        if int(m.group("nodenum")) in (205, 206, 207, 208):
-            return "HA8000-S008"
-    r = re.compile(r"^([a-zA-Z]+)(\d+)?$")
-    m = r.match(hostname)
-    return m.groups()[0]
+    """
+    m = cluster_re.match(hostname)
+    return m.group("cname")
 
 
 def filename2rank(filename):
     """Pick up the rank of the process.
 
-    Arguments:
-    - `filename`:
+    @param filename
     """
-    #print filename
     r = re.compile(r".*profile\.(\d+)\.(\d+).(\d+)$")
     m = r.match(filename)
     return m.group(1)
 
 
-def soup2dic(soup, pg_dic):
+def soup2dic(soup):
     """Select values from soup and register them to pg_dic.
 
-    Arguments:
-    - `soup`:
-    - `pg_dic`:
-    Returns:
-    - `pg_dic`: modified version of the argument
-    - `exec_time`:
+    @param soup beautifulsoup XML soup
+    @return dictionary of key-value in the metadata XML
     """
-    start_time = 0
-    end_time = 0
+    sdic = dict()
     for attr in soup.findAll("attribute"):
         attrname = attr.find("name").string
         attrvalue = attr.find("value").string
-        pg_dic[attrname] = attrvalue
-        if attrname == "Executable":
-            appname = attrvalue
-            pg_dic["application"] = appname
-        if attrname == "Hostname":
-            cl_name = hostname2clustername(attrvalue)
-            pg_dic["place"] = cl_name
-        if attrname == "Starting Timestamp":
-            start_time = int(attrvalue)
-        if attrname == "Timestamp":
-            end_time = int(attrvalue)
-    pg_dic["exec_time"] = (end_time - start_time) / 1e6
-    return pg_dic
+        sdic[attrname] = attrvalue
+    return sdic
 
 
-def out(s, stream=sys.stdout):
+def out(*s, **kwrds):
     """Output string to the stream.
 
-    Arguments:
-    - `s`:
+    @param *s object to print
+    @param **kwrds kwrds["stream"] is output stream
     """
-    stream.write(s)
+    stream = sys.stdout
+    if "stream" in kwrds:
+        stream = kwrds["stream"]
+    print >> stream, s
 
 
-def err(s, stream=sys.stderr):
+def err(*s, **kwrds):
     """Output string to the stream especially for error messages.
 
-    Arguments:
-    - `s`:
-    - `stream`:
+    @param *s object to print
+    @param **kwrds kwrds["stream"] is output stream
     """
-    stream.write(s)
-    stream.fflush()
+    stream = sys.stderr
+    if "stream" in kwrds:
+        stream = kwrds["stream"]
+    print >> stream, s
+    stream.flush()
 
 
 def main(argv):
