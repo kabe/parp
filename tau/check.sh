@@ -6,6 +6,7 @@ pep8 TauLoad/Loader.py
 pep8 TauLoad/Util.py
 pep8 nm/loader.py
 pep8 register_profgroup.py
+pep8 util.py
 
 python test.py testcase/profile.0.0.0 testcase/solver_mpi_tau_pdt.map
 python TauLoad/Loader.py
