@@ -129,7 +129,7 @@ def add_profgroup(options, conn, info_dic):
     try:
         group_id = _add_profgroup(options, conn, info_dic)
     except KeyError, e:
-        print "KeyError Occurred in adding a profile group!"
+        util.err("KeyError Occurred in adding a profile group!")
         raise e
     return group_id
 
