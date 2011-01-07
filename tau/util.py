@@ -87,10 +87,29 @@ def soup2dic(soup, pg_dic):
     return pg_dic
 
 
+def out(s, stream=sys.stdout):
+    """Output string to the stream.
+
+    Arguments:
+    - `s`:
+    """
+    stream.write(s)
+
+
+def err(s, stream=sys.stderr):
+    """Output string to the stream especially for error messages.
+
+    Arguments:
+    - `s`:
+    - `stream`:
+    """
+    stream.write(s)
+    stream.fflush()
+
+
 def main(argv):
     import doctest
     doctest.testmod()
 
 if __name__ == "__main__":
     main(sys.argv)
-
