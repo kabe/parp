@@ -5,6 +5,7 @@
 # Insert all records into the database
 #
 
+from __future__ import print_function
 import sys
 import os
 import os.path
@@ -91,9 +92,7 @@ def out(*s, **kwrds):
     stream = sys.stdout
     if "stream" in kwrds:
         stream = kwrds["stream"]
-    if len(s) == 1:
-        s = s[0]
-    print >> stream, s
+    print(*s, file=stream)
 
 
 def err(*s, **kwrds):
@@ -105,9 +104,7 @@ def err(*s, **kwrds):
     stream = sys.stderr
     if "stream" in kwrds:
         stream = kwrds["stream"]
-    if len(s) == 1:
-        s = s[0]
-    print >> stream, s
+    print(*s, file=stream)
     stream.flush()
 
 

@@ -264,7 +264,7 @@ def main():
         # Profile Insert
         insert_profile(options, profs, profexec_id, conn)
     except Exception, e:
-        util.err("Exception in main " + repr(e))
+        util.err("Exception in main", repr(e))
         conn.rollback_transaction()
         raise e  # Re-raise the exception
     # Finalization
