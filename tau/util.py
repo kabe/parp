@@ -91,6 +91,8 @@ def out(*s, **kwrds):
     stream = sys.stdout
     if "stream" in kwrds:
         stream = kwrds["stream"]
+    if len(s) == 1:
+        s = s[0]
     print >> stream, s
 
 
@@ -103,6 +105,8 @@ def err(*s, **kwrds):
     stream = sys.stderr
     if "stream" in kwrds:
         stream = kwrds["stream"]
+    if len(s) == 1:
+        s = s[0]
     print >> stream, s
     stream.flush()
 
