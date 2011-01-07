@@ -34,8 +34,7 @@ class Loader(object):
     def __init__(self, filename):
         """Constructor.
 
-        Arguments:
-        - `filename`:
+        @param filename Filename from `nm filename`
         """
         self._filename = filename
         self.func_a_table = dict()
@@ -51,8 +50,7 @@ class Loader(object):
     def add_func(self, line):
         """Add a function to self.functable.
 
-        Arguments:
-        - `line`:
+        @param line
         """
         r = re.compile("(?P<faddr>[^ ]+)? +(?P<type>\w) (?P<fname>[^ ]+)")
         m = r.match(line)

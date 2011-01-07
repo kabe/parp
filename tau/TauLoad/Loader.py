@@ -49,10 +49,11 @@ class Profile(object):
     def _get_function(self):
         return self._function
 
+    ## dictionary of function name: metrics
     function = property(_get_function, _set_function)
 
     class Prof(object):
-        """Profile of a function
+        """Profile for a function.
         """
 
         def _set_attr(self, value):
@@ -61,13 +62,13 @@ class Profile(object):
         def _get_attr(self):
             return self._attr
 
+        ## dictionary of metrics
         attr = property(_get_attr, _set_attr)
 
         def __init__(self, mo, funcmap):
             """
-            Arguments:
-            - `mo`: match object
-            - `funcmap`: function2addr map
+            @param mo match object
+            @param funcmap function2addr map
             """
             self.attr = dict()
             # funcname
@@ -79,20 +80,19 @@ class Profile(object):
             #    self.attr[attr] = mo.group(attr)
             for attr in ("calls", "subrs", "excl", "incl", "profcalls"):
                 self.attr[attr] = float(mo.group(attr))
+            ## function name
             self.funcname = self.attr["funcname"]
 
     def __init__(self, ):
         """Initialisation.
         """
-        self.funcname = ""
         self.function = dict()
 
     def add(self, funcs, funcmap):
         """Add functions profiles.
 
-        Arguments:
-        - `funcs`: arrays of MatchObject for each function
-        - `funcmap`: function2addr map
+        @param funcs arrays of MatchObject for each function
+        @param funcmap function2addr map
         """
         for f in funcs:
             profobj = Profile.Prof(f, funcmap)
@@ -106,6 +106,7 @@ class Loader(object):
     def _get_filename(self):
         return self._filename
 
+    ## file name of the loader profile
     filename = property(_get_filename)
 
     def _set_file(self, value):
@@ -114,23 +115,25 @@ class Loader(object):
     def _get_file(self):
         return self._file
 
+    ## file object of the loader
     file = property(_get_file, _set_file)
 
     def _get_funcmap(self):
         return self._funcmap
 
+    ## function map for the loader
     funcmap = property(_get_funcmap)
 
     def __init__(self, filename, funcmap):
         """
-
-        Arguments:
-        - `filename`: File name of profile data.
-        - `funcmap`: Function map loader object.
+        @param filename File name of profile data.
+        @param funcmap Function map loader object.
         """
         self._filename = filename
         self._funcmap = funcmap
+        ## function profile data
         self.profile = Profile()
+        ## userevent profile data
         self.userevents = UserEvents()
 
     def load_all(self, ):
@@ -153,7 +156,7 @@ class Loader(object):
             # Misc Info
             lines = [self.file.readline().rstrip() for i in xrange(2)]
             self.load_miscinfo(lines)
-            # TODO: there seems only "0 aggregates" for now. if error, check.
+            ## @todo there seems only "0 aggregates" for now. if error, check.
             # UserEvents
             cols = self.file.readline().rstrip()
             self.userevents.columns = cols
@@ -171,8 +174,7 @@ class Loader(object):
     def load_header1(self, line):
         """Load the first line in the header.
 
-        Arguments:
-        - `line`: line of first line in the profile file.
+        @param line line of first line in the profile file.
 
         >>> import nm.loader
         >>> mloader = nm.loader.Loader("testcase/solver_mpi_tau_pdt.map")
@@ -184,16 +186,18 @@ class Loader(object):
         """
         r = re.compile(r"(?P<num>\d+) templated_functions_MULTI_TIME")
         m = r.match(line)
+        ## the number of functions in the profile
         self.func_num = int(m.group("num"))
 
     def load_xml(self, line):
         """Load XML profile metadata.
 
-        Arguments:
-        - `line`:
+        @param line
         """
         columns_str, metaxml = Util.sharp_div(line)
+        ## the list of columns
         self.columns = columns_str.split(" ")
+        ## BeautifulStoneSoup object of the metadata XML
         self.soup = BeautifulStoneSoup(metaxml)
 
     def load_function(self, line):
@@ -201,8 +205,7 @@ class Loader(object):
 
         Expectation: Name Calls Subrs Excl Incl ProfileCalls
 
-        Arguments:
-        - `line`:
+        @param line
 
         Returns MatchObject
 
@@ -247,8 +250,7 @@ class Loader(object):
         3 aggregates
         26 userevents
 
-        Arguments:
-        - `lines`: arrays of two lines like above
+        @param lines arrays of two lines like above
 
         >>> import nm.loader
         >>> mloader = nm.loader.Loader("testcase/solver_mpi_tau_pdt.map")
@@ -264,6 +266,7 @@ class Loader(object):
         r = re.compile(r"^(?P<num>\d+) \w+$")
         aggr = int(r.match(lines[0]).group("num"))
         uevs = int(r.match(lines[1]).group("num"))
+        ## the number of aggregates
         self.aggregates = aggr  # TODO: maybe to be fixed
         self.userevents.count = uevs
 
@@ -272,8 +275,7 @@ class Loader(object):
 
         # eventname numevents max min mean sumsqr
 
-        Arguments:
-        - `lines`: arrays of lines with userevents information
+        @param lines arrays of lines with userevents information
         """
         r = re.compile(r"\"(?P<eventname>.+?)\" " + \
                            r"(?P<numevents>[\d\.E]+) " + \

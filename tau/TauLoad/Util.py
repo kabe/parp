@@ -1,8 +1,6 @@
 #!/usr/bin/env python
 
-#
-# TauLoad.Util
-#
+"""Utility functions."""
 
 import sys
 import re
@@ -11,8 +9,7 @@ import re
 def sharp_div(line):
     """Divide a line with second sharp ("#").
 
-    Arguments:
-    - `line`:
+    @param line
 
     >>> sharp_div("# hoge fuga piyo # <metadata> # foo </metadata>")
     ('hoge fuga piyo', '<metadata> # foo </metadata>')
@@ -29,9 +26,8 @@ def sharp_div(line):
 def repl_func(tmpl, funcmap):
     """Replace addr=<0x...> expression with func().
 
-    Arguments:
-    - `tmpl`:
-    - `funcmap`:
+    @param tmpl
+    @param funcmap
 
     >>> import nm.loader
     >>> maploader = nm.loader.Loader("testcase/solver_mpi_tau_pdt.map")
@@ -52,9 +48,8 @@ def repl_func(tmpl, funcmap):
     def addr2funcname(funcmap, match):
         """Replace addr to function name.
 
-        Arguments:
-        - `funcmap`: FunctionMap
-        - `match`: MatchObject
+        @param funcmap FunctionMap
+        @param match MatchObject
         """
         hexaddr_s = match.group("hexaddr")
         addr_s = str(int(hexaddr_s, 16))
