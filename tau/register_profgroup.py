@@ -11,6 +11,7 @@ import os.path
 import re
 
 import db
+import tau
 
 from TauLoad.Loader import Loader
 import nm.loader
@@ -197,4 +198,5 @@ def main(argv):
     print "Commit OK"
 
 if __name__ == '__main__':
+    #tau.run('main(sys.argv)')
     main(sys.argv)
