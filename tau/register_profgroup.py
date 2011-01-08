@@ -76,7 +76,9 @@ def node_set(profs):
     """Set of nodes in the profile logs.
 
     Node name is in the metadata XML like the following line.
-      <attribute><name>Node Name</name><value>foonode</value></attribute>
+    @verbatim
+    <attribute><name>Node Name</name><value>foonode</value></attribute>
+    @endverbatim
 
     @param profs profile log data
     @return set of node names

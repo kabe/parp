@@ -9,7 +9,7 @@ import re
 def sharp_div(line):
     """Divide a line with second sharp ("#").
 
-    @param line
+    @param line line to devide with "#"
 
     >>> sharp_div("# hoge fuga piyo # <metadata> # foo </metadata>")
     ('hoge fuga piyo', '<metadata> # foo </metadata>')
