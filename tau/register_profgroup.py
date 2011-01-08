@@ -241,6 +241,9 @@ def parse_opt():
 
 def main():
     """Main function.
+
+    @todo library などの指定を可能にする
+    @todo SQLite3 のとき DB ファイルの指定を可能にする
     """
     options, args = parse_opt()
     # Data Prepare
