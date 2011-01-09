@@ -244,6 +244,8 @@ def main():
 
     @todo library などの指定を可能にする
     @todo SQLite3 のとき DB ファイルの指定を可能にする
+    @todo -t でテストにする
+    @todo class Parp など
     """
     options, args = parse_opt()
     # Data Prepare
