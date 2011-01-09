@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-#
-# Insert all records into the database
-#
+"""Parp Utilities
+"""
+
 
 from __future__ import print_function
 import sys
