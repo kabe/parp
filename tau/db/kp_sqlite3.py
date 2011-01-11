@@ -24,8 +24,7 @@ class SQLite3Handler(object):
     def __init__(self, conn):
         """Initialize DB handler.
 
-        Arguments:
-        - `conn`: SQLite3 connection object
+        @param conn SQLite3 connection object
         """
         self._conn = conn
         self._cur = self._conn.cursor()
@@ -51,12 +50,11 @@ class SQLite3Handler(object):
 
     def insert(self, table, idict, **kywds):
         """Insert a column to the database.
-        Returns dictionary of the iniserted column.
 
-        Arguments:
-        - `table`: table to insert a column into
-        - `idict`: dictionary of column data
-        - `**kywds`:
+        @param table table to insert a column into
+        @param idict dictionary of column data
+        @param **kywds
+        @return dictionary of the iniserted column
         """
         # Additional dictionary
         for k, v in kywds.iteritems():
@@ -84,11 +82,9 @@ class SQLite3Handler(object):
     def select(self, stmt, phs=None):
         """Issue a select statement.
 
-        Arguments:
-        - `stmt`: select statement
-        - `phs`: values for place holders
-        Returns:
-        List of tuples which selected
+        @param stmt select statement
+        @param phs values for place holders
+        @param list of tuples which selected
         """
         if phs:
             r = self.query(stmt, phs)
@@ -99,23 +95,20 @@ class SQLite3Handler(object):
     def get(self, table, arg, keyname=None):
         """Get a row from a database or view.
 
-        Arguments:
-        - `table`:
-        - `arg`:
-        - `keyname`:
-        ?
+        @param table
+        @param arg
+        @param keyname
+        @return ?
         """
         pass
 
     def query(self, q, args=()):
         """Issue a query.
 
-        Arguments:
-        - `q`: Query string (place holder "?" may appear)
-        - `*args`: Place holder string
-        Returns:
-        None if insert
-        List of tuples if select
+        @param q Query string (place holder "?" may appear)
+        @param *args Place holder string
+        @return None if q is insert statement;
+                list of tuples if q is select statement
         """
         c = self.conn.cursor()
         cur = c.execute(q, args)

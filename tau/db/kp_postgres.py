@@ -27,8 +27,7 @@ class PostgreSQLHandler(object):
     def _prepare(self, q):
         """Prepare a statement with place holder number.
 
-        Arguments:
-        - `q`:
+        @param q query to prepare
         >>> import db
         >>> conn = db.init("postgres", username="kabe", hostname="127.0.0.1")
         >>> s = "HOGE ? fuga ? bar ?"
@@ -58,8 +57,7 @@ class PostgreSQLHandler(object):
     def __init__(self, db,):
         """Initialize DB handler.
 
-        Arguments:
-        - `db`: PostgreSQL DB object (authenticated)
+        @param db PostgreSQL DB object (authenticated)
         """
         self._db = db
         self._plan_nr = 0
@@ -82,12 +80,12 @@ class PostgreSQLHandler(object):
 
     def insert(self, table, idict, **kywds):
         """Insert a column to the database.
-        Returns the dictionary of the inserted column.
 
         Arguments:
-        - `table`: table to insert a column into
-        - `idict`: dictionary of column data
-        - `**kywds`: additional key-value pairs to insert
+        @param table table to insert a column into
+        @param idict dictionary of column data
+        @param **kywds additional key-value pairs to insert
+        @return the dictionary of the inserted column
         """
         # Additional dictionary
         for k, v in kywds.iteritems():
@@ -102,11 +100,9 @@ class PostgreSQLHandler(object):
     def select(self, stmt, phs):
         """Issue a select statement.
 
-        Arguments:
-        - `stmt`: select statement
-        - `phs`: values for place holders
-        Returns:
-        List of tuples which selected
+        @param stmt select statement
+        @param phs values for place holders
+        @return list of tuples which selected
         """
         if phs:
             return self.query(stmt, phs)
@@ -116,10 +112,9 @@ class PostgreSQLHandler(object):
     def get(self, table, arg, keyname=None):
         """Get a row from a database or view.
 
-        Arguments:
-        - `table`:
-        - `arg`:
-        - `keyname`:
+        @param table
+        @param arg
+        @param keyname
         """
         if keyname:
             return self.db.get(table, arg, keyname)
@@ -127,15 +122,13 @@ class PostgreSQLHandler(object):
             return self.db.get(table, arg)
 
     def query(self, q, phs):
-        """DB.query wrapper
+        """DB.query wrapper.
 
-        Arguments:
-        - `q`: Query string
-        - `phs`: values for place holders.
-                 If specified uses prepared statement
-        Returns:
-        None if insert
-        List of Tuple if select
+        @param q Query string
+        @param phs values for place holders.
+               If specified uses prepared statement
+        @return None if insert;
+                List of Tuple if select
         """
         if phs:
             prepare_stmt = "PREPARE plan_%d AS %s" % (self.plan_nr, q)
