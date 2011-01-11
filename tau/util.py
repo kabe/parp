@@ -108,6 +108,24 @@ def err(*s, **kwrds):
     stream.flush()
 
 
+def node_set(profs):
+    """Set of nodes in the profile logs.
+
+    Node name is in the metadata XML like the following line.
+    @verbatim
+    <attribute><name>Node Name</name><value>foonode</value></attribute>
+    @endverbatim
+
+    @param profs profile log data
+    @return set of node names
+    """
+    nodes = [attr.find("value").string
+             for loader in profs
+             for attr in loader.soup.findAll("attribute")
+             if attr.find("name").string == "Node Name"]
+    return set(nodes)
+
+
 def main(argv):
     import doctest
     doctest.testmod()
