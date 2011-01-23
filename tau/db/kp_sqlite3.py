@@ -68,9 +68,9 @@ class SQLite3Handler(object):
             self.cur.execute(sql, idict.values())
         except sqlite3.IntegrityError, e:
             raise db.ProgrammingError, e
-        except e:
+        except Exception, e:
             print "Unknown insert error", e
-            raise e
+            raise
         # Get last inserted column
         lastrowid = self.cur.lastrowid
         last_get_sql = "SELECT * FROM %s WHERE ROWID=?" % (table)
