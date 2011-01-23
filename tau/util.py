@@ -30,6 +30,10 @@ def getplacename(options, infodic):
     """
     hostname = infodic["soupdic"]["Node Name"]
     m = r_ha8000cluster.match(hostname)
+    # Command line option has the most priority
+    if options.place:
+        return options.place
+    # No command line option is given: automatically determine
     if m:
         assert(m.group("batchname") == "b")
         if int(m.group("nodenum")) in (201, 202, 203, 204):
@@ -124,6 +128,17 @@ def node_set(profs):
              for attr in loader.soup.findAll("attribute")
              if attr.find("name").string == "Node Name"]
     return set(nodes)
+
+
+def NVL(test, val):
+    """None test and value.
+
+    @param test test value
+    @param val value to return if @a test is None
+    """
+    if test:
+        return test
+    return val
 
 
 def main(argv):
