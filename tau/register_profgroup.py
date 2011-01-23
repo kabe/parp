@@ -101,6 +101,8 @@ class Registerer(object):
         t0 = int(d["soupdic"]["Starting Timestamp"])
         t1 = int(d["soupdic"]["Timestamp"])
         d["exec_time"] = (t1 - t0) / 1e6
+        # library
+        d["library"] = util.NVL(self.options.library, "")
         if self.options.verbose >= 3:
             util.out("Infodic: ", d)
         ## Dictionary of all information
@@ -139,18 +141,19 @@ class Registerer(object):
                    """
         pd = self.infodic
         rtup = self.conn.select(sql_s,
-                                (pd["soupdic"]["Executable"].encode('utf_8'),
+                                (pd["soupdic"]["Executable"].encode("utf_8"),
                                  pd["nodes"],
                                  pd["nproc"],
-                                 pd["place"].encode('utf_8')))
+                                 pd["place"].encode("utf_8")))
         if len(rtup) == 0:
             if self.options.verbose >= 1:
                 util.out("No such profgroup. will newly insert...")
             pginsert = {
-                "application": pd["soupdic"]["Executable"].encode('utf_8'),
+                "application": pd["soupdic"]["Executable"].encode("utf_8"),
                 "nodes": pd["nodes"],
                 "procs": pd["nproc"],
-                "place": pd["place"].encode('utf_8')}
+                "place": pd["place"].encode("utf_8"),
+                "library": pd["library"].encode("utf_8")}
             if self.options.verbose >= 3:
                 util.out("new profgroup dict", pginsert)
             rdic = self.conn.insert("profgroup", pginsert)
@@ -208,9 +211,11 @@ class Registerer(object):
                           help="finally abort (thus no side-effect)")
         parser.add_option("-p", "--place", dest="place",
                           help="specify execution place as PLACE",
+                          default=None,
                           metavar="PLACE")
         parser.add_option("-l", "--library", dest="library",
                           help="specify library used as LIBRARY",
+                          default=None,
                           metavar="LIBRARY")
         (options, args) = parser.parse_args()
         if len(args) != 2:
@@ -253,7 +258,7 @@ class Registerer(object):
         except Exception, e:
             util.err("Exception in main", repr(e))
             self.conn.rollback_transaction()
-            raise e  # Re-raise the exception
+            raise  # Re-raise the exception
         # Finalization
         if self.options.finally_abort:
             self.conn.rollback_transaction()
