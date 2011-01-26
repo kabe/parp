@@ -40,3 +40,5 @@ echo CREATING VIEW GROUPEXECMERGE
 $SQLITE3 < create_view_groupexecmerge.sql
 echo CREATING VIEW PGROUP_META
 $SQLITE3 < create_view_pgroup_meta.sql
+echo CREATING VIEW PGROUP_RATIO
+$SQLITE3 < create_view_pgroup_ratio.sql
