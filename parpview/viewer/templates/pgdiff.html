@@ -1,0 +1,101 @@
+<html>
+  <head>
+    <title>Diff Comparator</title>
+    <style>
+      th {
+      border: solid 2px black
+      }
+      td {
+      border: solid 1px black
+      }
+      td.pg2slow {
+      background-color: #ff9966;
+      }
+      td.pg1slow {
+      background-color: #6699ff;
+      }
+      td.strange {
+      color: #ff9966;
+      }
+      tr.showing td {
+      background-color: #00cc66;
+      }
+      td.numeric {
+      text-align: right;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Compare ProfGroup {{ pg1 }} and {{ pg2 }}</h1>
+    {% if pg1 != pg2 %}
+    <p>Strangeness threshold: {{ params.stranger_diffpercent_thresh }} (%)</p>
+    <table>
+      <!-- header -->
+      <tr>
+        <th>Function</th>
+        <th>Ratio {{ pg1 }} Excl.</th>
+        <th>Ratio {{ pg2 }} Excl.</th>
+        <th>Ratio Diff {{ pg2 }} - {{ pg1 }} (%)</th>
+      </tr>
+      <!-- function comparation -->
+      {% for func in result %}
+      <tr>
+        <td>{{ func.0 }}</td>
+        <td class="numeric{% if func.1 > 1.0 %} strange{% endif %}">{{ func.1|floatformat:8 }}</td>
+        <td class="numeric{% if func.2 > 1.0 %} strange{% endif %}">{{ func.2|floatformat:8 }}</td>
+        {% if func.3 < params.stranger_diffpercent_thresh_neg %}
+        <td class="pg2slow numeric">{{ func.3 }}</td>
+        {% else %}
+        {% if func.3 > params.stranger_diffpercent_thresh %}
+        <td class="pg1slow numeric">{{ func.3 }}</td>
+        {% else %}
+        <td class="numeric">{{ func.3 }}</td>
+        {% endif %}
+        {% endif %}
+      </tr>
+      {% endfor %}
+    </table>
+    {% endif %}
+    <!-- New Comparisons -->
+    <h1>New comparisons?</h1>
+    <table>
+      <tr>
+        {% for n in rnc_n %}
+        <th>{{ n }}</th>
+        {% endfor %}
+      </tr>
+      {% for pg in rnc %}
+      {% if pg.0 == pg1 or pg.0 == pg2 %}
+      <tr class="showing">
+      {% else %}
+      <tr>
+      {% endif%}
+        {% ifnotequal pg.0 pg1 %}
+        <td><a href="/pgdiff/{{ pg.0 }}/{{ pg2 }}/">{{ pg.0 }}</a></td>
+        {% else %}
+        <td>{{ pg.0 }}</td>
+        {% endifnotequal %}
+        {% ifnotequal pg.0 pg2 %}
+        <td><a href="/pgdiff/{{ pg1 }}/{{ pg.0 }}/">{{ pg.0 }}</a></td>
+        {% else %}
+        <td>{{ pg.0 }}</td>
+        {% endifnotequal %}
+        <td>{{ pg.1 }}</td>
+        <td>{{ pg.2 }}</td>
+        <td>{{ pg.3 }}</td>
+        <td>{{ pg.4 }}</td>
+        <td>{{ pg.5 }}</td>
+        {% if pg.6 < pg.7 %}
+        <td class="strange">{{ pg.6 }}</td>
+        <td class="strange">{{ pg.7|floatformat:4 }}</td>
+        {% else %}
+        <td>{{ pg.6 }}</td>
+        <td>{{ pg.7|floatformat:4 }}</td>
+        {% endif %}
+      </tr>
+      {% endfor %}
+    </table>
+    <h1>Resource Usage Information</h1>
+    <p>total: {{ rd.4 }}, user: {{ rd.0 }}, system: {{ rd.1 }}, inblock: {{ rd.2 }}, outblock: {{ rd.3 }}</p>
+  </body>
+</html>
