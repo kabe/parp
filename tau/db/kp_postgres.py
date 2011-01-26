@@ -97,7 +97,7 @@ class PostgreSQLHandler(object):
         else:
             return rdic
 
-    def select(self, stmt, phs):
+    def select(self, stmt, phs=None):
         """Issue a select statement.
 
         @param stmt select statement
@@ -121,7 +121,7 @@ class PostgreSQLHandler(object):
         else:
             return self.db.get(table, arg)
 
-    def query(self, q, phs):
+    def query(self, q, phs=None):
         """DB.query wrapper.
 
         @param q Query string
@@ -133,8 +133,15 @@ class PostgreSQLHandler(object):
         if phs:
             prepare_stmt = "PREPARE plan_%d AS %s" % (self.plan_nr, q)
             self.db.query(self._prepare(prepare_stmt))
+            d_phs = list()
+            for x in phs:
+                if isinstance(x, basestring):
+                    d_phs.append(str(x))
+                else:
+                    d_phs.append(x)
+            d_phs = tuple(d_phs)
             result = self.db.query("EXECUTE plan_%d %s"
-                                   % (self.plan_nr, phs))
+                                   % (self.plan_nr, d_phs))
             self.plan_nr += 1
             if result:
                 return result.getresult()
