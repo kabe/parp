@@ -84,7 +84,7 @@ class SQLite3Handler(object):
 
         @param stmt select statement
         @param phs values for place holders
-        @param list of tuples which selected
+        @return list of tuples which selected
         """
         if phs:
             r = self.query(stmt, phs)
