@@ -242,7 +242,7 @@ class Registerer(object):
         # Prepare information to add
         self.prepare_registration()
         # DB prepare
-        #conn = db.init("postgres", username="kabe", hostname="127.0.0.1")
+        #self.conn = db.init("postgres", username="kabe", hostname="127.0.0.1")
         self.conn = db.init("sqlite3", dbfile="/home/kabe/Archives/prof.db")
         ### BEGIN TRANSACTION ###
         self.conn.begin_transaction()

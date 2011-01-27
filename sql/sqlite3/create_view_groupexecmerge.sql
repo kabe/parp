@@ -3,8 +3,8 @@
 CREATE VIEW groupexecmerge
 AS
 SELECT
-    frs.funcname,
-    pe.profgroup_id,
+    frs.funcname funcname,
+    pe.profgroup_id profgroup_id,
     AVG(frs.rank_sum) exec_sum_avg,
     AVG(frs.rank_max) exec_max_avg,
     AVG(frs.rank_min) exec_min_avg,

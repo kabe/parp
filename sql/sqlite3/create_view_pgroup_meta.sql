@@ -2,7 +2,7 @@
 -- Overview of profile group.
 -- Only shows the average time of execution time in the profile group.
 CREATE VIEW pgroup_meta AS
-SELECT pe.profgroup_id,
+SELECT pe.profgroup_id profgroup_id,
        AVG(pe.exec_time) avg_time,
        pg.procs procs,
        (sums.sum2 - sums.sum1 * sums.sum1 / sums.c ) / sums.c var
