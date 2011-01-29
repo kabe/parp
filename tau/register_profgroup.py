@@ -11,7 +11,6 @@ import os.path
 import re
 
 import db
-import tau
 
 from TauLoad.Loader import Loader
 import nm.loader

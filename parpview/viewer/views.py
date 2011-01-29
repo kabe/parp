@@ -14,7 +14,6 @@ path = "/home/kabe/git/prof/tau/"
 if path not in sys.path:
     sys.path.append(path)
 
-#import tau
 import util
 import db
 import nm.loader
