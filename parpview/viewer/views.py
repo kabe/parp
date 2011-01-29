@@ -41,12 +41,18 @@ def pgroupdiff(request, pg1, pg2):
     """
     ru1 = resource.getrusage(resource.RUSAGE_SELF)
     time1 = time.time()
-    conn = db.init("sqlite3", dbfile="/home/kabe/Archives/prof.db")
-    #conn = db.init("postgres", username="kabe", hostname="127.0.0.1")
-    # Params
-    stranger_diffpercent_thresh = 1.0
-    params = {"stranger_diffpercent_thresh": stranger_diffpercent_thresh,
-              "stranger_diffpercent_thresh_neg": -stranger_diffpercent_thresh,
+    params = ViewParam.objects.get()
+    dbtype = params.dbtype
+    if dbtype == "sqlite3":
+        conn = db.init("sqlite3", dbfile=params.sqlite3_file)
+    elif dbtype == "postgres":
+        conn = db.init("postgres", username="kabe", hostname="127.0.0.1")
+    else:
+        raise Http404
+    # Param
+    stranger_diff_thresh = params.susp_thresh
+    params = {"stranger_diffpercent_thresh": stranger_diff_thresh * 100,
+              "stranger_diffpercent_thresh_neg": -stranger_diff_thresh * 100,
               }
     # Main comparation
     sql = """
