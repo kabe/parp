@@ -13,6 +13,7 @@ urlpatterns = patterns('',
     (r'^$', 'parpview.viewer.views.helloworld'),
     (r'^ut/$', 'parpview.viewer.views.usetemplate'),
     (r'^pgdiff/(?P<pg1>\d+)/(?P<pg2>\d+)/$', 'parpview.viewer.views.pgroupdiff'),
+    (r'^pgview/(?P<pg_id>\d+)/$', 'parpview.viewer.views.pgview'),
     # Uncomment the admin/doc line below to enable admin documentation:
     # (r'^admin/doc/', include('django.contrib.admindocs.urls')),
 

@@ -1,6 +1,10 @@
 # Create your views here.
 from django.http import HttpResponse
+from django.http import Http404
+from django.http import HttpResponseRedirect
 from django.shortcuts import render_to_response
+from parpview.viewer.models import ViewParam
+
 import resource
 import math
 import time
@@ -18,7 +22,8 @@ import TauLoad.Loader
 
 
 def helloworld(request):
-    return HttpResponse("Hello World")
+    #return HttpResponse("Hello World")
+    return HttpResponseRedirect("/pgdiff/1/1/")
 
 
 def usetemplate(request):
@@ -28,7 +33,7 @@ def usetemplate(request):
 
 
 def pgroupdiff(request, pg1, pg2):
-    """
+    """Show ProfGroup difference.
 
     @param request
     @param pg1
@@ -99,3 +104,48 @@ ORDER BY profgroup.id
                                "rnc": r_newc2,
                                "rd": rd})
 
+def pgview(request, pg_id):
+    """Detail view of ProfGroup.
+
+    Arguments:
+    - `request`:
+    - `pg_id`:
+    """
+    params = ViewParam.objects.get()
+    dbtype = params.dbtype
+    if dbtype == "sqlite3":
+        conn = db.init("sqlite3", dbfile=params.sqlite3_file)
+    elif dbtype == "postgres":
+        conn = db.init("postgres", username="kabe", hostname="127.0.0.1")
+    else:
+        raise Http404
+    # Main comparation
+    pg_sql = """
+SELECT pg.application AS app,
+       pg.nodes AS nodes,
+       pg.procs AS procs,
+       pg.place AS place,
+       pg.library AS library
+FROM profgroup AS pg
+WHERE pg.id = ?
+;
+"""
+    r_pg = conn.select(pg_sql, (pg_id,))[0]
+    pgpe_sql = """
+SELECT pe.id AS pe_id,
+       pe.exec_time AS etime,
+       pe.start_ts AS start_ts
+FROM profgroup AS pg,
+     profexec AS pe
+WHERE pg.id = pe.profgroup_id
+  AND pg.id = ?
+ORDER BY pe_id
+;
+"""
+    r_pgpe = conn.select(pgpe_sql, (pg_id,))
+    return render_to_response('pgdetail.html',
+                              {"pg_id": pg_id,
+                               "r_pg": r_pg,
+                               "r_pgpe": r_pgpe,
+                               "pe_num": len(r_pgpe)
+                               })
