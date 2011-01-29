@@ -1,0 +1,62 @@
+<html>
+  <head>
+    <title>ProfGroup #{{ pg_id }}</title>
+    <style>
+      th {
+      border: solid 2px black
+      }
+      td {
+      border: solid 1px black
+      }
+      td.pg2slow {
+      background-color: #ff9966;
+      }
+      td.pg1slow {
+      background-color: #6699ff;
+      }
+      td.strange {
+      color: #ff9966;
+      }
+      tr.showing td {
+      background-color: #00cc66;
+      }
+      td.numeric {
+      text-align: right;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>ProfGroup Detail #{{ pg_id }}</h1>
+    <h2>Execution Summary</h2>
+    <dl>
+      <dt>Application</dt>
+      <dd>{{ r_pg.0 }}</dd>
+      <dt># of nodes</dt>
+      <dd>{{ r_pg.1 }}</dd>
+      <dt># of processes</dt>
+      <dd>{{ r_pg.2 }}</dd>
+      <dt>Place/Location</dt>
+      <dd>{{ r_pg.3 }}</dd>
+      <dt>Library</dt>
+      <dd>{{ r_pg.4 }}</dd>
+    </dl>
+    <h2>Each Execution Information</h2>
+    <p>There {% if pe_num == 1 %}is{% endif %}{% if pe_num > 1 %}are{% endif %} {{ pe_num }} execution logs.</p>
+    <table>
+      <tr>
+        <th>ProfExec ID</th>
+        <th>Execution Time</th>
+        <th>Start TimeStamp</th>
+      </tr>
+      {% for pe in r_pgpe %}
+      <tr>
+        <td>{{ pe.0 }}</td>
+        <td>{{ pe.1 }}</td>
+        <td>{{ pe.2 }}</td>
+      </tr>
+      {% endfor %}
+    </table>
+    <h1>Resource Usage Information</h1>
+    <p>total: {{ rd.4 }}, user: {{ rd.0 }}, system: {{ rd.1 }}, inblock: {{ rd.2 }}, outblock: {{ rd.3 }}</p>
+  </body>
+</html>
