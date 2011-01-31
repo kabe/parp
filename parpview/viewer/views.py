@@ -10,7 +10,7 @@ import math
 import time
 
 import sys
-path = "/home/kabe/git/prof/tau/"
+path = "/home/tomoya/git/prof/tau/"
 if path not in sys.path:
     sys.path.append(path)
 
