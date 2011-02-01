@@ -4,5 +4,5 @@ CREATE TABLE profexec (
     exec_time DOUBLE PRECISION NOT NULL,
     start_ts INT,
     UNIQUE (profgroup_id, start_ts),
-    FOREIGN KEY (profgroup_id) REFERENCES profgroup(id)
+    FOREIGN KEY (profgroup_id) REFERENCES profgroup(id) ON DELETE CASCADE
 );
