@@ -136,14 +136,16 @@ class Registerer(object):
                        application = ?
                    AND nodes = ?
                    AND procs = ?
-                   AND place = ?;
+                   AND place = ?
+                   AND library = ?;
                    """
         pd = self.infodic
         rtup = self.conn.select(sql_s,
                                 (pd["soupdic"]["Executable"].encode("utf_8"),
                                  pd["nodes"],
                                  pd["nproc"],
-                                 pd["place"].encode("utf_8")))
+                                 pd["place"].encode("utf_8"),
+                                 pd["library"].encode("utf_8"),))
         if len(rtup) == 0:
             if self.options.verbose >= 1:
                 util.out("No such profgroup. will newly insert...")
