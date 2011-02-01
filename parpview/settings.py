@@ -99,3 +99,6 @@ INSTALLED_APPS = (
     'django.contrib.admindocs',
     'parpview.viewer',
 )
+
+#CACHE_BACKEND = "locmem:///"
+CACHE_BACKEND = "memcached://127.0.0.1:11211"
