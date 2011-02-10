@@ -1,3 +1,4 @@
+<!DOCTYPE HTML>
 <html>
   <head>
     <title>Diff Comparator</title>
@@ -34,30 +35,40 @@
       <tr>
         <th>Function</th>
         <th>Ratio {{ pg1 }} Excl.</th>
+        <th>Time {{ pg1 }} Excl. (usec)</th>
         <th>Ratio {{ pg2 }} Excl.</th>
+        <th>Time {{ pg2 }} Excl. (usec)</th>
         <th>Ratio Diff {{ pg2 }} - {{ pg1 }} (%)</th>
+        <th>Time Diff {{ pg2 }} - {{ pg1 }} (usec)</th>
       </tr>
       <!-- function comparation -->
       {% for func in result %}
       <tr>
         <td>{{ func.0 }}</td>
-        <td class="numeric{% if func.1 > 1.0 %} strange{% endif %}">{{ func.1|floatformat:8 }}</td>
-        <td class="numeric{% if func.2 > 1.0 %} strange{% endif %}">{{ func.2|floatformat:8 }}</td>
-        {% if func.3 < params.stranger_diffpercent_thresh_neg %}
-        <td class="pg2slow numeric">{{ func.3 }}</td>
+        <td class="numeric{% if func.1 > params.susp_ratio_thresh %} strange{% endif %}">{{ func.1|floatformat:8 }}</td>
+        <td class="numeric">{{ func.2|floatformat:8 }}</td>
+        <td class="numeric{% if func.3 > params.susp_ratio_thresh %} strange{% endif %}">{{ func.3|floatformat:8 }}</td>
+        <td class="numeric">{{ func.4|floatformat:8 }}</td>
+        <!-- Ratio Diff strangeness -->
+        {% if func.5 < params.stranger_diffpercent_thresh_neg %}
+        <td class="pg2slow numeric">{{ func.5 }}</td>
         {% else %}
-        {% if func.3 > params.stranger_diffpercent_thresh %}
-        <td class="pg1slow numeric">{{ func.3 }}</td>
+        {% if func.5 > params.stranger_diffpercent_thresh %}
+        <td class="pg1slow numeric">{{ func.5 }}</td>
         {% else %}
-        <td class="numeric">{{ func.3 }}</td>
+        <td class="numeric">{{ func.5 }}</td>
         {% endif %}
         {% endif %}
+        <!-- Time Diff strangeness -->
+        <td class="numeric">{{ func.6 }}</td>
       </tr>
       {% endfor %}
     </table>
     {% endif %}
+    {# NEW COMPARISONS SELECTION TABLE #}
     <!-- New Comparisons -->
     <h1>New comparisons?</h1>
+    <form id="compselect" target="/pgdiff2" method="POST">
     <table>
       <tr>
         {% for n in rnc_n %}
@@ -70,31 +81,48 @@
       {% else %}
       <tr>
       {% endif%}
+        {# 1 #}
         {% ifnotequal pg.0 pg1 %}
-        <td><a href="/pgdiff/{{ pg.0 }}/{{ pg2 }}/">{{ pg.0 }}</a></td>
+          <td><a href="/pgdiff/{{ pg.0 }}/{{ pg2 }}/">{{ pg.0 }}</a></td>
         {% else %}
-        <td>{{ pg.0 }}</td>
+          <td>{{ pg.0 }}</td>
         {% endifnotequal %}
+        {# 2 #}
         {% ifnotequal pg.0 pg2 %}
-        <td><a href="/pgdiff/{{ pg1 }}/{{ pg.0 }}/">{{ pg.0 }}</a></td>
+          <td><a href="/pgdiff/{{ pg1 }}/{{ pg.0 }}/">{{ pg.0 }}</a></td>
         {% else %}
-        <td>{{ pg.0 }}</td>
+          <td>{{ pg.0 }}</td>
         {% endifnotequal %}
+        {# 3 #}
         <td><a href="/pgview/{{ pg.0 }}">{{ pg.1 }}</a></td>
+        {# 4 #}
         <td>{{ pg.2 }}</td>
+        {# 5 #}
         <td>{{ pg.3 }}</td>
+        {# 6 #}
         <td>{{ pg.4 }}</td>
+        {# 7 #}
         <td>{{ pg.5 }}</td>
+        {# 8 #}
         {% if pg.6 < pg.7 %}
-        <td class="strange">{{ pg.6 }}</td>
-        <td class="strange">{{ pg.7|floatformat:4 }}</td>
+          <td class="strange">{{ pg.6 }}</td>
+          <td class="strange">{{ pg.7|floatformat:4 }}</td>
         {% else %}
-        <td>{{ pg.6 }}</td>
-        <td>{{ pg.7|floatformat:4 }}</td>
+          <td>{{ pg.6 }}</td>
+          <td>{{ pg.7|floatformat:4 }}</td>
         {% endif %}
+        {# 9 #}
+          <td>
+            <input type="radio" name="lp" value="{{ pg.0 }}" />
+          </td>
+        {# 10 #}
+          <td>
+            <input type="radio" name="rp" value="{{ pg.0 }}" />
+          </td>
       </tr>
       {% endfor %}
     </table>
+    </form>
     <h1>Resource Usage Information</h1>
     <p>total: {{ rd.4 }}, user: {{ rd.0 }}, system: {{ rd.1 }}, inblock: {{ rd.2 }}, outblock: {{ rd.3 }}</p>
   </body>

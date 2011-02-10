@@ -11,6 +11,7 @@ class ViewParam(models.Model):
         ("postgres", "PostgreSQL"),
         )
     susp_thresh = models.FloatField()
+    susp_ratio_thresh = models.FloatField()
     sqlite3_file = models.TextField()
     dbtype = models.CharField(max_length=15, choices=DB_TYPES)
 

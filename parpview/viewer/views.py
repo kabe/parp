@@ -10,7 +10,9 @@ import math
 import time
 
 import sys
-path = "/home/tomoya/git/prof/tau/"
+import os
+import os.path
+path = os.path.join(os.environ["HOME"], "git/prof/tau/")
 if path not in sys.path:
     sys.path.append(path)
 
@@ -50,15 +52,19 @@ def pgroupdiff(request, pg1, pg2):
         raise Http404
     # Param
     stranger_diff_thresh = params.susp_thresh
-    params = {"stranger_diffpercent_thresh": stranger_diff_thresh * 100,
-              "stranger_diffpercent_thresh_neg": -stranger_diff_thresh * 100,
-              }
+    t_params = {"stranger_diffpercent_thresh": stranger_diff_thresh * 100,
+                "stranger_diffpercent_thresh_neg": -stranger_diff_thresh * 100,
+                "susp_ratio_thresh": params.susp_ratio_thresh * 100,
+                }
     # Main comparation
     sql = """
 SELECT pr1.funcname,
-       pr1.ratio R1,
-       pr2.ratio R2,
-       (pr2.ratio - pr1.ratio) * 100 AS ratiodiff
+       pr1.ratio AS R1,
+       pr1.excl_pe_rank_avg AS excl1,
+       pr2.ratio AS R2,
+       pr2.excl_pe_rank_avg AS excl2,
+       (pr2.ratio - pr1.ratio) * 100 AS ratiodiff,
+       (pr2.excl_pe_rank_avg - pr1.excl_pe_rank_avg) AS timediff
 FROM (SELECT * FROM pgroup_ratio WHERE profgroup_id = ?) pr1,
      (SELECT * FROM pgroup_ratio WHERE profgroup_id = ?) pr2
 WHERE pr1.funcname = pr2.funcname
@@ -71,20 +77,21 @@ ORDER BY ABS(pr2.ratio - pr1.ratio) DESC
     # New comparison
     newc_colnames = ("PG L", "PG R",
                      "Application", "Place", "# of nodes",
-                     "# of Processes", "Library", "Avg. Time", "StdDev.")
+                     "# of Processes", "Library", "Avg. Time", "StdDev.",
+                     "PG L2", "PG R2")
     newc = """
-SELECT profgroup.id,
-       application,
-       place,
-       nodes,
-       profgroup.procs,
-       library,
-       avg_time,
-       var
-FROM profgroup,
-     pgroup_meta
-WHERE profgroup.id = pgroup_meta.profgroup_id
-ORDER BY profgroup.id
+SELECT pg.id,
+       pg.application,
+       pg.place,
+       pg.nodes,
+       pg.procs,
+       pg.library,
+       pgm.avg_time,
+       pgm.var
+FROM profgroup AS pg,
+     pgroup_meta AS pgm
+WHERE pg.id = pgm.profgroup_id
+ORDER BY pg.id
 ;
 """
     r_newc = conn.select(newc)
@@ -101,7 +108,7 @@ ORDER BY profgroup.id
           time2 - time1,
           )
     return render_to_response('pgdiff.html',
-                              {"params": params,
+                              {"params": t_params,
                                "pg1": int(pg1),
                                "pg2": int(pg2),
                                "result": r_main,
