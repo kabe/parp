@@ -1,7 +1,8 @@
 CREATE VIEW pgroup_ratio AS
 SELECT gem.funcname funcname,
        gem.profgroup_id profgroup_id,
-       (gem.exec_avg_avg/pgm.avg_time/1000000) ratio
+       gem.exec_excl_avg_avg excl_pe_rank_avg,
+       (gem.exec_excl_avg_avg / pgm.avg_time / 1000000) ratio
 FROM groupexecmerge gem,
      pgroup_meta pgm
 WHERE gem.profgroup_id = pgm.profgroup_id
