@@ -40,6 +40,7 @@ def pgroupdiff(request, pg1, pg2):
     @param pg1
     @param pg2
     """
+    view_meter_diffratio_max = 10
     ru1 = resource.getrusage(resource.RUSAGE_SELF)
     time1 = time.time()
     params = ViewParam.objects.get()
@@ -55,6 +56,7 @@ def pgroupdiff(request, pg1, pg2):
     t_params = {"stranger_diffpercent_thresh": stranger_diff_thresh * 100,
                 "stranger_diffpercent_thresh_neg": -stranger_diff_thresh * 100,
                 "susp_ratio_thresh": params.susp_ratio_thresh * 100,
+                "vmdfrmax": view_meter_diffratio_max,
                 }
     # Main comparation
     sql = """
@@ -64,7 +66,8 @@ SELECT pr1.funcname,
        pr2.ratio AS R2,
        pr2.excl_pe_rank_avg AS excl2,
        (pr2.ratio - pr1.ratio) * 100 AS ratiodiff,
-       (pr2.excl_pe_rank_avg - pr1.excl_pe_rank_avg) AS timediff
+       (pr2.excl_pe_rank_avg - pr1.excl_pe_rank_avg) AS timediff,
+       ABS(pr2.ratio - pr1.ratio) * 100 AS absratiodiff
 FROM (SELECT * FROM pgroup_ratio WHERE profgroup_id = ?) pr1,
      (SELECT * FROM pgroup_ratio WHERE profgroup_id = ?) pr2
 WHERE pr1.funcname = pr2.funcname
@@ -72,8 +75,11 @@ ORDER BY ABS(pr2.ratio - pr1.ratio) DESC
 ;
 """
     r_main = ()
+    r1_max, r2_max = 0, 0
     if pg1 != pg2:
         r_main = conn.select(sql, (pg1, pg2))
+        r1_max, r2_max = max(x[2] for x in r_main), max(x[4] for x in r_main)
+        print r1_max, r2_max
     # New comparison
     newc_colnames = ("PG L", "PG R",
                      "Application", "Place", "# of nodes",
@@ -114,7 +120,20 @@ ORDER BY pg.id
                                "result": r_main,
                                "rnc_n": newc_colnames,
                                "rnc": r_newc2,
-                               "rd": rd})
+                               "rd": rd,
+                               "pg_maxs": (r1_max, r2_max)
+                               })
+
+def pgdiff2(request, params):
+    """
+    
+    Arguments:
+    - `request`:
+    - `params`:
+    """
+    print params
+    return HttpResponseRedirect(reverse('parpview.viewer.pgdiff'), args=(1, 1))
+
 
 def pgview(request, pg_id):
     """Detail view of ProfGroup.
@@ -123,6 +142,10 @@ def pgview(request, pg_id):
     - `request`:
     - `pg_id`:
     """
+    # Log
+    ru1 = resource.getrusage(resource.RUSAGE_SELF)
+    time1 = time.time()
+    # Params
     params = ViewParam.objects.get()
     dbtype = params.dbtype
     if dbtype == "sqlite3":
@@ -155,9 +178,19 @@ ORDER BY pe_id
 ;
 """
     r_pgpe = conn.select(pgpe_sql, (pg_id,))
+    # Log
+    ru2 = resource.getrusage(resource.RUSAGE_SELF)
+    time2 = time.time()
+    rd = (ru2.ru_utime - ru1.ru_utime,
+          ru2.ru_stime - ru1.ru_stime,
+          ru2.ru_inblock - ru1.ru_inblock,
+          ru2.ru_oublock - ru1.ru_oublock,
+          time2 - time1,
+          )
     return render_to_response('pgdetail.html',
                               {"pg_id": pg_id,
                                "r_pg": r_pg,
                                "r_pgpe": r_pgpe,
-                               "pe_num": len(r_pgpe)
+                               "pe_num": len(r_pgpe),
+                               "rd": rd,
                                })
