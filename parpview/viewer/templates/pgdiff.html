@@ -7,7 +7,11 @@
       border: solid 2px black
       }
       td {
-      border: solid 1px black
+      border: solid 1px black;
+      padding-left: 1ex;
+      padding-right: 1ex;
+      padding-top: 5px;
+      padding-bottom: 5px;
       }
       td.pg2slow {
       background-color: #ff9966;
@@ -52,8 +56,6 @@
         </td>
         <td class="numeric">
           {{ func.2|floatformat:8 }}
-          <br />
-          <meter min="0" max="{{ pg_maxs.0 }}" value="{{ func.2 }}"></meter>
         </td>
         <td class="numeric{% if func.3 > params.susp_ratio_thresh %} strange{% endif %}">
           {{ func.3|floatformat:8 }}
@@ -62,8 +64,6 @@
         </td>
         <td class="numeric">
           {{ func.4|floatformat:8 }}
-          <br />
-          <meter min="0" max="{{ pg_maxs.1 }}" value="{{ func.4 }}"></meter>
         </td>
         <!-- Ratio Diff strangeness -->
         {% if func.5 < params.stranger_diffpercent_thresh_neg %}
