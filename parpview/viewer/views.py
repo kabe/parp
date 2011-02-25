@@ -226,7 +226,7 @@ def getimage(request, imgpath):
     return response
 
 
-@cache_page(60 * 30)
+@cache_page(60 * 1)
 def pgd1(request, order, sortmode, graphmode, pg1, pg2):
     """Show ProfGroup difference.
 
@@ -248,14 +248,14 @@ def pgd1(request, order, sortmode, graphmode, pg1, pg2):
         conn = db.init("postgres", username="kabe", hostname="127.0.0.1")
     else:
         raise Http404
-    # Param
+    ## Param
     stranger_diff_thresh = params.susp_thresh
     t_params = {"stranger_diffpercent_thresh": stranger_diff_thresh * 100,
                 "stranger_diffpercent_thresh_neg": -stranger_diff_thresh * 100,
                 "susp_ratio_thresh": params.susp_ratio_thresh * 100,
                 "vmdfrmax": view_meter_diffratio_max,
                 }
-    # Sort order
+    ## Sort order
     print "order:" + order
     if order == "timediff":
         order_str = "ABS(pr1.excl_pe_rank_avg - pr2.excl_pe_rank_avg)"
@@ -265,7 +265,7 @@ def pgd1(request, order, sortmode, graphmode, pg1, pg2):
         order_str = "ABS(pr1.ratio - pr2.ratio)"
     else:
         raise Http404
-    # Sort mode
+    ## Sort mode
     print "sortmode:" + sortmode
     if sortmode == "asc":
         order_str += " ASC"
@@ -273,7 +273,7 @@ def pgd1(request, order, sortmode, graphmode, pg1, pg2):
         order_str += " DESC"
     else:
         raise Http404
-    # Main comparation
+    ## Main comparation
     sql = """
 SELECT pr1.funcname,
        pr1.ratio AS R1,
@@ -297,31 +297,31 @@ ORDER BY ${order}
     if pg1 != pg2:
         r_main = conn.select(sql_str, (pg1, pg2))
         r1_max, r2_max = max(x[2] for x in r_main), max(x[4] for x in r_main)
-#     # New comparison
-#     newc_colnames = ("PG L", "PG R",
-#                      "Application", "Place", "# of nodes",
-#                      "# of Processes", "Library", "Avg. Time", "StdDev.",
-#                      "PG L2", "PG R2")
-#     newc = """
-# SELECT pg.id,
-#        pg.application,
-#        pg.place,
-#        pg.nodes,
-#        pg.procs,
-#        pg.library,
-#        pgm.avg_time,
-#        pgm.var
-# FROM profgroup AS pg,
-#      pgroup_meta AS pgm
-# WHERE pg.id = pgm.profgroup_id
-# ORDER BY pg.id
-# ;
-# """
-#     r_newc = conn.select(newc)
-#     # stddev
-#     r_newc2 = (r[0:-1] + (math.sqrt(r[-1]),) for r in r_newc)
-#     #print r_newc2
-    # Log
+    ## New comparison
+    newc_colnames = ("PG L", "PG R",
+                     "Application", "Place", "# of nodes",
+                     "# of Processes", "Library", "Avg. Time", "StdDev.",
+                     "PG L2", "PG R2")
+    newc = """
+SELECT pg.id,
+       pg.application,
+       pg.place,
+       pg.nodes,
+       pg.procs,
+       pg.library,
+       pgm.avg_time,
+       pgm.var
+FROM profgroup AS pg,
+     pgroup_meta AS pgm
+WHERE pg.id = pgm.profgroup_id
+ORDER BY pg.id
+;
+"""
+    r_newc = conn.select(newc)
+    ## stddev
+    r_newc2 = (r[0:-1] + (math.sqrt(r[-1]),) for r in r_newc)
+    #print r_newc2
+    ## Log
     ru2 = resource.getrusage(resource.RUSAGE_SELF)
     time2 = time.time()
     rd = (ru2.ru_utime - ru1.ru_utime,
@@ -363,8 +363,9 @@ set grid
 set key above
 ${xtics_conf}
 set xtics rotate
-plot "${datafile}" using ($1-2):${col_A}:(4) title "A" w boxes fs solid 1, \
-     "${datafile}" using ($1+2):${col_B}:(4) title "B" w boxes fs solid 1
+plot \
+    "${datafile}" using ($1-2):${col_A}:(4) title "A" w boxes fs solid 1, \
+    "${datafile}" using ($1+2):${col_B}:(4) title "B" w boxes fs solid 1
 """
     template = string.Template(plot_template)
     # Determine image file name

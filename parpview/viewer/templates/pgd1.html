@@ -29,13 +29,15 @@
       text-align: right;
       }
     </style>
+    {#<script src="/prototype.js" />#}
   </head>
   <body>
     {% if pg1 != pg2 %}
-    <h1>Compare ProfGroup {{ pg1 }} and {{ pg2 }}</h1>
+    <h1>Compare ProfGroup <a href="/pgview/{{ pg1 }}">{{ pg1 }}</a> and <a href="/pgview/{{ pg2 }}">{{ pg2 }}</a></h1>
     <p>
       <img src="/img/{{ imgfilename }}"
-           width="1400" />
+           width="1400"
+           id="graphimg" />
     </p>
     <p>
       {% if reqparams.graphmode != "exectime" %}
@@ -64,15 +66,15 @@
           Speedup
           <br />
           ({{ pg1 }} / {{ pg2 }})
-          {#<a href="/pgd1/speedup/asc/{{pg1}}/{{pg2}}">&#9650;</a>#}
-          <a href="/pgd1/speedup/desc/{{pg1}}/{{pg2}}">&#9660;</a>
+          {#<a href="/pgd1/speedup/asc/{{ reqparams.graphmode }}/{{pg1}}/{{pg2}}">&#9650;</a>#}
+          <a href="/pgd1/speedup/desc/{{ reqparams.graphmode }}/{{pg1}}/{{pg2}}">&#9660;</a>
         </th>
         <th>
           Time diff
           <br />
           ({{ pg1 }} - {{ pg2 }})
-          {#<a href="/pgd1/timediff/asc/{{pg1}}/{{pg2}}">&#9650;</a>#}
-          <a href="/pgd1/timediff/desc/{{pg1}}/{{pg2}}">&#9660;</a>
+          {#<a href="/pgd1/timediff/asc/{{ reqparams.graphmode }}/{{pg1}}/{{pg2}}">&#9650;</a>#}
+          <a href="/pgd1/timediff/desc/{{ reqparams.graphmode }}/{{pg1}}/{{pg2}}">&#9660;</a>
         </th>
         <th>Ratio {{ pg1 }} Excl.</th>
         <th>Ratio {{ pg2 }} Excl.</th>
@@ -80,8 +82,8 @@
           Ratio Diff
           <br />
           ({{ pg1 }} - {{ pg2 }} (%))
-          {#<a href="/pgd1/ratiodiff/asc/{{pg1}}/{{pg2}}">&#9650;</a>#}
-          <a href="/pgd1/ratiodiff/desc/{{pg1}}/{{pg2}}">&#9660;</a>
+          {#<a href="/pgd1/ratiodiff/asc/{{ reqparams.graphmode }}/{{pg1}}/{{pg2}}">&#9650;</a>#}
+          <a href="/pgd1/ratiodiff/desc/{{ reqparams.graphmode }}/{{pg1}}/{{pg2}}">&#9660;</a>
         </th>
       </tr>
       <!-- function comparation -->
