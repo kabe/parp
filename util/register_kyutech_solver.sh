@@ -23,4 +23,10 @@ for x in $PROFS;do
     $CMD --place kyutech --library "OpenMPI GCC NFS" $SOLVER_BASE/openmpi_$x.kyutech-charlie.isc.kyutech.ac.jp $SOLVER_BASE/$MAP
 done
 
+# 64 Nodes
+MAP=solver_mpich2_tau_kyutech.map
+PROFS=`seq 33282 33291`
+for x in $PROFS;do
+    $CMD --place kyutech --library "MPICH2 GCC NFS" $SOLVER_BASE/mpich2-1.2.1_$x.kyutech-charlie.isc.kyutech.ac.jp $SOLVER_BASE/$MAP
+done
 

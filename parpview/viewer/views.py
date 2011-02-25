@@ -48,9 +48,9 @@ def usetemplate(request):
 def pgroupdiff(request, pg1, pg2):
     """Show ProfGroup difference.
 
-    @param request
-    @param pg1
-    @param pg2
+    @param request request object
+    @param pg1 ProfGroup ID 1 (which should be visualized left)
+    @param pg2 ProfGroup ID 2 (which should be visualized right)
     """
     view_meter_diffratio_max = 10
     ru1 = resource.getrusage(resource.RUSAGE_SELF)
@@ -137,11 +137,10 @@ ORDER BY pg.id
 
 
 def pgdiff2(request, params):
-    """
+    """Test funtion for form paramteres.
     
-    Arguments:
-    - `request`:
-    - `params`:
+    @param request request object
+    @param params get parameters
     """
     print params
     return HttpResponseRedirect(reverse('parpview.viewer.pgdiff'), args=(1, 1))
@@ -150,9 +149,8 @@ def pgdiff2(request, params):
 def pgview(request, pg_id):
     """Detail view of ProfGroup.
 
-    Arguments:
-    - `request`:
-    - `pg_id`:
+    @param request request object
+    @param pg_id ProfGroup ID
     """
     # Log
     ru1 = resource.getrusage(resource.RUSAGE_SELF)
@@ -419,3 +417,9 @@ plot \
     os.unlink(tmpfilename)
     print "DONE"
     return image_filename
+
+
+def style(request):
+    """
+    """
+    return render_to_response('style.css', {})

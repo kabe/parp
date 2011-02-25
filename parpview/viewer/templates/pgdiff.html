@@ -2,6 +2,7 @@
 <html lagn="en">
   <head>
     <title>Diff Comparator</title>
+    {#<link rel="stylesheet" type="text/css" href="/style.css">#}
     <style>
       th {
       border: solid 2px black
@@ -35,7 +36,7 @@
     <h1>Compare ProfGroup {{ pg1 }} and {{ pg2 }}</h1>
     <p>Strangeness threshold: {{ params.stranger_diffpercent_thresh }} (%)</p>
     <table>
-      <!-- header -->
+      <!-- header -->{# And Sort field selector #}
       <tr>
         <th>Function</th>
         <th>Ratio {{ pg1 }} Excl.</th>
