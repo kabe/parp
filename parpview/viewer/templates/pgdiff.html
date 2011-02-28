@@ -2,34 +2,7 @@
 <html lagn="en">
   <head>
     <title>Diff Comparator</title>
-    {#<link rel="stylesheet" type="text/css" href="/style.css">#}
-    <style>
-      th {
-      border: solid 2px black
-      }
-      td {
-      border: solid 1px black;
-      padding-left: 1ex;
-      padding-right: 1ex;
-      padding-top: 5px;
-      padding-bottom: 5px;
-      }
-      td.pg2slow {
-      background-color: #ff9966;
-      }
-      td.pg1slow {
-      background-color: #6699ff;
-      }
-      td.strange {
-      color: #ff9966;
-      }
-      tr.showing td {
-      background-color: #00cc66;
-      }
-      td.numeric {
-      text-align: right;
-      }
-    </style>
+    <link rel="stylesheet" type="text/css" href="/style/style.css" />
   </head>
   <body>
     {% if pg1 != pg2 %}

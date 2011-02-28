@@ -1,0 +1,50 @@
+/* div */
+div#cmptable {
+    text-align: center;
+}
+
+/* Header */
+h1 {
+    border-style: solid;
+    border-color: #000000;
+    border-width: 0 0 1px 1ex;
+    padding-left: 1ex;
+    padding-bottom: 2px;
+    padding-top: 2px;
+}
+/* Table */
+th {
+    border: solid 2px black;
+}
+td {
+    border: solid 1px black;
+    text-align: left;
+}
+td.pg2slow {
+    background-color: #ff9966;
+}
+td.pg1slow {
+    background-color: #6699ff;
+}
+td.strange {
+    color: #ff9966;
+}
+tr.showing td {
+    background-color: #00cc66;
+}
+td.numeric {
+    text-align: right;
+}
+/* image graph */
+p#graphimg {
+    text-align: center;
+}
+p#graphimg img {
+    width: 60%;
+}
+
+/* tooltip */
+div.dtip {
+    background-color: #AAAAAA;
+    padding: 3px;
+}

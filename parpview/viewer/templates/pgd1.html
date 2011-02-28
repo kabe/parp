@@ -2,42 +2,21 @@
 <html lagn="en">
   <head>
     <title>Diff Comparator</title>
-    <style>
-      th {
-      border: solid 2px black
-      }
-      td {
-      border: solid 1px black;
-      padding-left: 1ex;
-      padding-right: 1ex;
-      padding-top: 5px;
-      padding-bottom: 5px;
-      }
-      td.pg2slow {
-      background-color: #ff9966;
-      }
-      td.pg1slow {
-      background-color: #6699ff;
-      }
-      td.strange {
-      color: #ff9966;
-      }
-      tr.showing td {
-      background-color: #00cc66;
-      }
-      td.numeric {
-      text-align: right;
-      }
-    </style>
-    {#<script src="/prototype.js" />#}
+    <link rel="stylesheet" type="text/css" href="/style/style.css" />
+    <script type="text/javascript" src="/script/p.js"></script>
   </head>
-  <body>
+  <body onLoad="makeIndex();">
+    <div id="toc">
+    </div>
     {% if pg1 != pg2 %}
-    <h1>Compare ProfGroup <a href="/pgview/{{ pg1 }}">{{ pg1 }}</a> and <a href="/pgview/{{ pg2 }}">{{ pg2 }}</a></h1>
-    <p>
-      <img src="/img/{{ imgfilename }}"
-           width="1400"
-           id="graphimg" />
+    <h1 id="cmptable">
+      Compare ProfGroup
+      <a id="toplink_pg1" href="/pgview/{{ pg1 }}" onMouseOver="teston();" onMouseOut="testoff();">{{ pg1 }}</a>
+      and
+      <a id="toplink_pg2" href="/pgview/{{ pg2 }}">{{ pg2 }}</a>
+    </h1>
+    <p id="graphimg">
+      <img src="/img/{{ imgfilename }}" />
     </p>
     <p>
       {% if reqparams.graphmode != "exectime" %}
@@ -48,78 +27,94 @@
       {% endif %}
     </p>
     <p>Strangeness threshold: {{ params.stranger_diffpercent_thresh }} (%)</p>
-    <table>
-      <!-- header -->
-      <tr>
-        <th>Function</th>
-        <th>
-          Time {{ pg1 }} Excl. (usec)
-          <br />
-          <a href="">&#9660;</a>
-        </th>
-        <th>
-          Time {{ pg2 }} Excl. (usec)
-          <br />
-          <a href="">&#9660;</a>
-        </th>
-        <th>
-          Speedup
-          <br />
-          ({{ pg1 }} / {{ pg2 }})
-          {#<a href="/pgd1/speedup/asc/{{ reqparams.graphmode }}/{{pg1}}/{{pg2}}">&#9650;</a>#}
-          <a href="/pgd1/speedup/desc/{{ reqparams.graphmode }}/{{pg1}}/{{pg2}}">&#9660;</a>
-        </th>
-        <th>
-          Time diff
-          <br />
-          ({{ pg1 }} - {{ pg2 }})
-          {#<a href="/pgd1/timediff/asc/{{ reqparams.graphmode }}/{{pg1}}/{{pg2}}">&#9650;</a>#}
-          <a href="/pgd1/timediff/desc/{{ reqparams.graphmode }}/{{pg1}}/{{pg2}}">&#9660;</a>
-        </th>
-        <th>Ratio {{ pg1 }} Excl.</th>
-        <th>Ratio {{ pg2 }} Excl.</th>
-        <th>
-          Ratio Diff
-          <br />
-          ({{ pg1 }} - {{ pg2 }} (%))
-          {#<a href="/pgd1/ratiodiff/asc/{{ reqparams.graphmode }}/{{pg1}}/{{pg2}}">&#9650;</a>#}
-          <a href="/pgd1/ratiodiff/desc/{{ reqparams.graphmode }}/{{pg1}}/{{pg2}}">&#9660;</a>
-        </th>
-      </tr>
-      <!-- function comparation -->
+    {# Tooltip #}
       {% for func in result %}
-      <tr>
-        <td>{{ func.0 }}</td>
-        <td class="numeric">
-          {{ func.2 }}
-        </td>
-        <td class="numeric">
-          {{ func.4 }}
-        </td>
-        <td class="numeric">
-          {{ func.5 }}
-        </td>
-        <td class="numeric">
-          {{ func.7 }}
-        </td>
-        <td class="numeric{% if func.1 > params.susp_ratio_thresh %} strange{% endif %}">
-          {{ func.1 }}
-          <br />
-          <meter min="0" max="1.0" value="{{ func.1 }}"></meter>
-        </td>
-        <td class="numeric{% if func.3 > params.susp_ratio_thresh %} strange{% endif %}">
-          {{ func.3 }}
-          <br />
-          <meter min="0" max="1.0" value="{{ func.3 }}"></meter>
-        </td>
-        <td>
-          {{ func.6 }}
-        </td>
-      </tr>
+      <div class="dtip" id="tip_rmpg1_{{ forloop.counter0 }}" style="display:none;">
+        {{ func.1|floatformat:5 }}
+      </div>
+      <div class="dtip" id="tip_rmpg2_{{ forloop.counter0 }}" style="display:none;">
+        {{ func.3|floatformat:5 }}
+      </div>
       {% endfor %}
-    </table>
+    {# Tooltip End #}
+    <div id="cmptable">
+      <table>
+        <!-- header -->
+        <tr>
+          <th>Function</th>
+          <th>
+            Time {{ pg1 }} Excl. (usec)
+            <br />
+            <a href="">&#9660;</a>
+          </th>
+          <th>
+            Time {{ pg2 }} Excl. (usec)
+            <br />
+            <a href="">&#9660;</a>
+          </th>
+          <th>
+            Speedup
+            <br />
+            ({{ pg1 }} / {{ pg2 }})
+            {#<a href="/pgd1/speedup/asc/{{ reqparams.graphmode }}/{{pg1}}/{{pg2}}">&#9650;</a>#}
+            <a href="/pgd1/speedup/desc/{{ reqparams.graphmode }}/{{pg1}}/{{pg2}}">&#9660;</a>
+          </th>
+          <th>
+            Time diff
+            <br />
+            ({{ pg1 }} - {{ pg2 }})
+            {#<a href="/pgd1/timediff/asc/{{ reqparams.graphmode }}/{{pg1}}/{{pg2}}">&#9650;</a>#}
+            <a href="/pgd1/timediff/desc/{{ reqparams.graphmode }}/{{pg1}}/{{pg2}}">&#9660;</a>
+          </th>
+          <th>Ratio {{ pg1 }} Excl.</th>
+          <th>Ratio {{ pg2 }} Excl.</th>
+          <th>
+            Ratio Diff
+            <br />
+            ({{ pg1 }} - {{ pg2 }} (%))
+            {#<a href="/pgd1/ratiodiff/asc/{{ reqparams.graphmode }}/{{pg1}}/{{pg2}}">&#9650;</a>#}
+            <a href="/pgd1/ratiodiff/desc/{{ reqparams.graphmode }}/{{pg1}}/{{pg2}}">&#9660;</a>
+          </th>
+        </tr>
+        <!-- function comparation -->
+        {% for func in result %}
+        <tr>
+          <td>{{ func.0 }}</td>
+          <td class="numeric">
+            {{ func.2|floatformat:3 }}
+          </td>
+          <td class="numeric">
+            {{ func.4|floatformat:3 }}
+          </td>
+          <td class="numeric">
+            {{ func.5|floatformat:3 }}
+          </td>
+          <td class="numeric">
+            {{ func.7|floatformat:3 }}
+          </td>
+          <td class="numeric{% if func.1 > params.susp_ratio_thresh %} strange{% endif %}">
+            <meter min="0" max="1.0" value="{{ func.1 }}" id="ratiometerpg1_{{ forloop.counter0 }}">
+              {{ func.1|floatformat:3 }}
+            </meter>
+          </td>
+          <td class="numeric{% if func.3 > params.susp_ratio_thresh %} strange{% endif %}">
+            <meter min="0" max="1.0" value="{{ func.3 }}" id="ratiometerpg2_{{ forloop.counter0 }}">
+              {{ func.3|floatformat:3 }}
+            </meter>
+          </td>
+          <td>
+            {{ func.6|floatformat:3 }}
+          </td>
+        </tr>
+        <script type="text/javascript">
+          var my_tooltip1_{{ forloop.counter0 }} = new Tooltip('ratiometerpg1_{{ forloop.counter0 }}', 'tip_rmpg1_{{ forloop.counter0 }}');
+          var my_tooltip2_{{ forloop.counter0 }} = new Tooltip('ratiometerpg2_{{ forloop.counter0 }}', 'tip_rmpg2_{{ forloop.counter0 }}');
+        </script>
+        {% endfor %}
+      </table>
+    </div>
     {% endif %}
-    <h1>Resource Usage Information</h1>
+    <h1 id="resourceinfo">Resource Usage Information</h1>
     <p>total: {{ rd.4 }}, user: {{ rd.0 }}, system: {{ rd.1 }}, inblock: {{ rd.2 }}, outblock: {{ rd.3 }}</p>
   </body>
 </html>

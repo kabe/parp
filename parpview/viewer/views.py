@@ -11,6 +11,7 @@ import math
 import time
 import string
 import subprocess
+import cPickle
 
 import sys
 import os
@@ -23,7 +24,13 @@ import util
 import db
 import nm.loader
 import TauLoad.Loader
+import memcachedwrapper
 
+# Memcached Preparation
+use_memcache = True
+memcached_conn = memcachedwrapper.MemcachedConnection(use_memcache,
+                                                      ['127.0.0.1:11211'])
+print memcached_conn
 
 def helloworld(request):
     #return HttpResponse("Hello World")
@@ -224,7 +231,7 @@ def getimage(request, imgpath):
     return response
 
 
-@cache_page(60 * 1)
+#@cache_page(60 * 1)
 def pgd1(request, order, sortmode, graphmode, pg1, pg2):
     """Show ProfGroup difference.
 
@@ -254,7 +261,6 @@ def pgd1(request, order, sortmode, graphmode, pg1, pg2):
                 "vmdfrmax": view_meter_diffratio_max,
                 }
     ## Sort order
-    print "order:" + order
     if order == "timediff":
         order_str = "ABS(pr1.excl_pe_rank_avg - pr2.excl_pe_rank_avg)"
     elif order == "speedup":
@@ -264,7 +270,6 @@ def pgd1(request, order, sortmode, graphmode, pg1, pg2):
     else:
         raise Http404
     ## Sort mode
-    print "sortmode:" + sortmode
     if sortmode == "asc":
         order_str += " ASC"
     elif sortmode == "desc":
@@ -293,7 +298,14 @@ ORDER BY ${order}
     r_main = ()
     r1_max, r2_max = 0, 0
     if pg1 != pg2:
-        r_main = conn.select(sql_str, (pg1, pg2))
+        mc_index = "diff_%s_%s" % (pg1, pg2)
+        trycache = memcached_conn.get(mc_index)
+        if trycache:
+            r_main = cPickle.loads(trycache)
+        else:
+            r_main = conn.select(sql_str, (pg1, pg2))
+            cachestr = cPickle.dumps(r_main)
+            memcached_conn.set(mc_index, cachestr)
         r1_max, r2_max = max(x[2] for x in r_main), max(x[4] for x in r_main)
     ## New comparison
     newc_colnames = ("PG L", "PG R",
@@ -328,7 +340,6 @@ ORDER BY pg.id
           ru2.ru_oublock - ru1.ru_oublock,
           time2 - time1,
           )
-    print rd
     imagefilename = gengraph(pg1, pg2, graphmode, r_main)
     return render_to_response('pgd1.html',
                               {"params": t_params,
@@ -414,12 +425,39 @@ plot \
                                 "out.eps",
                                 os.path.join("viewer", "data", image_filename)))
         sp2.wait()
-    os.unlink(tmpfilename)
+    try:
+        os.unlink(tmpfilename)
+    except:
+        pass
     print "DONE"
     return image_filename
 
 
-def style(request):
+def getstyle(request, stylefile):
+    """Returns stylesheet file.
+
+    @param request http request object
+    @param stylefile stylesheet file path in the template directory
     """
+    try:
+        with open(os.path.join("viewer", "templates", stylefile)) as f:
+            data = f.read()
+    except:
+        raise Http404
+    response = HttpResponse(data, mimetype='text/css')
+    return response
+
+
+def getjs(request, path):
+    """Returns javascript file.
+
+    @param request http request object
+    @param stylefile javascript file path in the template directory
     """
-    return render_to_response('style.css', {})
+    try:
+        with open(os.path.join("viewer", "templates", path)) as f:
+            data = f.read()
+    except:
+        raise Http404
+    response = HttpResponse(data, mimetype='text/javascript')
+    return response
