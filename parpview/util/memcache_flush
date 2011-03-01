@@ -1,0 +1,16 @@
+#!/usr/bin/env python
+
+
+import os
+import sys
+
+
+path = os.path.join("../viewer/")
+if path not in sys.path:
+    sys.path.append(path)
+
+import memcachedwrapper
+
+memcached_conn = memcachedwrapper.MemcachedConnection(True,
+                                                      ['127.0.0.1:11211'])
+memcached_conn.flush()
