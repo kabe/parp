@@ -24,7 +24,9 @@ import util
 import db
 import nm.loader
 import TauLoad.Loader
+
 import memcachedwrapper
+import getraw
 
 # Memcached Preparation
 use_memcache = True
@@ -213,24 +215,6 @@ ORDER BY pe_id
                                })
 
 
-def getimage(request, imgpath):
-    """Return image response.
-    
-    Arguments:
-    - `request`:
-    - `imgpath`:
-    """
-    with open(os.path.join("viewer", "data", imgpath)) as f:
-        try:
-            img_data = f.read()
-        except:
-            raise Http404
-        response = HttpResponse(img_data, mimetype='image/png')
-    
-    #response['Content-Disposition'] = 'attachment; filename=foo.xls'
-    return response
-
-
 #@cache_page(60 * 1)
 def pgd1(request, order, sortmode, graphmode, pg1, pg2):
     """Show ProfGroup difference.
@@ -355,6 +339,160 @@ ORDER BY pg.id
                                })
 
 
+def pgd2(request, order, sortmode, graphmode, pg1, pg2):
+    """Show ProfGroup difference.
+
+    @param request
+    @param order
+    @param sortmode
+    @param graphmode
+    @param pg1
+    @param pg2
+    """
+    view_meter_diffratio_max = 10.0
+    ru1 = resource.getrusage(resource.RUSAGE_SELF)
+    time1 = time.time()
+    params = ViewParam.objects.get()
+    dbtype = params.dbtype
+    if dbtype == "sqlite3":
+        conn = db.init("sqlite3", dbfile=params.sqlite3_file)
+    elif dbtype == "postgres":
+        conn = db.init("postgres", username="kabe", hostname="127.0.0.1")
+    else:
+        raise Http404
+    ## Param
+    stranger_diff_thresh = params.susp_thresh
+    t_params = {"stranger_diffpercent_thresh": stranger_diff_thresh * 100,
+                "stranger_diffpercent_thresh_neg": -stranger_diff_thresh * 100,
+                "susp_ratio_thresh": params.susp_ratio_thresh * 100,
+                "vmdfrmax": view_meter_diffratio_max,
+                }
+    ## Sort order
+    if order == "timediff":
+        order_str = "ABS(pr1.excl_pe_rank_avg - pr2.excl_pe_rank_avg)"
+    elif order == "speedup":
+        order_str = "ABS(pr1.excl_pe_rank_avg / pr2.excl_pe_rank_avg)"
+    elif order == "ratiodiff":
+        order_str = "ABS(pr1.ratio - pr2.ratio)"
+    else:
+        raise Http404
+    ## Sort mode
+    if sortmode == "asc":
+        order_str += " ASC"
+    elif sortmode == "desc":
+        order_str += " DESC"
+    else:
+        raise Http404
+    ## Main comparation SQL generation
+    # define view columns
+    ## dictionary of strings tuple: (key, value) = (definition, name)
+    view_columns = (
+        ("pr1.funcname", "funcname"),
+        ("pr1.ratio", "R1"),
+        ("pr1.excl_pe_rank_avg", "excl1"),
+        ("pr2.ratio", "R2"),
+        ("pr2.excl_pe_rank_avg", "excl2"),
+        ("(pr1.excl_pe_rank_avg / pr2.excl_pe_rank_avg)", "speedup"),
+        ("(pr1.ratio - pr2.ratio) * 100", "ratiodiff"),
+        ("(pr1.excl_pe_rank_avg - pr2.excl_pe_rank_avg)", "timediff"),
+        ("ABS(pr1.ratio - pr2.ratio) * 100", "absratiodiff"),
+        )
+    view_columns_joined_str = ", ".join(" AS ".join(vc)
+                                        for vc in view_columns)
+    #print view_columns_joined_str
+    # Joined tables (or views) definitions
+    joined_tables = (
+        ("(SELECT * FROM pgroup_ratio WHERE profgroup_id = ?)", "pr1"),
+        ("(SELECT * FROM pgroup_ratio WHERE profgroup_id = ?)", "pr2"),
+        )
+    joined_tables_joined_str = ", ".join(" ".join(jt) for jt in joined_tables)
+    #print "JOIN: " + joined_tables_joined_str
+    # Join conditions
+    join_conditions = [
+        "pr1.funcname = pr2.funcname",
+        ]
+    join_conditions_joined_str = " AND ".join(join_conditions)
+    # @TODO What should be the definition of "from" and join condition?
+    # should it be able to be specified by a user?
+    sql = """
+SELECT ${columns}
+FROM ${tables}
+WHERE ${join_conditions}
+ORDER BY ${order}
+;
+"""
+    sql_tpl = string.Template(sql)
+    sql_str = sql_tpl.substitute(columns=view_columns_joined_str,
+                                 tables=joined_tables_joined_str,
+                                 join_conditions=join_conditions_joined_str,
+                                 order=order_str,)
+    #print sql_str
+    r_main = ()
+    r1_max, r2_max = 0, 0
+    if pg1 != pg2:
+        mc_index = "diff_%s_%s_%s_%s_%s" % (order, sortmode, graphmode, pg1, pg2)
+        trycache = memcached_conn.get(mc_index)
+        if trycache:
+            r_main = cPickle.loads(trycache)
+        else:
+            r_main = conn.select(sql_str, (pg1, pg2))
+            cachestr = cPickle.dumps(r_main)
+            memcached_conn.set(mc_index, cachestr)
+        r1_max, r2_max = max(x[2] for x in r_main), max(x[4] for x in r_main)
+    ## New comparison
+    #print r_main
+    newc_colnames = ("PG L", "PG R",
+                     "Application", "Place", "# of nodes",
+                     "# of Processes", "Library", "Avg. Time", "StdDev.",
+                     "PG L2", "PG R2")
+    newc = """
+SELECT pg.id,
+       pg.application,
+       pg.place,
+       pg.nodes,
+       pg.procs,
+       pg.library,
+       pgm.avg_time,
+       pgm.var
+FROM profgroup AS pg,
+     pgroup_meta AS pgm
+WHERE pg.id = pgm.profgroup_id
+ORDER BY pg.id
+;
+"""
+    r_newc = conn.select(newc)
+    ## stddev
+    r_newc2 = (r[0:-1] + (math.sqrt(r[-1]),) for r in r_newc)
+    #print r_newc2
+    ## Log
+    ru2 = resource.getrusage(resource.RUSAGE_SELF)
+    time2 = time.time()
+    rd = (ru2.ru_utime - ru1.ru_utime,
+          ru2.ru_stime - ru1.ru_stime,
+          ru2.ru_inblock - ru1.ru_inblock,
+          ru2.ru_oublock - ru1.ru_oublock,
+          time2 - time1,
+          )
+    imagefilename = gengraph(pg1, pg2, graphmode, r_main)
+    return render_to_response('pgd1.html',
+                              {"params": t_params,
+                               "pg1": int(pg1),
+                               "pg2": int(pg2),
+                               "result": r_main,
+                               "rd": rd,
+                               "pg_maxs": (r1_max, r2_max),
+                               "imgfilename": imagefilename,
+                               "reqparams": {"graphmode": graphmode,
+                                             "order": order,
+                                             "sortmode": sortmode,}
+                               })
+
+
+##################################################
+###                 Utilities                  ###
+##################################################
+
+
 def gengraph(index_A, index_B, mode, funcs):
     """Generate GNUPLOT Graph.
     
@@ -433,19 +571,28 @@ plot \
     return image_filename
 
 
+##################################################
+###          Get raw file interfaces           ###
+##################################################
+
+
+def getpng(request, imgpath):
+    """Return image response.
+    
+    Arguments:
+    - `request`:
+    - `imgpath`:
+    """
+    return getraw.getpng(request, imgpath)
+
+
 def getstyle(request, stylefile):
     """Returns stylesheet file.
 
     @param request http request object
     @param stylefile stylesheet file path in the template directory
     """
-    try:
-        with open(os.path.join("viewer", "templates", stylefile)) as f:
-            data = f.read()
-    except:
-        raise Http404
-    response = HttpResponse(data, mimetype='text/css')
-    return response
+    return getraw.getstyle(request, stylefile)
 
 
 def getjs(request, path):
@@ -454,10 +601,4 @@ def getjs(request, path):
     @param request http request object
     @param stylefile javascript file path in the template directory
     """
-    try:
-        with open(os.path.join("viewer", "templates", path)) as f:
-            data = f.read()
-    except:
-        raise Http404
-    response = HttpResponse(data, mimetype='text/javascript')
-    return response
+    return getraw.getjs(request, path)
