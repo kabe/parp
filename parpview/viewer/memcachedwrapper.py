@@ -17,7 +17,6 @@ class MemcachedConnection(object):
             try:
                 import memcache
                 memcache_conn = memcache.Client(self._servers)
-                #memcache_conn.flush_all()
             except:
                 use_memcache = False
         self.conn = memcache_conn
@@ -27,6 +26,8 @@ class MemcachedConnection(object):
 
         @param key
         """
+        if not self._use:
+            return None
         obj = self.conn.get(str(key))
         return obj
 
@@ -38,6 +39,11 @@ class MemcachedConnection(object):
         """
         self.conn.set(str(key), value)
 
+    def flush(self, ):
+        """Flush memcached.
+        """
+        self.conn.flush_all()
+    
     def __str__(self, ):
         """str().
         """
