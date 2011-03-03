@@ -2,6 +2,13 @@
 div#cmptable {
     text-align: center;
 }
+div#container {
+    margin-left: auto;
+    margin-right: auto;
+    padding-left: auto;
+    padding-right: auto;
+    width: 80%;
+}
 
 /* Header */
 h1 {
@@ -13,6 +20,11 @@ h1 {
     padding-top: 2px;
 }
 /* Table */
+div#cmp table#cmptable {
+    margin-right: auto;
+    margin-left: auto;
+}
+
 th {
     border: solid 2px black;
 }
@@ -35,12 +47,17 @@ tr.showing td {
 td.numeric {
     text-align: right;
 }
+/* form */
+p.submit_p {
+    text-align: right;
+    margin-right: 30%;
+}
 /* image graph */
 p#graphimg {
     text-align: center;
 }
 p#graphimg img {
-    width: 60%;
+    width: 80%;
 }
 
 /* tooltip */

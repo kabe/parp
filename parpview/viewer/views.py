@@ -25,6 +25,7 @@ import db
 import nm.loader
 import TauLoad.Loader
 
+import default
 import memcachedwrapper
 import getraw
 
@@ -339,17 +340,15 @@ ORDER BY pg.id
                                })
 
 
-def pgd2(request, order, sortmode, graphmode, pg1, pg2):
+def pgd2(request, order, sortmode, pg1, pg2):
     """Show ProfGroup difference.
 
     @param request
     @param order
     @param sortmode
-    @param graphmode
     @param pg1
     @param pg2
     """
-    view_meter_diffratio_max = 10.0
     ru1 = resource.getrusage(resource.RUSAGE_SELF)
     time1 = time.time()
     params = ViewParam.objects.get()
@@ -360,22 +359,43 @@ def pgd2(request, order, sortmode, graphmode, pg1, pg2):
         conn = db.init("postgres", username="kabe", hostname="127.0.0.1")
     else:
         raise Http404
+    ## Request mode
+    graph_cols = {"y1": [], "y2": []}
+    if request.method == "POST":
+        graph_cols["y1"] = request.POST.getlist("graph_y1")
+        graph_cols["y2"] = request.POST.getlist("graph_y2")
+    else:  # default mode
+        graph_cols["y1"] = ("R1", "R2")
+        graph_cols["y2"] = ("excl1", "excl2")
+    print "Graph Parameters:"
+    print graph_cols
+    #print request.META
     ## Param
-    stranger_diff_thresh = params.susp_thresh
-    t_params = {"stranger_diffpercent_thresh": stranger_diff_thresh * 100,
-                "stranger_diffpercent_thresh_neg": -stranger_diff_thresh * 100,
-                "susp_ratio_thresh": params.susp_ratio_thresh * 100,
-                "vmdfrmax": view_meter_diffratio_max,
-                }
+    t_params = {}
+    ## Main comparation SQL generation
+    # define view columns
+    ## dictionary of strings tuple: (key, value) = (definition, name)
+    view_columns = default.view_columns
+    view_columns_joined_str = ", ".join(" AS ".join(vc)
+                                        for vc in view_columns)
+    #print view_columns_joined_str
+    checked_radios = determine_checked_radios(view_columns, graph_cols)
+    ## Joined tables (or views) definitions
+    joined_tables = (
+        ("(SELECT * FROM pgroup_ratio WHERE profgroup_id = ?)", "pr1"),
+        ("(SELECT * FROM pgroup_ratio WHERE profgroup_id = ?)", "pr2"),
+        )
+    joined_tables_joined_str = ", ".join(" ".join(jt) for jt in joined_tables)
+    ## Join conditions
+    join_conditions = [
+        "pr1.funcname = pr2.funcname",
+        ]
+    join_conditions_joined_str = " AND ".join(join_conditions)
     ## Sort order
-    if order == "timediff":
-        order_str = "ABS(pr1.excl_pe_rank_avg - pr2.excl_pe_rank_avg)"
-    elif order == "speedup":
-        order_str = "ABS(pr1.excl_pe_rank_avg / pr2.excl_pe_rank_avg)"
-    elif order == "ratiodiff":
-        order_str = "ABS(pr1.ratio - pr2.ratio)"
-    else:
+    column_names = (x[1] for x in view_columns)
+    if order not in column_names:
         raise Http404
+    order_str = order
     ## Sort mode
     if sortmode == "asc":
         order_str += " ASC"
@@ -383,35 +403,6 @@ def pgd2(request, order, sortmode, graphmode, pg1, pg2):
         order_str += " DESC"
     else:
         raise Http404
-    ## Main comparation SQL generation
-    # define view columns
-    ## dictionary of strings tuple: (key, value) = (definition, name)
-    view_columns = (
-        ("pr1.funcname", "funcname"),
-        ("pr1.ratio", "R1"),
-        ("pr1.excl_pe_rank_avg", "excl1"),
-        ("pr2.ratio", "R2"),
-        ("pr2.excl_pe_rank_avg", "excl2"),
-        ("(pr1.excl_pe_rank_avg / pr2.excl_pe_rank_avg)", "speedup"),
-        ("(pr1.ratio - pr2.ratio) * 100", "ratiodiff"),
-        ("(pr1.excl_pe_rank_avg - pr2.excl_pe_rank_avg)", "timediff"),
-        ("ABS(pr1.ratio - pr2.ratio) * 100", "absratiodiff"),
-        )
-    view_columns_joined_str = ", ".join(" AS ".join(vc)
-                                        for vc in view_columns)
-    #print view_columns_joined_str
-    # Joined tables (or views) definitions
-    joined_tables = (
-        ("(SELECT * FROM pgroup_ratio WHERE profgroup_id = ?)", "pr1"),
-        ("(SELECT * FROM pgroup_ratio WHERE profgroup_id = ?)", "pr2"),
-        )
-    joined_tables_joined_str = ", ".join(" ".join(jt) for jt in joined_tables)
-    #print "JOIN: " + joined_tables_joined_str
-    # Join conditions
-    join_conditions = [
-        "pr1.funcname = pr2.funcname",
-        ]
-    join_conditions_joined_str = " AND ".join(join_conditions)
     # @TODO What should be the definition of "from" and join condition?
     # should it be able to be specified by a user?
     sql = """
@@ -430,7 +421,7 @@ ORDER BY ${order}
     r_main = ()
     r1_max, r2_max = 0, 0
     if pg1 != pg2:
-        mc_index = "diff_%s_%s_%s_%s_%s" % (order, sortmode, graphmode, pg1, pg2)
+        mc_index = "diff_%s_%s_%s_%s" % (order, sortmode, pg1, pg2)
         trycache = memcached_conn.get(mc_index)
         if trycache:
             r_main = cPickle.loads(trycache)
@@ -473,18 +464,22 @@ ORDER BY pg.id
           ru2.ru_oublock - ru1.ru_oublock,
           time2 - time1,
           )
-    imagefilename = gengraph(pg1, pg2, graphmode, r_main)
-    return render_to_response('pgd1.html',
-                              {"params": t_params,
+    imagefilename = gengraph(pg1, pg2, r_main, order,
+                             view_columns, graph_cols)
+    return render_to_response('pgd2.html',
+                              {"self_path": request.path,
+                               "params": t_params,
+                               "cols": view_columns,
                                "pg1": int(pg1),
                                "pg2": int(pg2),
                                "result": r_main,
                                "rd": rd,
                                "pg_maxs": (r1_max, r2_max),
                                "imgfilename": imagefilename,
-                               "reqparams": {"graphmode": graphmode,
-                                             "order": order,
-                                             "sortmode": sortmode,}
+                               "reqparams": {"order": order,
+                                             "sortmode": sortmode,
+                                             "path": request.path,},
+                               "checked_radios": checked_radios,
                                })
 
 
@@ -493,14 +488,17 @@ ORDER BY pg.id
 ##################################################
 
 
-def gengraph(index_A, index_B, mode, funcs):
+def gengraph(index_A, index_B, funcs, order, colinfo, cols):
     """Generate GNUPLOT Graph.
     
     @param index_A index for A
     @param index_B index for B
-    @param mode "exectime" or "ratio"
     @param funcs
+    @param order sort order column name
+    @param colinfo names of columns
+    @param cols column names of y1 and y2
     """
+    graph_width = 4
     plot_template = """reset
 set terminal postscript eps color "Gothic-BBB-EUC-H" 96
 set size 4
@@ -510,50 +508,82 @@ set grid
 set key above
 ${xtics_conf}
 set xtics rotate
+set y2tics
 plot \
-    "${datafile}" using ($1-2):${col_A}:(4) title "A" w boxes fs solid 1, \
-    "${datafile}" using ($1+2):${col_B}:(4) title "B" w boxes fs solid 1
+    ${plines}
 """
+    pl_template = '"${datafile}" using ($1${goffset}):${col_index}:(${gwidth})' \
+        ' title "${colname}" w boxes fs solid 1 axis ${axis}'
     template = string.Template(plot_template)
+    pltemplate = string.Template(pl_template)
     # Determine image file name
     cur_time = time.time()
     image_filename = str(cur_time) + ".png"
+    # Graph title
+    title = "%s (order %s)" % (", ".join(cols["y1"]  + cols["y2"]), order)
+    # Graph scale calc
+    graph_interval = 4 * (len(cols["y1"]) + len(cols["y2"])) + 2
+    print "Graph Interval = %d" % (graph_interval)
     # xtics
-    xtics_t = """set xtics(${conf})"""
+    xtics_t = "set xtics(${conf})"
     xtics_tt = string.Template(xtics_t)
-    xtics_list = []
-    if mode == "exectime":
-        title = "Execution Time"
-        col_A = 2
-        col_B = 3
-    elif mode == "ratio":
-        title = "Ratio"
-        col_A = 5
-        col_B = 6
-    else:
-        raise Http404
-    label_A = str(index_A)
-    label_B = str(index_B)
+    xtics_list = []  # will be a function name list
     timedata = ""
-    line_t = "${index} ${t1} ${t2} ${ratio} ${r1} ${r2} ${rdiff}" + "\n"
-    tt = string.Template(line_t)
     for i, t in enumerate(funcs):
+        goffset = i * graph_interval
         #print i, t
         if i >= 10: break
-        ts = tt.safe_substitute(index=i * 10,
-                                t1=t[2], t2=t[4], ratio=t[5],
-                                r1=t[1], r2=t[3], rdiff=t[6])
+        ts = "%d " % (goffset) + " ".join(str(x) for x in t) + "\n"
         timedata += ts
-        xtics_list.append('"' + t[0][:-2] + '"' + " " + str(i * 10))
+        xtics_list.append('"' + t[0][:-2] + '"' + " " + str(i * graph_interval))
     tmpfilename = os.tmpnam()
     xtics_conf = xtics_tt.substitute(conf=",".join(xtics_list))
+    # make plines
+    lines = {"y1": "", "y2": ""}
+    ## X
+    ss = []
+    for i, valcolumn in enumerate(cols["y1"]):
+        graph_offset = graph_width * (i + 0.5) - \
+            ((graph_interval - graph_width / 2) / 2)
+        ss.append(pltemplate.safe_substitute(
+                col_index=str([x[1] for x in colinfo].index(valcolumn) + 2),
+                axis="x1y1",
+                datafile=tmpfilename,
+                goffset="%+d" % (graph_offset),
+                gwidth=graph_width,
+                colname=valcolumn,))
+    lines["y1"] = ", ".join(ss)
+    ## Y
+    ss = []
+    for i, valcolumn in enumerate(cols["y2"]):
+        k = i + len(cols["y1"])
+        graph_offset = graph_width * (k + 0.5) - \
+            ((graph_interval - graph_width / 2) / 2)
+        ss.append(pltemplate.safe_substitute(
+                col_index=str([x[1] for x in colinfo].index(valcolumn) + 2),
+                axis="x1y2",
+                datafile=tmpfilename,
+                goffset="%+d" % (graph_offset),
+                gwidth=graph_width,
+                colname=valcolumn,))
+    lines["y2"] = ", ".join(ss)
+    if lines["y1"] and lines["y2"]:
+        plines = ", ".join(lines.values())
+    elif lines["y1"]:
+        plines = lines["y1"]
+    elif lines["y2"]:
+        plines = lines["y2"]
+    else:
+        raise Http404
+    # Main
     s = template.safe_substitute(title=title,
                                  datafile=tmpfilename,
                                  xtics_conf=xtics_conf,
-                                 col_A=col_A,
-                                 col_B=col_B)
+                                 plines=plines)
+    print s
     with open(tmpfilename, "w") as f:
         f.write(timedata.strip())
+        print timedata
         f.close()
         sp = subprocess.Popen(("gnuplot",), stdin=subprocess.PIPE)
         sp.stdin.write(s)
@@ -569,6 +599,25 @@ plot \
         pass
     print "DONE"
     return image_filename
+
+
+def determine_checked_radios(cols, graphcols):
+    """
+    @param cols Columns for rendering a table
+    @param graphcols Columns dictionary of checked columns
+    """
+    d = {"y1": None, "y2": None}
+    # Init
+    for y in d.keys():
+        d[y] = []
+        for i, col in enumerate(cols):
+            d[y].append("")
+    # Toggle
+    for y in d.keys():
+        for col in graphcols[y]:
+            index = [x[1] for x in cols].index(col)
+            d[y][index] = 'checked="checked"'
+    return d
 
 
 ##################################################
