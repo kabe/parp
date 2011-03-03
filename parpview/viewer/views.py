@@ -509,7 +509,7 @@ def gengraph(index_A, index_B, funcs, order, colinfo, cols):
     """
     graph_width = 4
     plot_template = """reset
-set terminal postscript eps color "Gothic-BBB-EUC-H" 96
+set terminal postscript eps enhanced color "Gothic-BBB-EUC-H" 96
 set size 4
 set title "${title}"
 set output "out.eps"
@@ -529,7 +529,8 @@ plot \
     cur_time = time.time()
     image_filename = str(cur_time) + ".png"
     # Graph title
-    title = "%s (order %s)" % (", ".join(cols["y1"]  + cols["y2"]), order)
+    title = "%s \\n (order %s)" % \
+        (", ".join(cols["y1"]  + cols["y2"]).replace("_", "\\\\_"), order)
     # Graph scale calc
     graph_interval = 4 * (len(cols["y1"]) + len(cols["y2"])) + 2
     print "Graph Interval = %d" % (graph_interval)
@@ -546,7 +547,8 @@ plot \
         timedata += ts
         xtics_list.append('"' + t[0][:-2] + '"' + " " + str(i * graph_interval))
     tmpfilename = os.tmpnam()
-    xtics_conf = xtics_tt.substitute(conf=",".join(xtics_list))
+    xtics_conf = xtics_tt.substitute(
+        conf=",".join(xtics_list).replace("_", "\\\\_"))
     # make plines
     lines = {"y1": "", "y2": ""}
     ## X
@@ -616,6 +618,8 @@ def determine_checked_radios(cols, graphcols):
     @param graphcols Columns dictionary of checked columns
     """
     d = {"y1": None, "y2": None}
+    print cols
+    print graphcols
     # Init
     for y in d.keys():
         d[y] = []
@@ -626,6 +630,7 @@ def determine_checked_radios(cols, graphcols):
         for col in graphcols[y]:
             index = [x[1] for x in cols].index(col)
             d[y][index] = 'checked="checked"'
+    print d
     return d
 
 
