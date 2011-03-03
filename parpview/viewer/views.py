@@ -49,6 +49,15 @@ def pgd1_dummy(request):
     return HttpResponseRedirect("/pgd1/ratiodiff/desc/ratio/1/7/")
 
 
+def pgd2_dummy(request):
+    """redirector
+    
+    Arguments:
+    - `request`:
+    """
+    return HttpResponseRedirect("/pgd2/ratiodiff/desc/1/7/")
+
+
 def usetemplate(request):
     return render_to_response('ut.html',
                               {"hensu1": "HENSU1",
