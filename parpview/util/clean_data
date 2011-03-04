@@ -1,0 +1,5 @@
+#!/bin/sh
+
+datadir="../viewer/data/"
+
+find $datadir -name '*.png' | xargs rm
