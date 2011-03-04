@@ -55,7 +55,7 @@ def pgd2_dummy(request):
     Arguments:
     - `request`:
     """
-    return HttpResponseRedirect("/pgd2/desc/1/7/")
+    return HttpResponseRedirect("/pgd2/desc/")
 
 
 def usetemplate(request):
@@ -350,13 +350,11 @@ ORDER BY pg.id
                                })
 
 
-def pgd2(request, sortmode, pg1, pg2):
+def pgd2(request, sortmode):
     """Show ProfGroup difference.
 
     @param request
     @param sortmode
-    @param pg1
-    @param pg2
     """
     ru1 = resource.getrusage(resource.RUSAGE_SELF)
     time1 = time.time()
