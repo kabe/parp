@@ -55,7 +55,7 @@ def pgd2_dummy(request):
     Arguments:
     - `request`:
     """
-    return HttpResponseRedirect("/pgd2/ratiodiff/desc/1/7/")
+    return HttpResponseRedirect("/pgd2/desc/1/7/")
 
 
 def usetemplate(request):
@@ -292,10 +292,11 @@ ORDER BY ${order}
     r_main = ()
     r1_max, r2_max = 0, 0
     if pg1 != pg2:
-        mc_index = "diff_%s_%s" % (pg1, pg2)
+        mc_index = "diff_%s" % (sql_str)
         trycache = memcached_conn.get(mc_index)
         if trycache:
             r_main = cPickle.loads(trycache)
+            print "Cached"
         else:
             r_main = conn.select(sql_str, (pg1, pg2))
             cachestr = cPickle.dumps(r_main)
@@ -349,11 +350,10 @@ ORDER BY pg.id
                                })
 
 
-def pgd2(request, order, sortmode, pg1, pg2):
+def pgd2(request, sortmode, pg1, pg2):
     """Show ProfGroup difference.
 
     @param request
-    @param order
     @param sortmode
     @param pg1
     @param pg2
@@ -397,7 +397,7 @@ def pgd2(request, order, sortmode, pg1, pg2):
         graph_cols["y2"] = ("excl1", "excl2")
         pgs = [20, 22]
         view_columns = default.view_columns
-        #order = default.order
+        order = default.order
         #sortmode = default.sortmode
     print pgs
     print "Graph Parameters:"
