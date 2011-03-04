@@ -52,7 +52,7 @@ Users can define their own columns freely
         <input type="text" name="new_colname_{{ x }}" size="15" value="" />
       </td>
       <td>
-        <input type="radio" name="order" value="{{ x }}" />
+        <input type="radio" name="order" value="{{ cols|length|add:x }}" />
       </td>
     </tr>
   {% endfor %}
