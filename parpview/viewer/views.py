@@ -370,21 +370,46 @@ def pgd2(request, order, sortmode, pg1, pg2):
         raise Http404
     ## Request mode
     graph_cols = {"y1": [], "y2": []}
+    pgs = []
     if request.method == "POST":
+        print "POST Parameters:"
+        print request.POST
         graph_cols["y1"] = request.POST.getlist("graph_y1")
         graph_cols["y2"] = request.POST.getlist("graph_y2")
+        pgs = [request.POST["pg1"], request.POST["pg2"]]
+        ##### Column definitions #####
+        existinig_usecol_indeces = request.POST.getlist("use_flag")
+        existing_usecols = tuple((request.POST["coldef_%s" % (ind)],
+                                  request.POST["colname_%s" % (ind)])
+                                 for ind in existinig_usecol_indeces)
+        print existing_usecols
+        new_usecol_indeces = request.POST.getlist("use_flag_new")
+        new_usecols = tuple((request.POST["new_coldef_%s" % (ind)],
+                             request.POST["new_colname_%s" % (ind)])
+                            for ind in new_usecol_indeces)
+        print new_usecols
+        view_columns = existing_usecols + new_usecols
+        ## Order
+        post_order_idx = int(request.POST["order"])
+        order = view_columns[post_order_idx][1]
     else:  # default mode
         graph_cols["y1"] = ("R1", "R2")
         graph_cols["y2"] = ("excl1", "excl2")
+        pgs = [20, 22]
+        view_columns = default.view_columns
+        #order = default.order
+        #sortmode = default.sortmode
+    print pgs
     print "Graph Parameters:"
     print graph_cols
     #print request.META
     ## Param
     t_params = {}
-    ## Main comparation SQL generation
+    coldef_params = {}
+    coldef_params["newcols"] = [x for x in xrange(5)]  # new columns defs
+    ##### Main comparation SQL generation #####
     # define view columns
     ## dictionary of strings tuple: (key, value) = (definition, name)
-    view_columns = default.view_columns
     view_columns_joined_str = ", ".join(" AS ".join(vc)
                                         for vc in view_columns)
     #print view_columns_joined_str
@@ -429,22 +454,21 @@ ORDER BY ${order}
     #print sql_str
     r_main = ()
     r1_max, r2_max = 0, 0
-    if pg1 != pg2:
-        mc_index = "diff_%s_%s_%s_%s" % (order, sortmode, pg1, pg2)
+    if pgs[0] != pgs[1]:
+        mc_index = "diff_%s_%s_%s_%s" % (order, sortmode, pgs[0], pgs[1])
         trycache = memcached_conn.get(mc_index)
         if trycache:
             r_main = cPickle.loads(trycache)
         else:
-            r_main = conn.select(sql_str, (pg1, pg2))
+            r_main = conn.select(sql_str, (pgs[0], pgs[1]))
             cachestr = cPickle.dumps(r_main)
             memcached_conn.set(mc_index, cachestr)
         r1_max, r2_max = max(x[2] for x in r_main), max(x[4] for x in r_main)
-    ## New comparison
+    ##### New comparison #####
     #print r_main
-    newc_colnames = ("PG L", "PG R",
+    newc_colnames = ("PG 1", "PG 2",
                      "Application", "Place", "# of nodes",
-                     "# of Processes", "Library", "Avg. Time", "StdDev.",
-                     "PG L2", "PG R2")
+                     "# of Processes", "Library", "Avg. Time", "StdDev.",)
     newc = """
 SELECT pg.id,
        pg.application,
@@ -473,15 +497,17 @@ ORDER BY pg.id
           ru2.ru_oublock - ru1.ru_oublock,
           time2 - time1,
           )
-    imagefilename = gengraph(pg1, pg2, r_main, order,
+    imagefilename = gengraph(pgs[0], pgs[1], r_main, order,
                              view_columns, graph_cols)
     return render_to_response('pgd2.html',
                               {"self_path": request.path,
                                "params": t_params,
                                "cols": view_columns,
-                               "pg1": int(pg1),
-                               "pg2": int(pg2),
+                               "pg1": int(pgs[0]),
+                               "pg2": int(pgs[1]),
                                "result": r_main,
+                               "rnc_n": newc_colnames,
+                               "rnc": r_newc2,
                                "rd": rd,
                                "pg_maxs": (r1_max, r2_max),
                                "imgfilename": imagefilename,
@@ -489,6 +515,7 @@ ORDER BY pg.id
                                              "sortmode": sortmode,
                                              "path": request.path,},
                                "checked_radios": checked_radios,
+                               "coldef_params": coldef_params,
                                })
 
 

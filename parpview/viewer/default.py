@@ -13,3 +13,7 @@ view_columns = (
     ("(pr1.excl_pe_rank_avg - pr2.excl_pe_rank_avg)", "timediff"),
     ("ABS(pr1.ratio - pr2.ratio)", "absratiodiff"),
     )
+
+order = "excl1"
+
+sortmode = "desc"

@@ -1,0 +1,59 @@
+{% comment %}
+Column definitions
+Users can define their own columns freely
+{% endcomment %}
+
+<h2>Column Definitions</h2>
+<table>
+  <tr>
+    {# 1 #}
+    <th>Use this column?</th>
+    {# 2 #}
+    <th>Column definition SQL</th>
+    {# 3 #}
+    <th>Column Name</th>
+    {# 4 #}
+    <th>ORDER BY</th>
+  </tr>
+  {# Columns currently used #}
+  {% for col in cols %}
+    <tr>
+      <td>
+        <input type="checkbox" name="use_flag" value="{{ forloop.counter0 }}"
+               checked="checked" />
+      </td>
+      <td>
+        <input type="text" name="coldef_{{ forloop.counter0 }}" size="40"
+               value="{{ col.0 }}" />
+      </td>
+      <td>
+        <input type="text" name="colname_{{ forloop.counter0 }}" size="15"
+               value="{{ col.1 }}" />
+      </td>
+      <td>
+        <input type="radio" name="order" value="{{ forloop.counter0 }}"
+               {% ifequal reqparams.order col.1 %}
+               checked="checked"
+               {% endifequal %}
+               />
+      </td>
+    </tr>
+  {% endfor %}
+  {# New Columns #}
+  {% for x in coldef_params.newcols %}
+    <tr>
+      <td>
+        <input type="checkbox" name="use_flag_new" value="{{ x }}" />
+      </td>
+      <td>
+        <input type="text" name="new_coldef_{{ x }}" size="40" value="" />
+      </td>
+      <td>
+        <input type="text" name="new_colname_{{ x }}" size="15" value="" />
+      </td>
+      <td>
+        <input type="radio" name="order" value="{{ x }}" />
+      </td>
+    </tr>
+  {% endfor %}
+</table>

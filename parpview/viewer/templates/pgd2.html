@@ -44,11 +44,13 @@
               <th>
                 {{ colname }}
                 {% if forloop.counter0 > 0 %}
+                {% comment %}
                   {% ifnotequal colname reqparams.order %}
                   <a href="/pgd2/{{colname}}/desc/{{pg1}}/{{pg2}}">
                     &#9660;
                   </a>
                   {% endifnotequal %}
+                {% endcomment %}
                   <br />
                   <label id="label_graph_y1" for="graph_y1">y1</label>
                   <input name="graph_y1" type="checkbox" value="{{ colname }}"
@@ -79,6 +81,14 @@
             </tr>
             {% endfor %}
           </table>
+          <p class="submit_p">
+            <input type="submit" value="Create Graph!" />
+          </p>
+          {% include "pgd/newcomp.html" %}
+          <p class="submit_p">
+            <input type="submit" value="Create Graph!" />
+          </p>
+          {% include "pgd/columndef.html" %}
           <p class="submit_p">
             <input type="submit" value="Create Graph!" />
           </p>

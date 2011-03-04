@@ -1,0 +1,49 @@
+{% comment %}
+@param rnc_n column name list
+@param rnc column data list (list list)
+{% endcomment %}
+
+<h2>Select new comparisons</h2>
+<table>
+  <tr>
+    {% for n in rnc_n %}
+    <th>{{ n }}</th>
+    {% endfor %}
+  </tr>
+  {% for pg in rnc %}
+    {% if pg.0 == pg1 or pg.0 == pg2 %}
+      <tr class="showing">
+    {% else %}
+      <tr>
+    {% endif%}
+    {# 1: PG1 #}
+    <td>
+      <input type="radio" name="pg1" value="{{ pg.0 }}"
+             {% ifequal pg.0 pg1 %} checked="checked" {% endifequal %} />
+    </td>
+    {# 2: PG2 #}
+    <td>
+      <input type="radio" name="pg2" value="{{ pg.0 }}"
+             {% ifequal pg.0 pg2 %} checked="checked" {% endifequal %} />
+    </td>
+    {# 3 #}
+    <td><a href="/pgview/{{ pg.0 }}">{{ pg.1 }}</a></td>
+    {# 4 #}
+    <td>{{ pg.2 }}</td>
+    {# 5 #}
+    <td>{{ pg.3 }}</td>
+    {# 6 #}
+    <td>{{ pg.4 }}</td>
+    {# 7 #}
+    <td>{{ pg.5 }}</td>
+    {# 8 #}
+    {% if pg.6 < pg.7 %}
+      <td class="strange">{{ pg.6 }}</td>
+      <td class="strange">{{ pg.7|floatformat:4 }}</td>
+    {% else %}
+      <td>{{ pg.6 }}</td>
+      <td>{{ pg.7|floatformat:4 }}</td>
+    {% endif %}
+  </tr>
+  {% endfor %}
+</table>
