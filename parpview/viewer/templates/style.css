@@ -20,17 +20,22 @@ h1 {
     padding-top: 2px;
 }
 /* Table */
+table {
+    border-collapse: collapse;
+    border-color: #ff00bfff;
+}
 div#cmp table#cmptable {
     margin-right: auto;
     margin-left: auto;
 }
 
 th {
-    border: solid 2px black;
+    border: solid 2px #00bfff;
 }
 td {
-    border: solid 1px black;
+    border: solid 1px #00bfff;
     text-align: left;
+    padding: 1px 1ex 1px 1ex;
 }
 td.pg2slow {
     background-color: #ff9966;
@@ -39,10 +44,10 @@ td.pg1slow {
     background-color: #6699ff;
 }
 td.strange {
-    color: #ff9966;
+    color: #ff3333;
 }
 tr.showing td {
-    background-color: #00cc66;
+    background-color: #00bfff;
 }
 td.numeric {
     text-align: right;

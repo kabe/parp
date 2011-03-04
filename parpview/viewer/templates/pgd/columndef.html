@@ -3,15 +3,15 @@ Column definitions
 Users can define their own columns freely
 {% endcomment %}
 
-<h2>Column Definitions</h2>
-<table>
+<h1 id="coldef">Column Definitions</h1>
+<table id="coldef_table">
   <tr>
     {# 1 #}
-    <th>Use this column?</th>
+    <th>Use?</th>
     {# 2 #}
-    <th>Column definition SQL</th>
-    {# 3 #}
     <th>Column Name</th>
+    {# 3 #}
+    <th>Column definition SQL</th>
     {# 4 #}
     <th>ORDER BY</th>
   </tr>
@@ -23,12 +23,12 @@ Users can define their own columns freely
                checked="checked" />
       </td>
       <td>
-        <input type="text" name="coldef_{{ forloop.counter0 }}" size="40"
-               value="{{ col.0 }}" />
-      </td>
-      <td>
         <input type="text" name="colname_{{ forloop.counter0 }}" size="15"
                value="{{ col.1 }}" />
+      </td>
+      <td>
+        <input type="text" name="coldef_{{ forloop.counter0 }}" size="40"
+               value="{{ col.0 }}" />
       </td>
       <td>
         <input type="radio" name="order" value="{{ forloop.counter0 }}"
@@ -46,10 +46,10 @@ Users can define their own columns freely
         <input type="checkbox" name="use_flag_new" value="{{ x }}" />
       </td>
       <td>
-        <input type="text" name="new_coldef_{{ x }}" size="40" value="" />
+        <input type="text" name="new_colname_{{ x }}" size="15" value="" />
       </td>
       <td>
-        <input type="text" name="new_colname_{{ x }}" size="15" value="" />
+        <input type="text" name="new_coldef_{{ x }}" size="40" value="" />
       </td>
       <td>
         <input type="radio" name="order" value="{{ cols|length|add:x }}" />

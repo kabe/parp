@@ -11,17 +11,19 @@
       <div id="toc">
       </div>
       {% if pg1 != pg2 %}
-      <h1 id="cmptable">
-        Compare ProfGroup
+      <h1>
+        Comparison Graph between
         <a id="toplink_pg1" href="/pgview/{{ pg1 }}" onMouseOver="teston();" onMouseOut="testoff();">{{ pg1 }}</a>
         and
         <a id="toplink_pg2" href="/pgview/{{ pg2 }}">{{ pg2 }}</a>
       </h1>
-      <h2>Comparation Graph</h2>
       <p id="graphimg">
+        {{ graph_title }}
+        <br />
         <img src="/img/{{ imgfilename }}" />
       </p>
       {# Tooltip #}
+      {% comment %}
       {% for func in result %}
       <div class="dtip" id="tip_rmpg1_{{ forloop.counter0 }}" style="display:none;">
         {{ func.1|floatformat:5 }}
@@ -30,10 +32,11 @@
         {{ func.3|floatformat:5 }}
       </div>
       {% endfor %}
+      {% endcomment %}
       {# Tooltip End #}
       <div id="cmp">
-        <h2>Comparation Table</h2>
-        <form method="POST" action="{{ reqparams.path }}" target="_self">
+        <h1 id="cmptable">Comparison Table</h1>
+        <form method="POST" action="{{ reqparams.path }}" target="_self" id="choiceform">
           <p class="submit_p">
             <input type="submit" value="Create Graph!" />
           </p>

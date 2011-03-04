@@ -464,8 +464,9 @@ ORDER BY ${order}
     ##### New comparison #####
     #print r_main
     newc_colnames = ("PG 1", "PG 2",
-                     "Application", "Place", "# of nodes",
-                     "# of Processes", "Library", "Avg. Time", "StdDev.",)
+                     "Application", "Comment", "Place",
+                     "# of nodes", "# of Processes",
+                     "Avg. Time [sec]", "StdDev. [sec]",)
     newc = """
 SELECT pg.id,
        pg.application,
@@ -513,6 +514,7 @@ ORDER BY pg.id
                                              "path": request.path,},
                                "checked_radios": checked_radios,
                                "coldef_params": coldef_params,
+                               "graph_title": graphtitle,
                                })
 
 
@@ -535,10 +537,11 @@ def gengraph(index_A, index_B, funcs, order, colinfo, cols):
     plot_template = """reset
 set terminal postscript eps enhanced color "Gothic-BBB-EUC-H" 96
 set size 4
-set title "${title}"
 set output "out.eps"
 set grid
 set key above
+set ylabel "${y1label}"
+set y2label "${y2label}"
 ${xtics_conf}
 set xtics rotate
 set y2tics
@@ -553,8 +556,11 @@ plot \
     cur_time = time.time()
     image_filename = str(cur_time) + ".png"
     # Graph title
-    title = "%s \\n (order %s)" % \
-        (", ".join(cols["y1"]  + cols["y2"]).replace("_", "\\\\_"), order)
+    # title = "%s \\n (order %s)" % \
+    #     (", ".join(cols["y1"]  + cols["y2"]).replace("_", "\\\\_"), order)
+    title = "Order by %s" % (order)
+    y1label = "%s" % (", ".join(cols["y1"]).replace("_", "\\\\_"))
+    y2label = "%s" % (", ".join(cols["y2"]).replace("_", "\\\\_"))
     # Graph scale calc
     graph_interval = 4 * (len(cols["y1"]) + len(cols["y2"])) + 2
     print "Graph Interval = %d" % (graph_interval)
@@ -614,7 +620,9 @@ plot \
     s = template.safe_substitute(title=title,
                                  datafile=tmpfilename,
                                  xtics_conf=xtics_conf,
-                                 plines=plines)
+                                 plines=plines,
+                                 y1label=y1label,
+                                 y2label=y2label,)
     print s
     with open(tmpfilename, "w") as f:
         f.write(timedata.strip())
@@ -633,7 +641,7 @@ plot \
     except:
         pass
     print "DONE"
-    return image_filename
+    return title, image_filename
 
 
 def determine_checked_radios(cols, graphcols):
@@ -642,7 +650,9 @@ def determine_checked_radios(cols, graphcols):
     @param graphcols Columns dictionary of checked columns
     """
     d = {"y1": None, "y2": None}
+    print "cols:"
     print cols
+    print "graphcols:"
     print graphcols
     # Init
     for y in d.keys():
@@ -652,7 +662,10 @@ def determine_checked_radios(cols, graphcols):
     # Toggle
     for y in d.keys():
         for col in graphcols[y]:
-            index = [x[1] for x in cols].index(col)
+            try:
+                index = [x[1] for x in cols].index(col)
+            except:
+                raise
             d[y][index] = 'checked="checked"'
     print d
     return d
