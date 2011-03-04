@@ -391,8 +391,7 @@ def pgd2(request, sortmode):
         post_order_idx = int(request.POST["order"])
         order = view_columns[post_order_idx][1]
     else:  # default mode
-        graph_cols["y1"] = ("R1", "R2")
-        graph_cols["y2"] = ("excl1", "excl2")
+        graph_cols = default.graph_cols
         pgs = [20, 22]
         view_columns = default.view_columns
         order = default.order
@@ -495,7 +494,7 @@ ORDER BY pg.id
           ru2.ru_oublock - ru1.ru_oublock,
           time2 - time1,
           )
-    imagefilename = gengraph(pgs[0], pgs[1], r_main, order,
+    graphtitle, imagefilename = gengraph(pgs[0], pgs[1], r_main, order,
                              view_columns, graph_cols)
     return render_to_response('pgd2.html',
                               {"self_path": request.path,
