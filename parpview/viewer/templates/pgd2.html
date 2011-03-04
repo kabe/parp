@@ -47,13 +47,11 @@
               <th>
                 {{ colname }}
                 {% if forloop.counter0 > 0 %}
-                {% comment %}
                   {% ifnotequal colname reqparams.order %}
-                  <a href="/pgd2/{{colname}}/desc/{{pg1}}/{{pg2}}">
+                  <span class="sort_link" onClick="submitform({{ forloop.counter0 }});">
                     &#9660;
-                  </a>
+                  </span>
                   {% endifnotequal %}
-                {% endcomment %}
                   <br />
                   <label id="label_graph_y1" for="graph_y1">y1</label>
                   <input name="graph_y1" type="checkbox" value="{{ colname }}"
@@ -69,7 +67,7 @@
             </tr>
             <!-- contents -->
             {% for func in result %}
-            <tr>
+            <tr{% if forloop.counter0 >= 10 %} style="display:none;" class="hiddentrs"{% endif %}>
               {% for col in func %}
               {% if forloop.counter0 == 0 %}
               <td>
@@ -82,6 +80,17 @@
               {% endif %}
               {% endfor %}
             </tr>
+            {# Seemore #}
+            {% if forloop.counter0 == 9 %}
+              <tr id="seemore_tr">
+                <td colspan="{{ result.0|length }}"><a id="seemore_a" href="#cmptable" onClick="seemorefunc();">See more ...</a></td>
+              </tr>
+            {% endif %}
+            {% if forloop.last %}
+              <tr id="hide_tr" style="display: none;">
+                <td colspan="7"><a id="hide_a" href="#cmptable" onClick="hidefunc();">Hide tail ...</a></td>
+              </tr>
+            {% endif %}
             {% endfor %}
           </table>
           <p class="submit_p">

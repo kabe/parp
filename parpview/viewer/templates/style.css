@@ -28,7 +28,11 @@ div#cmp table#cmptable {
     margin-right: auto;
     margin-left: auto;
 }
-
+tr.hiddentrs {
+}
+tr#hide_tr {
+    
+}
 th {
     border: solid 2px #00bfff;
 }
@@ -64,7 +68,10 @@ p#graphimg {
 p#graphimg img {
     width: 80%;
 }
-
+/* span */
+span.sort_link {
+    color: blue;
+}
 /* tooltip */
 div.dtip {
     background-color: #AAAAAA;
