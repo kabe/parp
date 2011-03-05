@@ -153,16 +153,19 @@ class Loader(object):
                      for i in xrange(self.func_num)]
             self.profile.add((self.load_function(func) for func in lines),
                              self.funcmap)
-            # Misc Info
-            lines = [self.file.readline().rstrip() for i in xrange(2)]
-            self.load_miscinfo(lines)
-            ## @todo there seems only "0 aggregates" for now. if error, check.
-            # UserEvents
-            cols = self.file.readline().rstrip()
-            self.userevents.columns = cols
-            lines = [self.file.readline().rstrip()
-                     for i in xrange(self.userevents.count)]
-            self.load_userevents(lines)
+            try:
+                # Misc Info
+                lines = [self.file.readline().rstrip() for i in xrange(2)]
+                self.load_miscinfo(lines)
+                ## @todo there seems only "0 aggregates" for now. if error, check.
+                # UserEvents
+                cols = self.file.readline().rstrip()
+                self.userevents.columns = cols
+                lines = [self.file.readline().rstrip()
+                         for i in xrange(self.userevents.count)]
+                self.load_userevents(lines)
+            except:
+                pass
         except AttributeError:
             print self.filename
             raise

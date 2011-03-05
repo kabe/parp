@@ -102,6 +102,8 @@ class Registerer(object):
         d["exec_time"] = (t1 - t0) / 1e6
         # library
         d["library"] = util.NVL(self.options.library, "")
+        # Application name
+        d["app_viewname"] = util.NVL(self.options.appname, "Unknown")
         if self.options.verbose >= 3:
             util.out("Infodic: ", d)
         ## Dictionary of all information
@@ -151,6 +153,7 @@ class Registerer(object):
                 util.out("No such profgroup. will newly insert...")
             pginsert = {
                 "application": pd["soupdic"]["Executable"].encode("utf_8"),
+                "app_viewname": pd["app_viewname"],
                 "nodes": pd["nodes"],
                 "procs": pd["nproc"],
                 "place": pd["place"].encode("utf_8"),
@@ -218,9 +221,14 @@ class Registerer(object):
                           help="specify library used as LIBRARY",
                           default=None,
                           metavar="LIBRARY")
+        parser.add_option("-a", "--appname", dest="appname",
+                          help="name of application",
+                          metavar="APPNAME")
         (options, args) = parser.parse_args()
         if len(args) != 2:
             parser.error("incorrect number of arguments: run with -h")
+        if not options.appname:
+            parser.error("application name must be specified")
         self.options = options
         self.args = args
 

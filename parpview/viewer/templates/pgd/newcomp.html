@@ -27,9 +27,19 @@
              {% ifequal pg.0 pg2 %} checked="checked" {% endifequal %} />
     </td>
     {# 3 #}
-    <td><a href="/pgview/{{ pg.0 }}">{{ pg.1 }}</a></td>
+    <td id="selectcolstd_{{ pg.0 }}">
+      {{ pg.6 }}
+      <div id="selectcols_{{ pg.0 }}" class="dtip" style="display: none;">
+        <p>
+          {{ pg.1 }}
+        </p>
+      </div>
+      <script type="text/javascript">
+        var coltip{{pg.0}} = new Tooltip('selectcolstd_{{ pg.0 }}', 'selectcols_{{ pg.0 }}');
+      </script>
+    </td>
     {# 4 #}
-    <td>{{ pg.5 }}</td>
+    <td>{{ pg.5 }} <a href="/pgview/{{ pg.0 }}">Detail</a></td>
     {# 5 #}
     <td>{{ pg.2 }}</td>
     {# 6 #}
@@ -38,11 +48,11 @@
     <td class="numeric">{{ pg.4 }}</td>
     {# 8 #}
     {% if pg.6 < pg.7 %}
-      <td class="strange numeric">{{ pg.6|floatformat:3 }}</td>
       <td class="strange numeric">{{ pg.7|floatformat:3 }}</td>
+      <td class="strange numeric">{{ pg.8|floatformat:3 }}</td>
     {% else %}
-      <td class="numeric">{{ pg.6|floatformat:3 }}</td>
       <td class="numeric">{{ pg.7|floatformat:3 }}</td>
+      <td class="numeric">{{ pg.8|floatformat:3 }}</td>
     {% endif %}
   </tr>
   {% endfor %}

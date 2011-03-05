@@ -474,6 +474,7 @@ SELECT pg.id,
        pg.nodes,
        pg.procs,
        pg.library,
+       pg.app_viewname,
        pgm.avg_time,
        pgm.var
 FROM profgroup AS pg,
