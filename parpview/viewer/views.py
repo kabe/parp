@@ -1,5 +1,5 @@
 # Create your views here.
-from django.http import HttpResponse
+from django.http import HttpResponse, HttpResponseServerError
 from django.http import Http404
 from django.http import HttpResponseRedirect
 from django.shortcuts import render_to_response
@@ -28,6 +28,7 @@ import TauLoad.Loader
 import default
 import memcachedwrapper
 import getraw
+import hashutil
 
 # Memcached Preparation
 use_memcache = True
@@ -81,7 +82,7 @@ def pgroupdiff(request, pg1, pg2):
     elif dbtype == "postgres":
         conn = db.init("postgres", username="kabe", hostname="127.0.0.1")
     else:
-        raise Http404
+        return HttpResponseServerError(content="Cannot connect to the database")
     # Param
     stranger_diff_thresh = params.susp_thresh
     t_params = {"stranger_diffpercent_thresh": stranger_diff_thresh * 100,
@@ -365,7 +366,7 @@ def pgd2(request, sortmode):
     elif dbtype == "postgres":
         conn = db.init("postgres", username="kabe", hostname="127.0.0.1")
     else:
-        raise Http404
+        return HttpResponseServerError("Cannot connect to the database")
     ## Request mode
     graph_cols = {"y1": [], "y2": []}
     pgs = []
@@ -376,15 +377,17 @@ def pgd2(request, sortmode):
         graph_cols["y2"] = request.POST.getlist("graph_y2")
         pgs = [request.POST["pg1"], request.POST["pg2"]]
         ##### Column definitions #####
-        existinig_usecol_indeces = request.POST.getlist("use_flag")
+        existing_usecol_indeces = request.POST.getlist("use_flag")
         existing_usecols = tuple((request.POST["coldef_%s" % (ind)],
                                   request.POST["colname_%s" % (ind)])
-                                 for ind in existinig_usecol_indeces)
+                                 for ind in existing_usecol_indeces)
+        print "existing_usecols:"
         print existing_usecols
         new_usecol_indeces = request.POST.getlist("use_flag_new")
         new_usecols = tuple((request.POST["new_coldef_%s" % (ind)],
                              request.POST["new_colname_%s" % (ind)])
                             for ind in new_usecol_indeces)
+        print "new_usecol"
         print new_usecols
         view_columns = existing_usecols + new_usecols
         ## Order
@@ -425,7 +428,7 @@ def pgd2(request, sortmode):
     ## Sort order
     column_names = (x[1] for x in view_columns)
     if order not in column_names:
-        raise Http404
+        return HttpResponseServerError(content="Order %s not in columns" % (order))
     order_str = order
     ## Sort mode
     if sortmode == "asc":
@@ -433,7 +436,7 @@ def pgd2(request, sortmode):
     elif sortmode == "desc":
         order_str += " DESC"
     else:
-        raise Http404
+        return HttpResponseServerError(content="Order mode not in list")
     # @TODO What should be the definition of "from" and join condition?
     # should it be able to be specified by a user?
     sql = """
@@ -452,7 +455,7 @@ ORDER BY ${order}
     r_main = ()
     r1_max, r2_max = 0, 0
     if pgs[0] != pgs[1]:
-        mc_index = "diff_%s_%s_%s_%s" % (order, sortmode, pgs[0], pgs[1])
+        mc_index = hashutil.md5(sql_str)
         trycache = memcached_conn.get(mc_index)
         if trycache:
             r_main = cPickle.loads(trycache)
@@ -487,8 +490,15 @@ ORDER BY pg.id
     print r_newc
     ## stddev
     r_newc2 = (r[0:-1] + (math.sqrt(r[-1]),) for r in r_newc)
-    graphtitle, imagefilename = gengraph(pgs[0], pgs[1], r_main, order,
-                             view_columns, graph_cols)
+    ### Graph generation
+    imagefilename = ""
+    graphtitle = "Column for graph unspecified"
+    if pgs[0] != pgs[1]:
+        try:
+            graphtitle, imagefilename = gengraph(pgs[0], pgs[1], r_main, order,
+                                                 view_columns, graph_cols)
+        except Exception, e:
+            pass
     ## Schema Info
     vschema = conn.getschema("pgroup_ratio")
     ## Log
@@ -619,7 +629,8 @@ plot \
     elif lines["y2"]:
         plines = lines["y2"]
     else:
-        raise Http404
+        #return HttpResponseServerError(content="Graph generation: lines error")
+        raise Exception("Nothing to display in graph")
     # Main
     s = template.safe_substitute(title=title,
                                  datafile=tmpfilename,

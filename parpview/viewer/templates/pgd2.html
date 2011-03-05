@@ -33,10 +33,14 @@
       </div>
       {% endfor %}
       {% endcomment %}
+      {% endif %}
       {# Tooltip End #}
       <div id="cmp">
+        {% if pg1 != pg2 %}
         <h1 id="cmptable">Comparison Table</h1>
+        {% endif %}
         <form method="POST" action="{{ reqparams.path }}" target="_self" id="choiceform">
+          {% if pg1 != pg2 %}
           <p class="submit_p">
             <input type="submit" value="Create Graph!" />
           </p>
@@ -96,6 +100,7 @@
           <p class="submit_p">
             <input type="submit" value="Create Graph!" />
           </p>
+          {% endif %}
           {% include "pgd/newcomp.html" %}
           <p class="submit_p">
             <input type="submit" value="Create Graph!" />
@@ -106,7 +111,6 @@
           </p>
         </form>
       </div>
-      {% endif %}
       <h1 id="resourceinfo">Resource Usage Information</h1>
       <p>total: {{ rd.4 }}, user: {{ rd.0 }}, system: {{ rd.1 }}, inblock: {{ rd.2 }}, outblock: {{ rd.3 }}</p>
     </div>
