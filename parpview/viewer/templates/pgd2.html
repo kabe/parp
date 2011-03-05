@@ -83,12 +83,12 @@
             {# Seemore #}
             {% if forloop.counter0 == 9 %}
               <tr id="seemore_tr">
-                <td colspan="{{ result.0|length }}"><a id="seemore_a" href="#cmptable" onClick="seemorefunc();">See more ...</a></td>
+                <td colspan="{{ result.0|length }}"><span id="seemore_a" onClick="seemorefunc();">See more ...</span></td>
               </tr>
             {% endif %}
             {% if forloop.last %}
               <tr id="hide_tr" style="display: none;">
-                <td colspan="7"><a id="hide_a" href="#cmptable" onClick="hidefunc();">Hide tail ...</a></td>
+                <td colspan="{{ result.0|length }}"><span id="hide_a" onClick="hidefunc();">Hide tail ...</span></td>
               </tr>
             {% endif %}
             {% endfor %}
