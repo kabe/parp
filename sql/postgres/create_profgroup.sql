@@ -1,5 +1,6 @@
 CREATE TABLE profgroup (
     application text,
+    app_viewname TEXT,
     nodes int,
     procs int,
     place text,

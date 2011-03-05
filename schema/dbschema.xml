@@ -272,6 +272,10 @@
 <OPTIONSELECTED>
 </OPTIONSELECTED>
 </COLUMN>
+<COLUMN ID="1364" ColName="app_viewname" PrevColName="" Pos="6" idDatatype="28" DatatypeParams="" Width="-1" Prec="-1" PrimaryKey="0" NotNull="1" AutoInc="0" IsForeignKey="0" DefaultValue="" Comments="">
+<OPTIONSELECTED>
+</OPTIONSELECTED>
+</COLUMN>
 <COLUMN ID="1007" ColName="nodes" PrevColName="" Pos="2" idDatatype="5" DatatypeParams="" Width="-1" Prec="-1" PrimaryKey="0" NotNull="1" AutoInc="0" IsForeignKey="0" DefaultValue="" Comments="">
 <OPTIONSELECTED>
 <OPTIONSELECT Value="1" />
@@ -427,6 +431,12 @@
 <OPTIONSELECT Value="0" />
 </OPTIONSELECTED>
 </COLUMN>
+<COLUMN ID="1365" ColName="profile_profgroup_id" PrevColName="" Pos="1" idDatatype="5" DatatypeParams="" Width="-1" Prec="-1" PrimaryKey="1" NotNull="1" AutoInc="0" IsForeignKey="1" DefaultValue="" Comments="">
+<OPTIONSELECTED>
+<OPTIONSELECT Value="1" />
+<OPTIONSELECT Value="0" />
+</OPTIONSELECTED>
+</COLUMN>
 <COLUMN ID="1079" ColName="calls" PrevColName="" Pos="2" idDatatype="5" DatatypeParams="" Width="-1" Prec="-1" PrimaryKey="0" NotNull="0" AutoInc="0" IsForeignKey="0" DefaultValue="" Comments="">
 <OPTIONSELECTED>
 <OPTIONSELECT Value="1" />
@@ -467,6 +477,7 @@
 <INDEXCOLUMN idColumn="1078" LengthParam="0" />
 <INDEXCOLUMN idColumn="1188" LengthParam="0" />
 <INDEXCOLUMN idColumn="1084" LengthParam="0" />
+<INDEXCOLUMN idColumn="1365" LengthParam="0" />
 </INDEXCOLUMNS>
 </INDEX>
 <INDEX ID="1173" IndexName="VIEW funcprofile_FKIndex1" IndexKind="1" FKRefDef_Obj_id="1085">
@@ -474,6 +485,7 @@
 <INDEXCOLUMN idColumn="1076" LengthParam="0" />
 <INDEXCOLUMN idColumn="1078" LengthParam="0" />
 <INDEXCOLUMN idColumn="1188" LengthParam="0" />
+<INDEXCOLUMN idColumn="1365" LengthParam="0" />
 </INDEXCOLUMNS>
 </INDEX>
 <INDEX ID="1217" IndexName="VIEW funcprofile_FKIndex2" IndexKind="1" FKRefDef_Obj_id="1215">
