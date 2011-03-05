@@ -1,0 +1,26 @@
+#
+# function.yaml
+#
+# Describe function explanation (e9n).
+#
+# format:
+# Application_name:
+#   function_name(): function_explanation
+#   function_name(): function_explanation
+#   function_name(): |-
+#     long_function_explanation
+#     long_function_explanation
+#     long_function_explanation
+#
+# function_name should be followed by ().
+# function_explanation must be a string.
+# When long expression is used, newlines will be reflected.
+
+FileAccess:
+  main(): main function
+  read_file(): read a whole file
+  seq_read_each(): read a file sequentially
+  seq_each_32B(): |-
+    read a file,
+    each process reads
+    with a block size 32B

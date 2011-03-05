@@ -20,6 +20,8 @@ path = os.path.join(os.environ["HOME"], "git/prof/tau/")
 if path not in sys.path:
     sys.path.append(path)
 
+import yaml
+
 import util
 import db
 import nm.loader
@@ -35,6 +37,8 @@ use_memcache = True
 memcached_conn = memcachedwrapper.MemcachedConnection(use_memcache,
                                                       ['127.0.0.1:11211'])
 print memcached_conn
+# YAML
+e9n_function = "viewer/e9n/function.yaml"
 
 def helloworld(request):
     #return HttpResponse("Hello World")
@@ -487,7 +491,7 @@ ORDER BY pg.id
 ;
 """
     r_newc = conn.select(newc)
-    print r_newc
+    #print r_newc
     ## stddev
     r_newc2 = (r[0:-1] + (math.sqrt(r[-1]),) for r in r_newc)
     ### Graph generation
@@ -501,6 +505,20 @@ ORDER BY pg.id
             pass
     ## Schema Info
     vschema = conn.getschema("pgroup_ratio")
+    ## Function Comments
+    y = None
+    try:
+        with open(e9n_function) as f:
+            s = f.read()
+            y = yaml.load(s)
+    except Exception, e:
+        raise e
+    if r_newc[int(pgs[0]) - 1][6] == r_newc[int(pgs[1]) - 1][6]:
+        appviewname = r_newc[int(pgs[0]) - 1][6]
+        functip = y[appviewname]
+        pass
+    else:
+        functip = []
     ## Log
     ru2 = resource.getrusage(resource.RUSAGE_SELF)
     time2 = time.time()
@@ -529,6 +547,7 @@ ORDER BY pg.id
                                "coldef_params": coldef_params,
                                "graph_title": graphtitle,
                                "vschema": vschema,
+                               "functip": functip,
                                })
 
 

@@ -76,11 +76,20 @@
             </tr>
             <!-- contents -->
             {% for func in result %}
-            <tr{% if forloop.counter0 >= 10 %} style="display:none;" class="hiddentrs"{% endif %}>
+            <tr{% if forloop.counter0 >= 10 %} style="display: none;" class="hiddentrs"{% endif %}>
               {% for col in func %}
-              {% if forloop.counter0 == 0 %}
-              <td>
+              {% if forloop.counter0 == 0 %}{# function name #}
+              <td id="funccol_{{ col|remove_func_paren }}">
                 {{ col }}
+                <div class="dtip" id="functip_{{ col|remove_func_paren }}" style="display: none;">
+                  {{ functip|safe_accessdic:col|linebreaks }}
+                </div>
+                <script type="text/javascript">
+                  var tip_content_{{ col|remove_func_paren }} = $('functip_{{ col|remove_func_paren }}');
+                  if(tip_content_{{ col|remove_func_paren }}.innerHTML.replace('<p></p>', '').match('^[ \n]*$') == null) {
+                    var tip_funccol_{{ col|remove_func_paren }} = new Tooltip('funccol_{{ col|remove_func_paren }}', 'functip_{{ col|remove_func_paren }}');
+                  }
+                </script>
               </td>
               {% else %}
               <td class="numeric">
