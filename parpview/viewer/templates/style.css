@@ -84,6 +84,10 @@ span.sort_link {
 div.dtip {
     background-color: #AAAAAA;
     padding: 3px;
+    margin: 0;
+}
+div.dtip p {
+    margin: 0;
 }
 /* misc */
 .nowrap {
