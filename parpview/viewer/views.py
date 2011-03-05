@@ -392,7 +392,7 @@ def pgd2(request, sortmode):
         order = view_columns[post_order_idx][1]
     else:  # default mode
         graph_cols = default.graph_cols
-        pgs = [20, 22]
+        pgs = [1, 1]
         view_columns = default.view_columns
         order = default.order
         #sortmode = default.sortmode
@@ -484,9 +484,9 @@ ORDER BY pg.id
 ;
 """
     r_newc = conn.select(newc)
+    print r_newc
     ## stddev
     r_newc2 = (r[0:-1] + (math.sqrt(r[-1]),) for r in r_newc)
-    #print r_newc2
     graphtitle, imagefilename = gengraph(pgs[0], pgs[1], r_main, order,
                              view_columns, graph_cols)
     ## Schema Info
