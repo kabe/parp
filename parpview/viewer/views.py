@@ -515,10 +515,12 @@ ORDER BY pg.id
         raise e
     if r_newc[int(pgs[0]) - 1][6] == r_newc[int(pgs[1]) - 1][6]:
         appviewname = r_newc[int(pgs[0]) - 1][6]
-        functip = y[appviewname]
-        pass
+        try:
+            functip = y[appviewname]
+        except KeyError:
+            functip = {}
     else:
-        functip = []
+        functip = {}
     ## Log
     ru2 = resource.getrusage(resource.RUSAGE_SELF)
     time2 = time.time()
