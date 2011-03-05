@@ -486,6 +486,10 @@ ORDER BY pg.id
     ## stddev
     r_newc2 = (r[0:-1] + (math.sqrt(r[-1]),) for r in r_newc)
     #print r_newc2
+    graphtitle, imagefilename = gengraph(pgs[0], pgs[1], r_main, order,
+                             view_columns, graph_cols)
+    ## Schema Info
+    vschema = conn.getschema("pgroup_ratio")
     ## Log
     ru2 = resource.getrusage(resource.RUSAGE_SELF)
     time2 = time.time()
@@ -495,8 +499,6 @@ ORDER BY pg.id
           ru2.ru_oublock - ru1.ru_oublock,
           time2 - time1,
           )
-    graphtitle, imagefilename = gengraph(pgs[0], pgs[1], r_main, order,
-                             view_columns, graph_cols)
     return render_to_response('pgd2.html',
                               {"self_path": request.path,
                                "params": t_params,
@@ -515,6 +517,7 @@ ORDER BY pg.id
                                "checked_radios": checked_radios,
                                "coldef_params": coldef_params,
                                "graph_title": graphtitle,
+                               "vschema": vschema,
                                })
 
 

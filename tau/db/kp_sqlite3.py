@@ -119,6 +119,16 @@ class SQLite3Handler(object):
         else:
             return r  # Maybe it's OK
 
+    def getschema(self, schemaname):
+        """Get a schema information of a table or a view.
+
+        Arguments:
+        - `schemaname`:
+        """
+        sql = """SELECT sql FROM sqlite_master WHERE name=?;"""
+        ret = self.query(sql, (schemaname,))
+        return ret[0][0]
+
     def close(self, ):
         """Commit changes and Close the database.
         """

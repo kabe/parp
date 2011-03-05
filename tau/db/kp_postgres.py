@@ -140,8 +140,8 @@ class PostgreSQLHandler(object):
                 else:
                     d_phs.append(x)
             d_phs = tuple(d_phs)
-            result = self.db.query("EXECUTE plan_%d %s"
-                                   % (self.plan_nr, d_phs))
+            result = self.db.query("EXECUTE plan_%d (%s)"
+                                   % (self.plan_nr, ", ".join("'%s'" % (x) for x in d_phs)))
             self.plan_nr += 1
             if result:
                 return result.getresult()
@@ -153,6 +153,62 @@ class PostgreSQLHandler(object):
                 return self.db.query(q).getresult()
             else:
                 return None
+
+    def getschema(self, schemaname):
+        """Get a schema information of a table or a view.
+
+        @param schemaname schema name to display
+        @todo implement for PostgreSQL: how to get a view's schema?
+        """
+        sql = """
+SELECT
+    attnum AS column_index,
+    attname AS column_name,
+    case typname
+        WHEN '_bpchar' then 'char'
+        WHEN '_varchar' then 'varchar'
+        WHEN '_date' then 'date'
+        WHEN '_float8' then 'float8'
+        WHEN '_int4' then 'integer'
+        WHEN '_interval' then 'interval'
+        WHEN '_numeric' then 'numeric'
+        WHEN '_float4' then 'float4'
+        WHEN '_int2' then 'smallint'
+        WHEN '_text' then 'text'
+        WHEN '_time' then 'time'
+        WHEN '_timestamp' then 'timestamp'
+    END AS type
+FROM
+    pg_stat_user_tables AS a,
+    pg_attribute AS b,
+    pg_type AS c
+WHERE a.relname = ?
+  AND a.relid = b.attrelid
+  AND b.attnum > 0
+  AND b.atttypid = c.typelem
+  AND substr(typname,1, 1) = '_'
+ORDER BY schemaname,relname,attnum;"""
+        """  *** MEMO ***
+    CASE typname
+        WHEN '_bpchar' then atttypmod - 4
+        WHEN '_varchar' then atttypmod - 4
+        WHEN '_numeric' then (atttypmod - 4) / 65536
+        ELSE attlen
+    END AS length,
+    CASE typname
+        WHEN
+        WHEN '_numeric' then (atttypmod - 4) % 65536
+        ELSE 0
+    END AS floating,
+    CASE b.attnotnull 
+        WHEN 't' then 'Yes'
+        WHEN 'f' then 'No'
+        else ''
+    END AS "NotNull"
+        """
+        ret = self.query(sql, (schemaname,))
+        #return "\n".join(", ".join(str(y) for y in x) for x in ret)
+        return "Sorry not implemented for PostgreSQL..."
 
     def close(self, ):
         """Commit changes and Close the database.

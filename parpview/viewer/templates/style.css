@@ -9,7 +9,10 @@ div#container {
     padding-right: auto;
     width: 80%;
 }
-
+div#coldef_refs {
+    width: 45%;
+    float: right;
+}
 /* Header */
 h1 {
     border-style: solid;
@@ -23,6 +26,10 @@ h1 {
 table {
     border-collapse: collapse;
     border-color: #ff00bfff;
+}
+table#coldef_table {
+    float: left;
+    width: 50%;
 }
 div#cmp table#cmptable {
     margin-right: auto;
@@ -60,6 +67,7 @@ td.numeric {
 p.submit_p {
     text-align: right;
     margin-right: 30%;
+    clear: left;
 }
 /* image graph */
 p#graphimg {
