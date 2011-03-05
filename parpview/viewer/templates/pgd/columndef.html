@@ -3,20 +3,21 @@ Column definitions
 Users can define their own columns freely
 {% endcomment %}
 
-<h1 id="coldef">Column Definitions</h1>
-<table id="coldef_table">
-  <tr>
-    {# 1 #}
-    <th>Use?</th>
-    {# 2 #}
-    <th>Column Name</th>
-    {# 3 #}
-    <th>Column definition SQL</th>
-    {# 4 #}
-    <th>ORDER BY</th>
-  </tr>
-  {# Columns currently used #}
-  {% for col in cols %}
+<div id="coldef_d">
+  <h1 id="coldef">Column Definitions</h1>
+  <table id="coldef_table">
+    <tr>
+      {# 1 #}
+      <th>Use?</th>
+      {# 2 #}
+      <th>Column Name</th>
+      {# 3 #}
+      <th>Column definition SQL</th>
+      {# 4 #}
+      <th>ORDER BY</th>
+    </tr>
+    {# Columns currently used #}
+    {% for col in cols %}
     <tr>
       <td>
         <input type="checkbox" name="use_flag" value="{{ forloop.counter0 }}"
@@ -38,9 +39,9 @@ Users can define their own columns freely
                />
       </td>
     </tr>
-  {% endfor %}
-  {# New Columns #}
-  {% for x in coldef_params.newcols %}
+    {% endfor %}
+    {# New Columns #}
+    {% for x in coldef_params.newcols %}
     <tr>
       <td>
         <input type="checkbox" name="use_flag_new" value="{{ x }}" />
@@ -55,5 +56,5 @@ Users can define their own columns freely
         <input type="radio" name="order" value="{{ cols|length|add:x }}" />
       </td>
     </tr>
-  {% endfor %}
-</table>
+    {% endfor %}
+  </table>
