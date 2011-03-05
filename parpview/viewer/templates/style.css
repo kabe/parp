@@ -85,3 +85,7 @@ div.dtip {
     background-color: #AAAAAA;
     padding: 3px;
 }
+/* misc */
+.nowrap {
+    white-space: nowrap;
+}
