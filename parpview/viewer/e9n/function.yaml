@@ -76,6 +76,41 @@ Solver:
   initial(): initialize vectors
   print_hostname(): print a hostname
 
+PageRank: 
+  main(): the main function
+  MPI_Init(): initialize MPI
+  MPI_Finalize(): finalize MPI
+  MPI_Barrier(): a barrier operation of MPI
+  MPI_Recv(): receive data
+  MPI_Irecv(): receive data asynchronously
+  MPI_Alltoall(): an all-to-all operation of MPI
+  MPI_Alltoallv(): an all-to-all operation of MPI
+  MPI_Allreduce(): an allreduce operation of MPI
+  MPI_Send(): send data
+  MPI_Gather(): a gather operation of MPI
+  MPI_Wait(): wait the completion of an asynchronous send and receive
+  MPI_Reduce(): a reduce operation of MPI
+  MPI_Comm_rank(): get a rank of a MPI process
+  MPI_Comm_size(): get the number of MPI processes
+  my_malloc(): malloc a memory
+  my_realloc(): realloc a memory
+  my_free(): free a memory
+  time_diff(): get time
+  time_lap(): get time
+  time_ref(): get time
+  out(): print a string
+  outn(): print a string with a newline
+  print_hostname(): print a hostname
+  graph_alloc(): load a graph data set from a file system
+  graph_propagate(): update the values of all vertices at each iteration
+  graph_dummy_propagate(): update the values of all vertexes at each iteration
+  graph_allreduce(): calculate the accumulated values of all vertices
+  graph_init(): set the initial values of all vertices
+  graph_free(): free a memory of a graph
+  fastsort(): quick sort + insertion sort
+  bind_to_cpu(): bind each process to each cpu explicitly
+  print_calctime(): print calculation time
+
 AminoAcid: 
   main(): the main function
   MPI_Init(): initialize MPI
