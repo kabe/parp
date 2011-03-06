@@ -63,14 +63,28 @@ def hostname2clustername(hostname):
     return m.group("cname")
 
 
-def filename2rank(filename):
+def filename2rank(filename, infodic):
     """Pick up the rank of the process.
 
     @param filename
     """
     r = re.compile(r".*profile\.(\d+)\.(\d+).(\d+)$")
     m = r.match(filename)
+    if infodic["use_rankmap"]:
+        triple = filename2triple(filename)
+        triple_s = ".".join(triple)
+        return infodic["rankmap"][triple_s]
     return m.group(1)
+
+
+def filename2triple(filename):
+    """Pick up the rank of the process.
+
+    @param filename
+    """
+    r = re.compile(r".*profile\.(\d+)\.(\d+).(\d+)$")
+    m = r.match(filename)
+    return [m.group(x) for x in (1, 2, 3)]
 
 
 def soup2dic(soup):
