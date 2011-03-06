@@ -20,15 +20,15 @@ FileAccess:
   main(): the main function
   read_file(): read a whole file
   seq_read_each(): read a file sequentially
-  seq_each_32B(): read a file sequentially with a request size of 32B
-  seq_each_1KB(): read a file sequentially with a request size of 1KB
-  seq_each_32KB(): read a file sequentially with a request size of 32KB
-  seq_each_1MB(): read a file sequentially with a request size of 1MB
+  seq_32B(): read a file sequentially with a request size of 32B
+  seq_1KB(): read a file sequentially with a request size of 1KB
+  seq_32KB(): read a file sequentially with a request size of 32KB
+  seq_1MB(): read a file sequentially with a request size of 1MB
   rand_32B(): read a file randomly with a request size of 32B
   rand_1KB(): read a file randomly with a request size of 1KB
   rand_32KB(): read a file randomly with a request size of 32KB
   rand_1MB(): read a file randomly with a request size of 1MB
-  rand_read_from_all(): read a file randomly
+  rand_read_all(): read a file randomly
   cur_time(): get a current time
   mymalloc(): malloc a memory
   atob(): change a string to bytes
