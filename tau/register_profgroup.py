@@ -30,6 +30,21 @@ class Registerer(object):
         """
         pass
 
+    @classmethod
+    def triple_comparator(cls, a, b):
+        """Compare triple.
+
+        @param a
+        @param b
+        """
+        if int(a[0]) != int(b[0]):
+            return cmp(int(a[0]), int(b[0]))
+        if int(a[1]) != int(b[1]):
+            return cmp(int(a[1]), int(b[1]))
+        if int(a[2]) != int(b[2]):
+            return cmp(int(a[2]), int(b[2]))
+        return cmp(1, 1)
+
     def insert_profile(self, exec_id):
         """Insert profiles.
 
@@ -38,7 +53,7 @@ class Registerer(object):
         """
         for loader in self.profs:
         # Insert profile info
-            rank = util.filename2rank(loader.filename)
+            rank = util.filename2rank(loader.filename, self.infodic)
             for funcname, func in loader.profile.function.iteritems():
                 pdic = dict()
                 pdic["rank"] = rank
@@ -104,6 +119,19 @@ class Registerer(object):
         d["library"] = util.NVL(self.options.library, "")
         # Application name
         d["app_viewname"] = util.NVL(self.options.appname, "Unknown")
+        # (node, context, thread) => rank mapping
+        d["use_rankmap"] = True
+        d["rankmap"] = {}
+        prof_rank_index = 0
+        for p in sorted(self.profs,
+                        cmp=lambda x, y:
+                            Registerer.triple_comparator(
+                util.filename2triple(x.filename),
+                util.filename2triple(y.filename))):
+            triple = util.filename2triple(p.filename)
+            triple_s = ".".join(triple)
+            d["rankmap"][triple_s] = prof_rank_index
+            prof_rank_index += 1
         if self.options.verbose >= 3:
             util.out("Infodic: ", d)
         ## Dictionary of all information
@@ -142,6 +170,7 @@ class Registerer(object):
                    AND library = ?;
                    """
         pd = self.infodic
+        print pd
         rtup = self.conn.select(sql_s,
                                 (pd["soupdic"]["Executable"].encode("utf_8"),
                                  pd["nodes"],
