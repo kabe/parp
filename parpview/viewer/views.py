@@ -573,7 +573,7 @@ def gengraph(index_A, index_B, funcs, order, colinfo, cols):
 set terminal postscript eps enhanced color "Gothic-BBB-EUC-H" 96
 set size 4
 set output "out.eps"
-set grid
+${setgrid}
 set key above
 set ylabel "${y1label}"
 set y2label "${y2label}"
@@ -597,7 +597,7 @@ plot \
     y1label = "%s" % (", ".join(cols["y1"]).replace("_", "\\\\_"))
     y2label = "%s" % (", ".join(cols["y2"]).replace("_", "\\\\_"))
     # Graph scale calc
-    graph_interval = 4 * (len(cols["y1"]) + len(cols["y2"])) + 2
+    graph_interval = 4 * (len(cols["y1"]) + len(cols["y2"])) + 4
     print "Graph Interval = %d" % (graph_interval)
     # xtics
     xtics_t = "set xtics(${conf})"
@@ -643,11 +643,14 @@ plot \
                 gwidth=graph_width,
                 colname=valcolumn,))
     lines["y2"] = ", ".join(ss)
+    setgrid = ""
     if lines["y1"] and lines["y2"]:
         plines = ", ".join(lines.values())
     elif lines["y1"]:
+        setgrid = "set grid"
         plines = lines["y1"]
     elif lines["y2"]:
+        setgrid = "set grid"
         plines = lines["y2"]
     else:
         #return HttpResponseServerError(content="Graph generation: lines error")
@@ -656,6 +659,7 @@ plot \
     s = template.safe_substitute(title=title,
                                  datafile=tmpfilename,
                                  xtics_conf=xtics_conf,
+                                 setgrid=setgrid,
                                  plines=plines,
                                  y1label=y1label,
                                  y2label=y2label,)
