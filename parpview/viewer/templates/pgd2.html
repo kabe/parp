@@ -19,8 +19,10 @@
       </h1>
       <p id="graphimg">
         {{ graph_title }}
+        {% if imgfilename != "" %}
         <br />
         <img src="/img/{{ imgfilename }}" />
+        {% endif %}
       </p>
       {# Tooltip #}
       {% comment %}
