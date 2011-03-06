@@ -459,7 +459,7 @@ ORDER BY ${order}
     r_main = ()
     r1_max, r2_max = 0, 0
     if pgs[0] != pgs[1]:
-        mc_index = hashutil.md5(sql_str)
+        mc_index = hashutil.md5(sql_str + pgs[0] + "_" + pgs[1])
         trycache = memcached_conn.get(mc_index)
         if trycache:
             r_main = cPickle.loads(trycache)
