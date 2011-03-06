@@ -17,10 +17,91 @@
 # When long expression is used, newlines will be reflected.
 
 FileAccess:
-  main(): main function
+  main(): the main function
   read_file(): read a whole file
   seq_read_each(): read a file sequentially
-  seq_each_32B(): |-
-    read a file,
-    each process reads
-    with a block size 32B
+  seq_each_32B(): read a file sequentially with a request size of 32B
+  seq_each_1KB(): read a file sequentially with a request size of 1KB
+  seq_each_32KB(): read a file sequentially with a request size of 32KB
+  seq_each_1MB(): read a file sequentially with a request size of 1MB
+  rand_32B(): read a file randomly with a request size of 32B
+  rand_1KB(): read a file randomly with a request size of 1KB
+  rand_32KB(): read a file randomly with a request size of 32KB
+  rand_1MB(): read a file randomly with a request size of 1MB
+  rand_read_from_all(): read a file randomly
+  cur_time(): get a current time
+  mymalloc(): malloc a memory
+  atob(): change a string to bytes
+  MPI_Init(): initialize MPI
+  MPI_Finalize(): finalize MPI
+  MPI_Barrier(): a barrier operation of MPI
+  MPI_Comm_rank(): get a rank of a MPI process
+  MPI_Comm_size(): get the number of MPI processes
+
+Solver: 
+  main(): the main function
+  MPI_Init(): initialize MPI
+  MPI_Finalize(): finalize MPI
+  MPI_Barrier(): a barrier operation of MPI
+  MPI_Recv(): receive data
+  MPI_Allreduce(): an allreduce operation of MPI
+  MPI_Isend(): send data asynchronously
+  MPI_Gather(): a gather operation of MPI
+  MPI_Wait(): wait the completion of an asynchronous send and receive
+  MPI_Reduce(): a reduce operation of MPI
+  MPI_Comm_rank(): get a rank of a MPI process
+  MPI_Comm_size(): get the number of MPI processes
+  make_mm(): calculate a pre-conditioning matrix
+  free_mm(): free a memory for a pre-conditioning matrix
+  fwbk(): calculate a forward and backward substitution
+  matvec(): calculate a matrix vector multiplication
+  dot(): calculate an inner product
+  make_data(): load a data set
+  free_data(): unload a data set
+  daxpy(): p = q + a * r
+  daxpy2(): p = a * q + b * r
+  daxpy3(): p = r + a * (p - b * q)
+  daxpy4(): p = a * q + b * r
+  daxpy5(): p = a * q + b * p + c * r
+  copy(): p = q
+  norm(): (p, q)
+  my_malloc(): malloc a memory
+  my_realloc(): realloc a memory
+  my_free(): free a memory
+  time_diff(): get time
+  time_lap(): get time
+  time_ref(): get time
+  out(): print a string
+  outn(): print a string with a newline
+  initial(): initialize vectors
+  print_hostname(): print a hostname
+
+AminoAcid: 
+  main(): the main function
+  MPI_Init(): initialize MPI
+  MPI_Finalize(): finalize MPI
+  MPI_Recv(): receive data
+  MPI_Send(): send data
+  MPI_Comm_rank(): get a rank of a MPI process
+  MPI_Comm_size(): get the number of MPI processes
+  sw_process(): create threads and print results
+  sw_thread(): each thread in a MPI process
+  make_balance(): make a task queue
+  free_balance(): free a task queue
+  make_task(): distribute tasks among MPI processes
+  free_task(): free tasks
+  qsort_weight(): quick sort of weights
+  qsort_answers(): quick sort of answer sequences
+  calc_score(): calculate a Smith-Waterman score between two sequences
+  calc_score_table(): generate a score table based on the Smith-Waterman algorithm
+  make_answer(): generate an answer sequence
+  free_answer(): free an answer sequence
+  calc_alignment(): calculate an alignment between two sequences
+  print_answer(): print answers
+  load_matrix(): load a matrix used for score calculation
+  make_vec(): read sequences from a data set
+  free_vec(): free sequences
+  my_malloc(): malloc a memory
+  my_realloc(): realloc a memory
+  my_free(): free a memory
+  get_time(): get time
