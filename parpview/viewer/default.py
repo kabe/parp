@@ -8,10 +8,6 @@ view_columns = (
     ("pr2.excl_pe_rank_avg", "exectime2"),
     ("(pr1.excl_pe_rank_avg - pr2.excl_pe_rank_avg)", "timediff"),
     ("(pr1.excl_pe_rank_avg / pr2.excl_pe_rank_avg)", "speedup"),
-    ("pr1.excl_avg_ratio", "Ratio1"),
-    ("pr2.excl_avg_ratio", "Ratio2"),
-    ("pr1.excl_avg_ratio - pr2.excl_avg_ratio", "ratiodiff"),
-    ("ABS(pr1.excl_avg_ratio - pr2.excl_avg_ratio)", "absratiodiff"),
     )
 
 order = "exectime1"
