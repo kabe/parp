@@ -37,10 +37,10 @@ FileAccess:
   - 1
   rand_32B(): 
   - read a file randomly with a request size of 32B
-  - 1
+  - 0
   rand_1KB(): 
   - read a file randomly with a request size of 1KB
-  - 1
+  - 0
   rand_32KB(): 
   - read a file randomly with a request size of 32KB
   - 1
