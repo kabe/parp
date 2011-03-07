@@ -457,7 +457,6 @@ ORDER BY ${order}
                                  order=order_str,)
     #print sql_str
     r_main = ()
-    r1_max, r2_max = 0, 0
     if pgs[0] != pgs[1]:
         mc_index = hashutil.md5(sql_str + pgs[0] + "_" + pgs[1])
         trycache = memcached_conn.get(mc_index)
@@ -467,7 +466,6 @@ ORDER BY ${order}
             r_main = conn.select(sql_str, (pgs[0], pgs[1]))
             cachestr = cPickle.dumps(r_main)
             memcached_conn.set(mc_index, cachestr)
-        r1_max, r2_max = max(x[2] for x in r_main), max(x[4] for x in r_main)
     ##### New comparison #####
     #print r_main
     newc_colnames = ("PG 1", "PG 2",
@@ -540,7 +538,6 @@ ORDER BY pg.app_viewname, pg.place, pg.id
                                "rnc_n": newc_colnames,
                                "rnc": r_newc2,
                                "rd": rd,
-                               "pg_maxs": (r1_max, r2_max),
                                "imgfilename": imagefilename,
                                "reqparams": {"order": order,
                                              "sortmode": sortmode,
