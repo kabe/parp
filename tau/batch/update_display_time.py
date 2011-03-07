@@ -61,7 +61,7 @@ WHERE profexec_id = ?;
 """
         rtup = self.conn.select(getfunc_sql, (peid,))
         display_time = 0
-        function_names = appinfo.keys()
+        function_names = [f for f in appinfo if appinfo[f][1] == 1]
         for row in rtup:
             funcname, peid, rank, time = row
             if funcname in function_names:
