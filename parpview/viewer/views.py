@@ -570,8 +570,8 @@ def gengraph(index_A, index_B, funcs, order, colinfo, cols):
     """
     graph_width = 4
     plot_template = """reset
-set terminal postscript eps enhanced color "Gothic-BBB-EUC-H" 96
-set size 4
+set terminal postscript eps enhanced color "Gothic-BBB-EUC-H" 112
+set size 6
 set output "out.eps"
 ${setgrid}
 set key above
@@ -705,7 +705,7 @@ def determine_checked_radios(cols, graphcols):
             try:
                 index = [x[1] for x in cols].index(col)
             except:
-                raise
+                index = 0
             d[y][index] = 'checked="checked"'
     print d
     return d
