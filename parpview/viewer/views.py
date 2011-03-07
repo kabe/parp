@@ -505,7 +505,8 @@ ORDER BY ${order}
     #print sql_str
     r_main = ()
     appviewname = col_0[6]
-    print r_newc[int(pgs[0]) - 1][6], r_newc[int(pgs[1]) - 1][6]
+    #print r_newc[int(pgs[0]) - 1][6], r_newc[int(pgs[1]) - 1][6]
+    functip = {}
     if pgs[0] != pgs[1]:
         mc_index = hashutil.md5(sql_str + pgs[0] + "_" + pgs[1])
         trycache = memcached_conn.get(mc_index)
@@ -676,7 +677,8 @@ plot \
                                  setgrid=setgrid,
                                  plines=plines,
                                  y1label=y1label,
-                                 y2label=y2label,)
+                                 y2label=y2label,
+                                 y2tics=y2tics,)
     print s
     with open(tmpfilename, "w") as f:
         f.write(timedata.strip())
