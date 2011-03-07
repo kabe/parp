@@ -31,6 +31,7 @@ import default
 import memcachedwrapper
 import getraw
 import hashutil
+import tableutil
 
 # Memcached Preparation
 use_memcache = True
@@ -371,6 +372,36 @@ def pgd2(request, sortmode):
         conn = db.init("postgres", username="kabe", hostname="127.0.0.1")
     else:
         return HttpResponseServerError("Cannot connect to the database")
+    ##########################
+    ##### New comparison #####
+    ##########################
+    newc_colnames = ("PG 1", "PG 2",
+                     "Application", "Comment", "Place",
+                     "# of nodes", "# of Processes",
+                     "Avg. Time [sec]", "StdDev. [sec]",)
+    newc = """
+SELECT pg.id,
+       pg.application,
+       pg.place,
+       pg.nodes,
+       pg.procs,
+       pg.library,
+       pg.app_viewname,
+       pgm.avg_dtime,
+       pgm.dvar
+FROM profgroup AS pg,
+     pgroup_meta AS pgm
+WHERE pg.id = pgm.profgroup_id
+ORDER BY pg.app_viewname, pg.place, pg.id
+;
+"""
+    r_newc = conn.select(newc)
+    #print r_newc
+    ## stddev
+    r_newc2 = (r[0:-1] + (math.sqrt(r[-1]),) for r in r_newc)
+    ###################
+    ##### Request #####
+    ###################
     ## Request mode
     graph_cols = {"y1": [], "y2": []}
     pgs = []
@@ -403,7 +434,14 @@ def pgd2(request, sortmode):
         view_columns = default.view_columns
         order = default.order
         #sortmode = default.sortmode
-    print pgs
+    print "pgs: %s" % (pgs)
+    col_0, col_1 = ([x for x in r_newc
+                     if int(x[0]) == int(pgs[0])][0],
+                    [x for x in r_newc
+                     if int(x[0]) == int(pgs[1])][0])
+    print col_0, col_1
+    if col_0[6] != col_1[6]:
+        raise Exception("Impossible to compare two different applications")
     print "Graph Parameters:"
     print graph_cols
     #print request.META
@@ -411,7 +449,7 @@ def pgd2(request, sortmode):
     t_params = {}
     coldef_params = {}
     coldef_params["newcols"] = [x for x in xrange(5)]  # new columns defs
-    ##### Main comparation SQL generation #####
+    ##### Main comparison SQL generation #####
     # define view columns
     ## dictionary of strings tuple: (key, value) = (definition, name)
     view_columns_joined_str = ", ".join(" AS ".join(vc)
@@ -441,6 +479,15 @@ def pgd2(request, sortmode):
         order_str += " DESC"
     else:
         return HttpResponseServerError(content="Order mode not in list")
+    ## Prepare YAML
+    y = None
+    try:
+        with open(e9n_function) as f:
+            s = f.read()
+            y = yaml.load(s)
+    except Exception, e:
+        raise e
+    ## Query
     # @TODO What should be the definition of "from" and join condition?
     # should it be able to be specified by a user?
     sql = """
@@ -457,6 +504,8 @@ ORDER BY ${order}
                                  order=order_str,)
     #print sql_str
     r_main = ()
+    appviewname = col_0[6]
+    print r_newc[int(pgs[0]) - 1][6], r_newc[int(pgs[1]) - 1][6]
     if pgs[0] != pgs[1]:
         mc_index = hashutil.md5(sql_str + pgs[0] + "_" + pgs[1])
         trycache = memcached_conn.get(mc_index)
@@ -464,34 +513,14 @@ ORDER BY ${order}
             r_main = cPickle.loads(trycache)
         else:
             r_main = conn.select(sql_str, (pgs[0], pgs[1]))
+            r_main = tableutil.remove_unnecessary_funcs(r_main, appviewname, y)
             cachestr = cPickle.dumps(r_main)
             memcached_conn.set(mc_index, cachestr)
-    ##### New comparison #####
-    #print r_main
-    newc_colnames = ("PG 1", "PG 2",
-                     "Application", "Comment", "Place",
-                     "# of nodes", "# of Processes",
-                     "Avg. Time [sec]", "StdDev. [sec]",)
-    newc = """
-SELECT pg.id,
-       pg.application,
-       pg.place,
-       pg.nodes,
-       pg.procs,
-       pg.library,
-       pg.app_viewname,
-       pgm.avg_dtime,
-       pgm.dvar
-FROM profgroup AS pg,
-     pgroup_meta AS pgm
-WHERE pg.id = pgm.profgroup_id
-ORDER BY pg.app_viewname, pg.place, pg.id
-;
-"""
-    r_newc = conn.select(newc)
-    #print r_newc
-    ## stddev
-    r_newc2 = (r[0:-1] + (math.sqrt(r[-1]),) for r in r_newc)
+        ## Function Comments Tooltip
+        try:
+            functip = y[appviewname]
+        except KeyError:
+            functip = {}
     ### Graph generation
     imagefilename = ""
     graphtitle = "Column for graph unspecified"
@@ -503,22 +532,6 @@ ORDER BY pg.app_viewname, pg.place, pg.id
             pass
     ## Schema Info
     vschema = conn.getschema("pgroup_ratio")
-    ## Function Comments
-    y = None
-    try:
-        with open(e9n_function) as f:
-            s = f.read()
-            y = yaml.load(s)
-    except Exception, e:
-        raise e
-    if r_newc[int(pgs[0]) - 1][6] == r_newc[int(pgs[1]) - 1][6]:
-        appviewname = r_newc[int(pgs[0]) - 1][6]
-        try:
-            functip = y[appviewname]
-        except KeyError:
-            functip = {}
-    else:
-        functip = {}
     ## Log
     ru2 = resource.getrusage(resource.RUSAGE_SELF)
     time2 = time.time()
@@ -572,11 +585,11 @@ set size 6
 set output "out.eps"
 ${setgrid}
 set key above
-set ylabel "${y1label}"
-set y2label "${y2label}"
+${y1label}
+${y2label}
 ${xtics_conf}
 set xtics rotate
-set y2tics
+${y2tics}
 plot \
     ${plines}
 """
@@ -591,8 +604,9 @@ plot \
     # title = "%s \\n (order %s)" % \
     #     (", ".join(cols["y1"]  + cols["y2"]).replace("_", "\\\\_"), order)
     title = "Order by %s" % (order)
-    y1label = "%s" % (", ".join(cols["y1"]).replace("_", "\\\\_"))
-    y2label = "%s" % (", ".join(cols["y2"]).replace("_", "\\\\_"))
+    y1label = "set ylabel \"%s\"" % (", ".join(cols["y1"]).replace("_", "\\\\_"))
+    y2label = "set y2label \"%s\"" % (", ".join(cols["y2"]).replace("_", "\\\\_"))
+    y2tics = "set y2tics"
     # Graph scale calc
     graph_interval = 4 * (len(cols["y1"]) + len(cols["y2"])) + 4
     print "Graph Interval = %d" % (graph_interval)
@@ -646,9 +660,12 @@ plot \
     elif lines["y1"]:
         setgrid = "set grid"
         plines = lines["y1"]
+        y2label = ""
+        y2tics = ""
     elif lines["y2"]:
         setgrid = "set grid"
         plines = lines["y2"]
+        y1label = ""
     else:
         #return HttpResponseServerError(content="Graph generation: lines error")
         raise Exception("Nothing to display in graph")
