@@ -84,7 +84,7 @@
               <td id="funccol_{{ col|remove_func_paren }}">
                 {{ col }}
                 <div class="dtip" id="functip_{{ col|remove_func_paren }}" style="display: none;">
-                  {{ functip|safe_accessdic:col|linebreaks }}
+                  {{ functip|safe_accessdic:col|first|linebreaks }}
                 </div>
                 <script type="text/javascript">
                   var tip_content_{{ col|remove_func_paren }} = $('functip_{{ col|remove_func_paren }}');

@@ -482,12 +482,12 @@ SELECT pg.id,
        pg.procs,
        pg.library,
        pg.app_viewname,
-       pgm.avg_time,
-       pgm.var
+       pgm.avg_dtime,
+       pgm.dvar
 FROM profgroup AS pg,
      pgroup_meta AS pgm
 WHERE pg.id = pgm.profgroup_id
-ORDER BY pg.id
+ORDER BY pg.app_viewname, pg.place, pg.id
 ;
 """
     r_newc = conn.select(newc)
