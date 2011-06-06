@@ -1,0 +1,25 @@
+ワークフローアプリケーションを PARPDB に追加する際の手順
+
+CRT は常に新規作成する
+NCR はなければ作成する
+
+* TABLE WORKFLOW
+workflow_name = ??? どこかで取得
+workflow_id = NCR(workflow.id=workflow_name)
+
+* TABLE WORKFLOW_CONDITION
+filesystem = ??? データを配置しているFilesystem
+location = ??? クラスタ名 or 環境名
+worker_num = ??? ワーカー数 gxpmake DB から取れる？
+workflow_condition_id = NCR(workflow_condition.id=(filesystem, location, worker_num))
+
+* TABLE WORKFLOW_TRIAL
+workflow_trial_id = CRT(workflow_trial_id=(workflow_id, workflow_ocndition_id))
+
+* TABLE APPLICATION
+application_name = DB から取得
+application_id = workflow_id 中の最大値 + 1 (NCR)
+
+* TABLE JOB
+
+* TABLE METRIC
