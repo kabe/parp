@@ -1,0 +1,24 @@
+GXPmake における DB の作られ方を解析していく
+
+2011/06/11 における Call Graph
+
+gxpc.cmd_interpreter.main
+  gxpc.init_and_dispatch
+    gxpc.dispatch
+      gxpc.do_make_cmd
+        gxpc.js_like_cmd
+call gxp_js.py make ...
+(gxpc)gxp_js.init_and_dispatch
+  (gxpc)gxp_js.dispatch
+    gxp_js.do_make_cmd
+      gxp_js.server_main(args, make_args, None)
+        gxp_js.server_main_with_log(make_args, None?)
+          gxp_js.server_main_init()
+          while True:
+            gxp_js.server_iterate()
+              gxp_js.make_matches()
+          gxp_js.record_everything(1)
+            gxp_js.record_rss()
+            gxp_js.record_mem()
+            gxp_js.record_loadavg()
+            gxp_js.generate_html()
