@@ -1,0 +1,18 @@
+-*- org -*-
+
+* Prerequisites (version described is tested)
+** For register script
+*** Linux packages
+- Python (2.6+)
+- unixodbc-dev (2.2.14p2)
+  pyodbc requires /usr/include/sql.h
+- libmyodbc (5.1.6)
+- memcached (1.4.5)
+- python-yaml (3.09)
+*** Python packages
+- pyodbc (http://code.google.com/p/pyodbc/) (2.1.8)
+- python-memcached (1.47)
+
+** For web application
+- Django (1.2.4)
+
