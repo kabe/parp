@@ -1,0 +1,29 @@
+{% load accessdic %}
+<!DOCTYPE HTML>
+<html lagn="en">
+  <head>
+    <title>Diff Comparator</title>
+    <link rel="stylesheet" type="text/css" href="/style/style.css" />
+    <!--script type="text/javascript" src="/script/p.js"></script-->
+  </head>
+  <body>
+    <div id="container">
+      <h1>Workflow PARP</h1>
+      <div>
+        <h2>Conditions</h2>
+        <table id="cmptable">
+          <tr>
+            <th>ID</th>
+            <th>Workflow Name</th>
+          </tr>
+          {% for wf in wfs %}
+          <tr>
+            <td>{{ wf.id }}</td>
+            <td><a href="/wfinfo/{{ wf.id }}">{{ wf.name }}</a></td>
+          </tr>
+          {% endfor %}
+        </table>
+      </div>
+    </div>
+  </body>
+</html>

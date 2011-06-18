@@ -12,26 +12,34 @@ import time
 import string
 import subprocess
 import cPickle
+import json
+import operator
 
 import sys
 import os
 import os.path
-path = os.path.join(os.environ["HOME"], "git/prof/tau/")
+relpath = "../../"
+path = os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                    relpath)
 if path not in sys.path:
     sys.path.append(path)
 
 import yaml
+import pyodbc
 
-import util
-import db
-import nm.loader
-import TauLoad.Loader
+import tau.util
+import tau.db
+import tau.nm.loader
+import tau.TauLoad.Loader
+import config.db
 
 import default
 import memcachedwrapper
 import getraw
 import hashutil
 import tableutil
+
+# GXPmake
 
 # Memcached Preparation
 use_memcache = True
@@ -64,11 +72,6 @@ def pgd2_dummy(request):
     return HttpResponseRedirect("/pgd2/desc/")
 
 
-def usetemplate(request):
-    return render_to_response('ut.html',
-                              {"hensu1": "HENSU1",
-                               "hensu2": "HENSU2"})
-
 @cache_page(60 * 5)
 def pgroupdiff(request, pg1, pg2):
     """Show ProfGroup difference.
@@ -83,9 +86,9 @@ def pgroupdiff(request, pg1, pg2):
     params = ViewParam.objects.get()
     dbtype = params.dbtype
     if dbtype == "sqlite3":
-        conn = db.init("sqlite3", dbfile=params.sqlite3_file)
+        conn = tau.db.init("sqlite3", dbfile=params.sqlite3_file)
     elif dbtype == "postgres":
-        conn = db.init("postgres", username="kabe", hostname="127.0.0.1")
+        conn = tau.db.init("postgres", username="kabe", hostname="127.0.0.1")
     else:
         return HttpResponseServerError(content="Cannot connect to the database")
     # Param
@@ -167,7 +170,6 @@ def pgdiff2(request, params):
     @param request request object
     @param params get parameters
     """
-    print params
     return HttpResponseRedirect(reverse('parpview.viewer.pgdiff'), args=(1, 1))
 
 
@@ -184,9 +186,9 @@ def pgview(request, pg_id):
     params = ViewParam.objects.get()
     dbtype = params.dbtype
     if dbtype == "sqlite3":
-        conn = db.init("sqlite3", dbfile=params.sqlite3_file)
+        conn = tau.db.init("sqlite3", dbfile=params.sqlite3_file)
     elif dbtype == "postgres":
-        conn = db.init("postgres", username="kabe", hostname="127.0.0.1")
+        conn = tau.db.init("postgres", username="kabe", hostname="127.0.0.1")
     else:
         raise Http404
     # Main comparation
@@ -248,9 +250,9 @@ def pgd1(request, order, sortmode, graphmode, pg1, pg2):
     params = ViewParam.objects.get()
     dbtype = params.dbtype
     if dbtype == "sqlite3":
-        conn = db.init("sqlite3", dbfile=params.sqlite3_file)
+        conn = tau.db.init("sqlite3", dbfile=params.sqlite3_file)
     elif dbtype == "postgres":
-        conn = db.init("postgres", username="kabe", hostname="127.0.0.1")
+        conn = tau.db.init("postgres", username="kabe", hostname="127.0.0.1")
     else:
         raise Http404
     ## Param
@@ -367,9 +369,9 @@ def pgd2(request, sortmode):
     params = ViewParam.objects.get()
     dbtype = params.dbtype
     if dbtype == "sqlite3":
-        conn = db.init("sqlite3", dbfile=params.sqlite3_file)
+        conn = tau.db.init("sqlite3", dbfile=params.sqlite3_file)
     elif dbtype == "postgres":
-        conn = db.init("postgres", username="kabe", hostname="127.0.0.1")
+        conn = tau.db.init("postgres", username="kabe", hostname="127.0.0.1")
     else:
         return HttpResponseServerError("Cannot connect to the database")
     ##########################
@@ -565,6 +567,122 @@ ORDER BY ${order}
 
 
 ##################################################
+###                 Workflows                  ###
+##################################################
+
+@cache_page(60 * 5)
+def wf(request,):
+    """Workflow Trial diff.
+
+    @param Django request object
+    """
+    cstr = config.db.connect_str
+    conn = pyodbc.connect(config.db.connect_str)
+    cursor = conn.cursor()
+    # List workflows
+    cursor.execute("""
+SELECT id, name
+FROM workflow
+ORDER BY name, id
+""")
+    wfs = cursor.fetchall()
+
+    return render_to_response(
+        'wf.html',
+        {
+            "self_path": request.path,
+            "wfs": wfs,})
+
+
+@cache_page(60 * 5)
+def workflow_info(request, wf):
+    """Workflow Information.
+
+    @param Django request object
+    @param wf workflow id
+    """
+    cstr = config.db.connect_str
+    conn = pyodbc.connect(config.db.connect_str)
+    cursor = conn.cursor()
+    cursor.execute("""
+SELECT name FROM workflow WHERE id=?
+""", wf)
+    workflow = cursor.fetchone()
+    cursor.execute("""
+SELECT id, name FROM application
+WHERE workflow=?
+""", wf)
+    apps = cursor.fetchall()
+    
+    cursor.execute("""
+SELECT
+  wft.id id,
+  wf.name name,
+  wft.workflow_condition wf_condition,
+  wfc.location location,
+  wfc.filesystem filesystem,
+  wfc.worker_num worker_num,
+  AVG(wft.elapsed_time) elapsed
+FROM
+  workflow_trial AS wft,
+  workflow AS wf,
+  workflow_condition AS wfc
+WHERE
+  wf.id = wft.workflow AND
+  wfc.id = wft.workflow_condition AND
+  wf.id = ?
+GROUP BY wft.workflow_condition
+""", wf)
+    conds = cursor.fetchall()
+
+    return render_to_response(
+        'workflowinfo.html',
+        {
+            "self_path": request.path,
+            "workflow": workflow,
+            "conds": conds,
+            "apps": apps,})
+
+
+def wfdiff(request, wf, wfc1, wfc2):
+    """Print diff.
+
+    @param request request object
+    @param wf workflow id
+    @param wft_1 Workflow condition ID 1
+    @param wft_2 Workflow condition ID 2
+    """
+    cstr = config.db.connect_str
+    conn = pyodbc.connect(config.db.connect_str)
+    cursor = conn.cursor()
+    # Get workflow obj
+    workflow = cursor.execute(
+        "SELECT * FROM workflow WHERE id = ?", wf).fetchone()
+    print "workflow"
+    print workflow
+    #
+    sql, columns_fixed, columns, sqlparams = construct_wfdiff_sql(
+        request, wf, wfc1, wfc2)
+    print sql
+    cursor.execute(sql, *sqlparams)
+    drows = cursor.fetchall()
+    print drows
+    jsoninfo = generate_wf_graph_json(drows, columns_fixed + columns, None)
+    jsondata = json.dumps(jsoninfo)
+    return render_to_response(
+        'wfd.html',
+        {
+            "self_path": request.path,
+            "sql": sql,
+            "columnsf": columns_fixed,
+            "columns": columns,
+            "drows": drows,
+            "jsondata": jsondata,
+            "workflow": workflow,
+            })
+
+
+##################################################
 ###                 Utilities                  ###
 ##################################################
 
@@ -679,10 +797,8 @@ plot \
                                  y1label=y1label,
                                  y2label=y2label,
                                  y2tics=y2tics,)
-    print s
     with open(tmpfilename, "w") as f:
         f.write(timedata.strip())
-        print timedata
         f.close()
         sp = subprocess.Popen(("gnuplot",), stdin=subprocess.PIPE)
         sp.stdin.write(s)
@@ -723,8 +839,95 @@ def determine_checked_radios(cols, graphcols):
             except:
                 index = 0
             d[y][index] = 'checked="checked"'
-    print d
     return d
+
+
+def construct_wfdiff_sql(request, wf, wfc1, wfc2):
+    """Construct SQL for comparing Workflow trials.
+
+    @param request
+    @param wf workflow ID
+    @param wfc1 workflow condition id 1
+    @param wfc2 workflow condition id 2
+    """
+    columns_fixed = (("app.name", "ApplicationName"),
+                     ("cv1.elapsed_local", "ElapsedL1"),
+                     ("cv2.elapsed_local", "ElapsedL2"))
+    # TODO: configure columns using request argument
+    columns = (("cv1.elapsed_remote", "ElapsedR1"),
+               ("cv2.elapsed_remote", "ElapsedR2"),
+               ("cv1.time_user", "UTime1"),
+               ("cv2.time_user", "UTime2"),
+               ("cv1.time_system", "STime1"),
+               ("cv2.time_system", "STime2"),
+               ("cv1.minor_faults", "MinFlt1"),
+               ("cv2.minor_faults", "MinFlt2"),
+               ("cv1.major_faults", "MajFlt1"),
+               ("cv2.major_faults", "MajFlt2"),)
+    sql_columns = ", ".join(
+        " ".join((col[0], col[1]))
+        for col in columns_fixed + columns)
+    # TODO: Check the SQL sentence is valid/secure.
+    sql = """
+SELECT
+  %s
+FROM
+  condition_view cv1,
+  condition_view cv2,
+  application app
+WHERE
+  cv1.application = cv2.application AND
+  cv1.workflow = cv2.workflow AND
+  cv1.wf_condition = ? AND
+  cv2.wf_condition = ? AND
+  cv1.application = app.id AND
+  cv1.workflow = ?
+""" % (sql_columns)
+    return sql, columns_fixed, columns, (wfc1, wfc2, wf)
+
+
+def generate_wf_graph_json(contents, columns, graph_cols):
+    """Genearte JSON string to create a graph.
+
+    @param contents all column contents
+    @param columns column names
+    @param graph_cols graph column names (Dict of for y1, y2)
+    """
+    series = []
+    contents_to_appmap = {}
+    for i, column in enumerate(columns):
+        contents_to_appmap[column[1]] = tuple(map(
+                operator.itemgetter(i), contents))[0: default.APP_NUM]
+    print "contents_to_appmap"
+    print contents_to_appmap
+    # Fixed graph columns
+    graph_cols = {"y1": ("ElapsedL1", "ElapsedL2"), "y2": ("UTime1", "UTime2")}
+    # ApplicationName s
+    categories = tuple(content[0] for content in contents)[0:default.APP_NUM]
+    # Values
+    yaxis = []
+    axis_idx = 0
+    for axis in ("y1", "y2",):
+        if axis in graph_cols.keys():
+            yaxis.append({
+                    "title": {"align": "middle",
+                              "text": ", ".join(graph_cols[axis])}})
+            for col in graph_cols[axis]:
+                series.append(
+                    {
+                        "name": col,
+                        "data": contents_to_appmap[col],
+                        "yAxis": axis_idx})
+            axis_idx += 1
+    print "Categories"
+    print categories
+    print "Series"
+    print series
+    return {
+        "categories": categories,
+        "series": series,
+        "yaxis": yaxis,
+        }
 
 
 ##################################################

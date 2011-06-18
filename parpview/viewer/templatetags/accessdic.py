@@ -18,6 +18,14 @@ def safe_accessdic(obj, index):
 
 register.filter('safe_accessdic', safe_accessdic)
 
+def accessprop(obj, prop):
+    try:
+        return getattr(obj, prop)
+    except:
+        return ""
+
+register.filter('accessprop', accessprop)
+
 def remove_func_paren(obj):
     try:
         return obj.replace("()", "")

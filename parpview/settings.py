@@ -19,7 +19,7 @@ DATABASES = {
         'PASSWORD': '',                  # Not used with sqlite3.
         'HOST': '',                      # Set to empty string for localhost. Not used with sqlite3.
         'PORT': '',                      # Set to empty string for default. Not used with sqlite3.
-    }
+    },
 }
 
 # Local time zone for this installation. Choices can be found here:
@@ -49,7 +49,9 @@ USE_L10N = True
 
 # Absolute filesystem path to the directory that will hold user-uploaded files.
 # Example: "/home/media/media.lawrence.com/"
-MEDIA_ROOT = ''
+#MEDIA_ROOT = ''
+MEDIA_ROOT = os.path.join(
+    os.path.dirname(os.path.abspath(__file__)), "resources")
 
 # URL that handles the media served from MEDIA_ROOT. Make sure to use a
 # trailing slash if there is a path component (optional in other cases).

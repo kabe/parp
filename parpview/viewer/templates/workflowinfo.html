@@ -1,0 +1,46 @@
+{% load accessdic %}
+<!DOCTYPE HTML>
+<html lagn="en">
+  <head>
+    <title>Workflow Information</title>
+    <link rel="stylesheet" type="text/css" href="/style/style.css" />
+    <!--script type="text/javascript" src="/script/p.js"></script-->
+  </head>
+  <body>
+    <div id="container">
+      <h1>Workflow {{ workflow.name }}</h1>
+      <div>
+        <h2>Applications in {{ workflow.name }}</h2>
+        <table id="cmptable">
+          <tr>
+            <th>ID</th>
+            <th>Name</th>
+          </tr>
+          {% for app in apps %}
+          <tr>
+            <td>{{ app.id }}</td>
+            <td>{{ app.name }}</td>
+          </tr>
+          {% endfor %}
+        </table>
+        <h2>Conditions</h2>
+        <table id="cmptable">
+          <tr>
+            <th>Location</th>
+            <th>Filesystem</th>
+            <th>Worker #</th>
+            <th>Average Time</th>
+          </tr>
+          {% for cond in conds %}
+          <tr>
+            <td>{{ cond.location }}</td>
+            <td>{{ cond.filesystem }}</td>
+            <td>{{ cond.worker_num }}</td>
+            <td>{{ cond.elapsed }}</td>
+          </tr>
+          {% endfor %}
+        </table>
+      </div>
+    </div>
+  </body>
+</html>

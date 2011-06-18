@@ -1,11 +1,8 @@
 from django.conf.urls.defaults import *
+from django.conf import settings
 from django.contrib import admin
 admin.autodiscover()
 
-
-# Uncomment the next two lines to enable the admin:
-# from django.contrib import admin
-# admin.autodiscover()
 
 urlpatterns = patterns('',
     # Example:
@@ -22,6 +19,12 @@ urlpatterns = patterns('',
      'parpview.viewer.views.pgd2'),
     (r'^pgview/(?P<pg_id>\d+)/$', 'parpview.viewer.views.pgview'),
     (r'^pgdiff/(?P<params>.+)/$', 'parpview.viewer.views.pgdiff2'),
+    # Workflow
+    (r'^wf/?$', 'parpview.viewer.views.wf'),
+    (r'^wfinfo/(?P<wf>\d+)', 'parpview.viewer.views.workflow_info'),
+    (r'^wfdiff/(?P<wf>\d+)/(?P<wfc1>\d+)/(?P<wfc2>\d+)',
+     'parpview.viewer.views.wfdiff'),
+    # Static
     (r'^img/(?P<imgpath>.+\.png)$', 'parpview.viewer.views.getpng'),
     (r'^script/(?P<path>.+\.js)$', 'parpview.viewer.views.getjs'),
     # Uncomment the admin/doc line below to enable admin documentation:
@@ -29,4 +32,9 @@ urlpatterns = patterns('',
 
     # Uncomment the next line to enable the admin:
     (r'^admin/', include(admin.site.urls)),
+
+    # Resources
+    (r'^resources/(?P<path>.*)$',
+     'django.views.static.serve',
+     {'document_root': settings.MEDIA_ROOT}),
 )
