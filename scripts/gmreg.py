@@ -29,6 +29,9 @@ def parse_opt():
     parser.add_option("-n", "--worker-num", dest="worker_num",
                       help="number of workers",
                       metavar="WORKER_NUM")
+    parser.add_option("-i", "--input-dataset", dest="input_dataset",
+                      help="input dataset name",
+                      metavar="INPUT_DATASET")
     parser.add_option("-f", "--filesystem", dest="filesystem",
                       help="filesystem",
                       default="",
@@ -70,7 +73,10 @@ Registers the database file into the database.
     print "Workflow ID = %d, New: %s" % (workflow_id, str(isnew))
     # TABLE WORKFLOW_CONDITION
     workflow_condition_id, isnew = reg.process_workflow_condition(
-        options.filesystem, options.location, options.worker_num)
+        options.filesystem,
+        options.location,
+        options.worker_num,
+        options.input_dataset)
     print "Workflow Condition ID = %d, New: %s" % (
         workflow_condition_id, str(isnew))
     # TABLE WORKFLOW_TRIAL (Always new)

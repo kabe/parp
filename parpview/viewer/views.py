@@ -603,7 +603,7 @@ ORDER BY name, id
             "wfs": wfs,})
 
 
-@cache_page(60 * 5)
+#@cache_page(60 * 5)
 def workflow_info(request, wf):
     """Workflow Information.
 
@@ -614,7 +614,7 @@ def workflow_info(request, wf):
     conn = pyodbc.connect(config.db.connect_str)
     cursor = conn.cursor()
     cursor.execute("""
-SELECT name FROM workflow WHERE id=?
+SELECT id, name FROM workflow WHERE id=?
 """, wf)
     workflow = cursor.fetchone()
     cursor.execute("""
@@ -628,9 +628,11 @@ SELECT
   wft.id id,
   wf.name name,
   wft.workflow_condition wf_condition,
+  wfc.id wfc_id,
   wfc.location location,
   wfc.filesystem filesystem,
   wfc.worker_num worker_num,
+  wfc.input_dataset input_dataset,
   AVG(wft.elapsed_time) elapsed
 FROM
   workflow_trial AS wft,

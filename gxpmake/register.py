@@ -71,28 +71,33 @@ class GXPMakeRegister(object):
         self._odbc_connection.rollback()
         raise RegisterException("Workflow")
 
-    def process_workflow_condition(self, filesystem, location, worker_num):
+    def process_workflow_condition(
+        self, filesystem, location, worker_num, input_dataset):
         """Registers workflow_condition.
 
         @param filesystem file system under which workflow was run
         @param location name of the execution environment
         @param worker_num number of workers
+        @param input_dataset name of input dataset
         @return (ID column value with args, True if newly inserted)
         """
-        row = self.cursor.execute("""
+        row = self.cursor.execute(
+            """
 SELECT id
 FROM workflow_condition
 WHERE
     filesystem = ? AND
     location = ? AND
-    worker_num = ?;""", filesystem, location, worker_num).fetchone()
+    worker_num = ? AND
+    input_dataset = ?;""",
+            filesystem, location, worker_num, input_dataset).fetchone()
         if row:
             return int(row[0]), False
         # Record not exists
         self.cursor.execute("""
 INSERT INTO workflow_condition
-    (filesystem, location, worker_num)
-VALUES (?, ?, ?);""", filesystem, location, worker_num)
+    (filesystem, location, worker_num, input_dataset)
+VALUES (?, ?, ?, ?);""", filesystem, location, worker_num, input_dataset)
         row = self.cursor.execute("SELECT LAST_INSERT_ID();").fetchone()
         if row:
             return int(row[0]), True
