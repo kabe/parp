@@ -519,7 +519,7 @@ ORDER BY ${order}
     #print r_newc[int(pgs[0]) - 1][6], r_newc[int(pgs[1]) - 1][6]
     functip = {}
     if pgs[0] != pgs[1]:
-        mc_index = hashutil.md5(sql_str + pgs[0] + "_" + pgs[1])
+        mc_index = hashutil.md5(sql_str + str(pgs[0]) + "_" + str(pgs[1]))
         trycache = memcached_conn.get(mc_index)
         if trycache:
             r_main = cPickle.loads(trycache)
@@ -553,6 +553,276 @@ ORDER BY ${order}
           ru2.ru_oublock - ru1.ru_oublock,
           time2 - time1,
           )
+    return render_to_response('pgd2.html',
+                              {"self_path": request.path,
+                               "params": t_params,
+                               "cols": view_columns,
+                               "pg1": int(pgs[0]),
+                               "pg2": int(pgs[1]),
+                               "result": r_main,
+                               "rnc_n": newc_colnames,
+                               "rnc": r_newc2,
+                               "rd": rd,
+                               "imgfilename": imagefilename,
+                               "reqparams": {"order": order,
+                                             "sortmode": sortmode,
+                                             "path": request.path,},
+                               "checked_radios": checked_radios,
+                               "coldef_params": coldef_params,
+                               "graph_title": graphtitle,
+                               "vschema": vschema,
+                               "functip": functip,
+                               })
+
+
+def pgd3(request, sortmode):
+    """Show ProfGroup difference.
+
+    @param request
+    @param sortmode
+    """
+    ru1 = resource.getrusage(resource.RUSAGE_SELF)
+    time1 = time.time()
+    params = ViewParam.objects.get()
+    dbtype = params.dbtype
+    if dbtype == "sqlite3":
+        conn = db.init("sqlite3", dbfile=params.sqlite3_file)
+    elif dbtype == "postgres":
+        conn = db.init("postgres", username="kabe", hostname="127.0.0.1")
+    else:
+        return HttpResponseServerError("Cannot connect to the database")
+
+    ##########################
+    ##### New comparison #####
+    ##########################
+
+    newc_colnames = ("PG 1", "PG 2",
+                     "Application", "Comment", "Place",
+                     "# of nodes", "# of Processes",
+                     "Avg. Time [sec]", "StdDev. [sec]",)
+    newc = """
+SELECT pg.id,
+       pg.application,
+       pg.place,
+       pg.nodes,
+       pg.procs,
+       pg.library,
+       pg.app_viewname,
+       pgm.avg_dtime,
+       pgm.dvar
+FROM profgroup AS pg,
+     pgroup_meta AS pgm
+WHERE pg.id = pgm.profgroup_id
+ORDER BY pg.app_viewname, pg.place, pg.id
+;
+"""
+    r_newc = conn.select(newc)
+    #print r_newc
+
+    ## stddev (replace the last column of r_newc with sqrted value)
+
+    r_newc2 = [r[0:-1] + (math.sqrt(r[-1]),) for r in r_newc]
+
+    ###################
+    ##### Request #####
+    ###################
+
+    ## Request mode
+
+    graph_cols = {"y1": [], "y2": []}
+    pgs = []
+    if request.method == "POST":
+        print "POST Parameters:"
+        print request.POST
+        graph_cols["y1"] = request.POST.getlist("graph_y1")
+        graph_cols["y2"] = request.POST.getlist("graph_y2")
+        pgs = [int(request.POST["pg1"]), int(request.POST["pg2"])]
+
+        ##### Column definitions #####
+
+        existing_usecol_indeces = request.POST.getlist("use_flag")
+        existing_usecols = tuple((request.POST["coldef_%s" % (ind)],
+                                  request.POST["colname_%s" % (ind)])
+                                 for ind in existing_usecol_indeces)
+        print "existing_usecols:"
+        print existing_usecols
+        new_usecol_indeces = request.POST.getlist("use_flag_new")
+        new_usecols = tuple((request.POST["new_coldef_%s" % (ind)],
+                             request.POST["new_colname_%s" % (ind)])
+                            for ind in new_usecol_indeces)
+        print "new_usecol"
+        print new_usecols
+        view_columns = existing_usecols + new_usecols
+
+        ## Order
+
+        post_order_idx = int(request.POST["order"])
+        order = view_columns[post_order_idx][1]
+    else:  # default mode
+        graph_cols = default.graph_cols
+        pgs = [1, 1]
+        view_columns = default.view_columns
+        order = default.order
+        #sortmode = default.sortmode
+    print "pgs: %s" % (str(pgs))
+    col_0, col_1 = ([x for x in r_newc
+                     if int(x[0]) == int(pgs[0])][0],
+                    [x for x in r_newc
+                     if int(x[0]) == int(pgs[1])][0])
+    print col_0, col_1
+    if col_0[6] != col_1[6]:
+        raise Exception("Impossible to compare two different applications")
+
+    # Execution Time
+
+    experiment_exec_times = [col_0[7], col_1[7]]
+    print "Exec time: %s" % (experiment_exec_times)
+
+    #print "Graph Parameters:"
+    #print graph_cols
+
+    ## Param
+
+    #print request.META
+    t_params = {}
+    coldef_params = {}
+    coldef_params["newcols"] = [x for x in xrange(5)]  # new columns defs
+
+    ##### Main comparison SQL generation #####
+    # define view columns
+    ## dictionary of strings tuple: (key, value) = (definition, name)
+
+    view_columns_joined_str = ", ".join(" AS ".join(vc)
+                                        for vc in view_columns)
+    #print view_columns_joined_str
+    checked_radios = determine_checked_radios(view_columns, graph_cols)
+
+    ## Joined tables (or views) definitions
+
+    joined_tables = (
+        ("(SELECT * FROM pgroup_ratio WHERE profgroup_id = ?)", "pr1"),
+        ("(SELECT * FROM pgroup_ratio WHERE profgroup_id = ?)", "pr2"),
+        )
+    joined_tables_joined_str = ", ".join(" ".join(jt) for jt in joined_tables)
+
+    ## Join conditions
+
+    join_conditions = [
+        "pr1.funcname = pr2.funcname",
+        ]
+    join_conditions_joined_str = " AND ".join(join_conditions)
+
+    ## Sort order
+
+    column_names = (x[1] for x in view_columns)
+    if order not in column_names:
+        return HttpResponseServerError(content="Order %s not in columns" % \
+                                           (order))
+    order_str = order
+
+    ## Sort mode
+
+    if sortmode == "asc":
+        order_str += " ASC"
+    elif sortmode == "desc":
+        order_str += " DESC"
+    else:
+        return HttpResponseServerError(content="Order mode not in list")
+
+    ## Prepare YAML
+
+    y = None
+    try:
+        with open(e9n_function) as f:
+            s = f.read()
+            y = yaml.load(s)
+    except Exception, e:
+        raise e
+
+    ## Query
+    # @TODO What should be the definition of "from" and join condition?
+    # should it be able to be specified by a user?
+
+    sql = """
+SELECT ${columns}
+FROM ${tables}
+WHERE ${join_conditions}
+ORDER BY ${order}
+;
+"""
+    sql_tpl = string.Template(sql)
+    sql_str = sql_tpl.substitute(columns=view_columns_joined_str,
+                                 tables=joined_tables_joined_str,
+                                 join_conditions=join_conditions_joined_str,
+                                 order=order_str,)
+    #print sql_str
+    r_main = ()
+    appviewname = col_0[6]
+    #print r_newc[int(pgs[0]) - 1][6], r_newc[int(pgs[1]) - 1][6]
+    functip = {}
+    if pgs[0] != pgs[1]:
+        mc_index = hashutil.md5(sql_str + str(pgs[0]) + "_" + str(pgs[1]))
+        trycache = memcached_conn.get(mc_index)
+        if trycache:
+            r_main = cPickle.loads(trycache)
+        else:
+            r_main = conn.select(sql_str, (pgs[0], pgs[1]))
+            r_main = tableutil.remove_unnecessary_funcs(r_main, appviewname, y)
+            cachestr = cPickle.dumps(r_main)
+            memcached_conn.set(mc_index, cachestr)
+
+        ## Function Comments Tooltip
+
+        try:
+            functip = y[appviewname]
+        except KeyError:
+            functip = {}
+
+    ### 2011/04/29 Special Order
+    ## Re-Ordering
+    ### by t1 * log(t1 / t2)
+    ### t1 = x[1], t2 = x[2]
+
+    r_main = sorted(r_main,
+                    lambda x, y: cmp(x[1] * math.log(x[1] / x[2]),
+                                     y[1] * math.log(y[1] / y[2])),
+                    None,
+                    True)
+    r_main = tableutil.add_column(r_main,
+                                  [math.log(x[1]) * math.log(x[1] / x[2])
+                                   for x in r_main])
+    r_main = tableutil.add_column(r_main,
+                                  [x[1] * math.log(x[1] / x[2])
+                                   for x in r_main])
+
+    ### Graph generation
+
+    imagefilename = ""
+    graphtitle = "Column for graph unspecified"
+    if pgs[0] != pgs[1]:
+        try:
+            graphtitle, imagefilename = gengraph(pgs[0], pgs[1], r_main, order,
+                                                 view_columns, graph_cols)
+        except Exception, e:
+            pass
+
+    ## Schema Info
+
+    vschema = conn.getschema("pgroup_ratio")
+
+    ## Log
+
+    ru2 = resource.getrusage(resource.RUSAGE_SELF)
+    time2 = time.time()
+    rd = (ru2.ru_utime - ru1.ru_utime,
+          ru2.ru_stime - ru1.ru_stime,
+          ru2.ru_inblock - ru1.ru_inblock,
+          ru2.ru_oublock - ru1.ru_oublock,
+          time2 - time1,
+          )
+
+    # Render All
+
     return render_to_response('pgd2.html',
                               {"self_path": request.path,
                                "params": t_params,
@@ -734,7 +1004,7 @@ plot \
     # Graph title
     # title = "%s \\n (order %s)" % \
     #     (", ".join(cols["y1"]  + cols["y2"]).replace("_", "\\\\_"), order)
-    title = "Order by %s" % (order)
+    title = "";  # "Order by %s" % (order)
     y1label = "set ylabel \"%s\"" % (", ".join(cols["y1"]).replace("_", "\\\\_"))
     y2label = "set y2label \"%s\"" % (", ".join(cols["y2"]).replace("_", "\\\\_"))
     y2tics = "set y2tics"
