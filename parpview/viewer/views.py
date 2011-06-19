@@ -904,7 +904,7 @@ SELECT
   wfc.worker_num worker_num,
   wfc.input_dataset input_dataset,
   COUNT(*) num_trials,
-  AVG(wft.elapsed_time) elapsed
+  AVG(TIME_TO_SEC(wft.elapsed_time)) elapsed
 FROM
   workflow_trial AS wft,
   workflow AS wf,
@@ -916,6 +916,8 @@ WHERE
 GROUP BY wft.workflow_condition
 """, wf)
     conds = cursor.fetchall()
+    print "conds"
+    print conds
 
     return render_to_response(
         'workflowinfo.html',
