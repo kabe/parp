@@ -1189,13 +1189,13 @@ def generate_wf_graph_json(contents, columns, graph_cols):
     graph_cols = {"y1": ("ElapsedL1", "ElapsedL2",
                          "ElapsedR1", "ElapsedR2",
                          "UTime1", "UTime2", "STime1", "STime2",),
-                  "y2": ("MinFlt1", "MinFlt2",)}
+                  "y2": ("MinFlt1", "MinFlt2",),}
     # ApplicationName s
     categories = tuple(content[0] for content in contents)[0:default.APP_NUM]
     # Values
     yaxis = []
     axis_idx = 0
-    for axis in ("y1", "y2",):
+    for axis in graph_cols.keys():
         if axis in graph_cols.keys():
             yaxis.append({
                     "title": {"align": "middle",
