@@ -69,7 +69,6 @@
     <div id="container">
       <h1>Workflow {{ workflow.name }}</h1>
       <div>
-        <h2>Applications in {{ workflow.name }}</h2>
         <h2>Graph</h2>
         <!-- Graph will be rendered here -->
         <div id='graph_render'
@@ -90,11 +89,15 @@
           <tr>
             <!-- Fixed Columns Contents -->
               {% for col in columnsf %}
+              {% if forloop.counter0 == 0 %}
               <td>{{ rec|accessprop:col.1 }}</td>
+              {% else %}
+              <td class="numeric">{{ rec|accessprop:col.1 }}</td>
+              {% endif %}
               {% endfor %}
             <!-- Non-Fixed Columns Contents -->
               {% for col in columns %}
-              <td>{{ rec|accessprop:col.1 }}</td>
+              <td class="numeric">{{ rec|accessprop:col.1 }}</td>
               {% endfor %}
           </tr>
           {% endfor %}

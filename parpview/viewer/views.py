@@ -903,6 +903,7 @@ SELECT
   wfc.filesystem filesystem,
   wfc.worker_num worker_num,
   wfc.input_dataset input_dataset,
+  COUNT(*) num_trials,
   AVG(wft.elapsed_time) elapsed
 FROM
   workflow_trial AS wft,

@@ -18,7 +18,7 @@
           </tr>
           {% for app in apps %}
           <tr>
-            <td>{{ app.id }}</td>
+            <td class="numeric">{{ app.id }}</td>
             <td>{{ app.name }}</td>
           </tr>
           {% endfor %}
@@ -32,15 +32,17 @@
             <th>Worker #</th>
             <th>Input Dataset</th>
             <th>Average Time</th>
+            <th># of Trials</th>
           </tr>
           {% for cond in conds %}
           <tr>
-            <td>{{ cond.wfc_id }}</td>
+            <td class="numeric">{{ cond.wfc_id }}</td>
             <td>{{ cond.location }}</td>
             <td>{{ cond.filesystem }}</td>
-            <td>{{ cond.worker_num }}</td>
+            <td class="numeric">{{ cond.worker_num }}</td>
             <td>{{ cond.input_dataset }}</td>
-            <td>{{ cond.elapsed }}</td>
+            <td class="numeric">{{ cond.elapsed }}</td>
+            <td class="numeric">{{ cond.num_trials }}</td>
           </tr>
           {% endfor %}
         </table>
