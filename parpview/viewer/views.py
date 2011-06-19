@@ -14,6 +14,7 @@ import subprocess
 import cPickle
 import json
 import operator
+import decimal
 
 import sys
 import os
@@ -40,6 +41,14 @@ import hashutil
 import tableutil
 
 # GXPmake
+
+# Support Class
+class DecimalEncoder(json.JSONEncoder):
+    def default(self, o):
+        if isinstance(o, decimal.Decimal):
+            return float(o)
+        return super(DecimalEncoder, self).default(o)
+
 
 # Memcached Preparation
 use_memcache = True
@@ -668,7 +677,8 @@ def wfdiff(request, wf, wfc1, wfc2):
     drows = cursor.fetchall()
     print drows
     jsoninfo = generate_wf_graph_json(drows, columns_fixed + columns, None)
-    jsondata = json.dumps(jsoninfo)
+    print jsoninfo
+    jsondata = json.dumps(jsoninfo, cls=DecimalEncoder)
     return render_to_response(
         'wfd.html',
         {
@@ -898,10 +908,13 @@ def generate_wf_graph_json(contents, columns, graph_cols):
     for i, column in enumerate(columns):
         contents_to_appmap[column[1]] = tuple(map(
                 operator.itemgetter(i), contents))[0: default.APP_NUM]
-    print "contents_to_appmap"
-    print contents_to_appmap
+    #print "contents_to_appmap"
+    #print contents_to_appmap
     # Fixed graph columns
-    graph_cols = {"y1": ("ElapsedL1", "ElapsedL2"), "y2": ("UTime1", "UTime2")}
+    graph_cols = {"y1": ("ElapsedL1", "ElapsedL2",
+                         "ElapsedR1", "ElapsedR2",
+                         "UTime1", "UTime2", "STime1", "STime2",),
+                  "y2": ("MinFlt1", "MinFlt2",)}
     # ApplicationName s
     categories = tuple(content[0] for content in contents)[0:default.APP_NUM]
     # Values
@@ -911,18 +924,20 @@ def generate_wf_graph_json(contents, columns, graph_cols):
         if axis in graph_cols.keys():
             yaxis.append({
                     "title": {"align": "middle",
-                              "text": ", ".join(graph_cols[axis])}})
+                              "text": ", ".join(graph_cols[axis]),},
+                    # Odd-number axis will be placed right
+                    "opposite": True if axis_idx % 2 else False})
             for col in graph_cols[axis]:
                 series.append(
                     {
                         "name": col,
                         "data": contents_to_appmap[col],
-                        "yAxis": axis_idx})
+                        "yAxis": axis_idx,})
             axis_idx += 1
-    print "Categories"
-    print categories
-    print "Series"
-    print series
+    #print "Categories"
+    #print categories
+    #print "Series"
+    #print series
     return {
         "categories": categories,
         "series": series,

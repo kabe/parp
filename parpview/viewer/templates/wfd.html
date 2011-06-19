@@ -15,7 +15,8 @@
           chart = new Highcharts.Chart({
             chart: {
                     renderTo: 'graph_render',
-                    defaultSeriesType: 'bar'
+                    //defaultSeriesType: 'bar',
+                    type: 'column',
             },
             title: {
                     text: "Comparison graph for Workflow {{ workflow.name}}"
@@ -59,8 +60,6 @@
             },
             series: jsondata.series
           });
-          
-              
       });
 				
     </script> 
