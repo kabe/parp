@@ -17,6 +17,8 @@ urlpatterns = patterns('',
     (r'^pgd2/$', 'parpview.viewer.views.pgd2_dummy'),
     (r'^pgd2/(?P<sortmode>\w+)/$',
      'parpview.viewer.views.pgd2'),
+    (r'^pgd3/(?P<sortmode>\w+)/$',
+     'parpview.viewer.views.pgd3'),
     (r'^pgview/(?P<pg_id>\d+)/$', 'parpview.viewer.views.pgview'),
     (r'^pgdiff/(?P<params>.+)/$', 'parpview.viewer.views.pgdiff2'),
     # Workflow
