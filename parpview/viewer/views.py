@@ -1137,10 +1137,14 @@ def construct_wfdiff_sql(request, wf, wfc1, wfc2):
     """
     columns_fixed = (("app.name", "ApplicationName"),
                      ("cv1.elapsed_local", "ElapsedL1"),
-                     ("cv2.elapsed_local", "ElapsedL2"))
+                     ("cv2.elapsed_local", "ElapsedL2"),
+                     ("cv1.app_count", "AppCount1"),
+                     ("cv2.app_count", "AppCount2"),)
     # TODO: configure columns using request argument
     columns = (("cv1.elapsed_remote", "ElapsedR1"),
                ("cv2.elapsed_remote", "ElapsedR2"),
+               ("cv1.elapsed_local * cv1.app_count", "AccumL1"),
+               ("cv2.elapsed_local * cv2.app_count", "AccumL2"),
                ("cv1.time_user", "UTime1"),
                ("cv2.time_user", "UTime2"),
                ("cv1.time_system", "STime1"),
@@ -1186,10 +1190,28 @@ def generate_wf_graph_json(contents, columns, graph_cols):
     #print "contents_to_appmap"
     #print contents_to_appmap
     # Fixed graph columns
-    graph_cols = {"y1": ("ElapsedL1", "ElapsedL2",
-                         "ElapsedR1", "ElapsedR2",
-                         "UTime1", "UTime2", "STime1", "STime2",),
-                  "y2": ("MinFlt1", "MinFlt2",),}
+    graph_cols1 = {
+        "y1": (
+            "ElapsedL1", "ElapsedL2",
+            "ElapsedR1", "ElapsedR2",
+            "UTime1", "UTime2", "STime1", "STime2",
+            "AccumL1", "AccumL2",
+            ),
+        "y2": ("MinFlt1", "MinFlt2",),
+        "y3": ("AppCount1",),}
+    graph_cols2 = {
+        "y1": (
+            "ElapsedL1", "ElapsedL2",
+            ),}
+    graph_cols3 = {
+        "y1": (
+            "AccumL1", "AccumL2",
+            ),
+        "y2": (
+            "ElapsedL1", "ElapsedL2",
+            ),
+        "y3": ("AppCount1",),}
+    graph_cols = graph_cols3
     # ApplicationName s
     categories = tuple(content[0] for content in contents)[0:default.APP_NUM]
     # Values
