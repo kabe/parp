@@ -87,16 +87,15 @@ Generate timechart of the specified trial.
         m = ManInfo(index=idx, name=man, position=p)
         iindex[man] = m
     # Init
-    psd.append(postscript.begin())
+    psd.extend(postscript.begin())
     # Create colour chart for applications
     apps_colour_d = mk_apps_colourd(apps)
-    psd.append(postscript.place_colourlegend(
+    psd.extend(postscript.place_colourlegend(
             apps_colour_d,
             postscript.Position(200, 0),
             postscript.Position(100, 90)))
     # Max name length of workers
     max_worker_length = max(len(man) for man in workers)
-    #print "Done"
     # Place Axis
     origin_x = max_worker_length * 0.5 * postscript.FONT_SIZE
     origin = postscript.Position(
@@ -105,18 +104,22 @@ Generate timechart of the specified trial.
     rt_y = FigureOption.Y_OFFSET + \
         FigureOption.NODE_INTERVAL * (len(workers) + 2)
     rt = postscript.Position(origin_x + FigureOption.X_WIDTH, rt_y)
-    psd.append(postscript.draw_axis(origin, rt))
+    psd.extend(postscript.draw_axis(origin, rt))
     # Place grid
-    psd.append(postscript.place_grid(
+    psd.extend(postscript.place_grid(
             origin_x + FigureOption.X_WIDTH,
             rt_y))
     # Place Node index
     for idx, man in enumerate(workers):
         m = iindex[man]
-        psd.append(postscript.place_text(
+        psd.extend(postscript.place_text(
                 man, postscript.Position(0, m.position.y)))
     # Place boxes
-    TIMESCALE = (1.0 * FigureOption.X_WIDTH) / (meta.time)
+    records_time_max = max(
+        [record.starttime + record.elapsedtime for record in records])
+    maximum_time = max(records_time_max, meta.time)
+    #print >>sys.stderr, maximum_time, records_time_max, meta.time
+    TIMESCALE = (1.0 * FigureOption.X_WIDTH) / maximum_time
     #print >>sys.stderr, meta
     #print >>sys.stderr, "origin_x=%f X_WIDTH=%f" % (
     #    origin_x, FigureOption.X_WIDTH,)
@@ -129,14 +132,15 @@ Generate timechart of the specified trial.
             TIMESCALE * record.elapsedtime,
             FigureOption.NODE_INTERVAL)
         try:
-            assert(x0.x + size.x <= origin_x + FigureOption.X_WIDTH)
+            assert(x0.x + size.x - 0.01 <= origin_x + FigureOption.X_WIDTH)
         except AssertionError, e:
             print >>sys.stderr, "x0.x=%f size.x=%f idx=%d" % (x0.x, size.x, idx)
-            print >>sys.stderr, "elapsedsec=%f" % (record.elapsedtime)
-        psd.append(
+            print >>sys.stderr, "starttime=%f elapsedsec=%f" % (
+                record.starttime, record.elapsedtime)
+        psd.extend(
             postscript.draw_rect_size(x0, size, apps_colour_d[record.appname]))
     # Finalize
-    psd.append(postscript.finalize())
+    psd.extend(postscript.finalize())
     print postscript.NL.join(psd)
 
 
@@ -274,12 +278,12 @@ def mk_apps_colourd(apps):
     c0 = [1, 0, 0, 0]
     c1 = [0, 0, 1, 0]
     for idx, app in enumerate(apps):
-        # TODO: Set d[app]
         c = [0] * len(c0)
         for cel in range(len(c0)):
-            c[cel] = (1.0 * idx * c0[cel] + (n - 1.0 - idx) * c1[cel]) / (n - 1.0)
+            c[cel] = (
+                1.0 * idx * c0[cel] + (n - 1.0 - idx) * c1[cel]) / (n - 1.0)
         d[app] = c
-    print >>sys.stderr, d
+    #print >>sys.stderr, d
     return d
 
 

@@ -58,7 +58,7 @@ def begin():
     l.append("%!PS")
     #l.append("")
     #l.append("%%BoundingBox 0 0 2000 3000")
-    return NL.join(l)
+    return l
 
 
 def finalize():
@@ -66,7 +66,7 @@ def finalize():
     """
     l = []
     l.append("showpage")
-    return NL.join(l)
+    return l
 
 
 def draw_rect_position(x0, x1, *args):
@@ -83,6 +83,7 @@ def draw_rect_position(x0, x1, *args):
     l.append("%% RECTANGLE")
     l.append("gsave")
     l.append("    0 0 0 1 setcmykcolor")
+    l.append("    0.1 setlinewidth")
     l.append("    %f %f moveto" % (x0.x, x0.y))
     l.append("    %f %f rlineto" % (xsize, 0))
     l.append("    %f %f rlineto" % (0, ysize))
@@ -100,7 +101,7 @@ def draw_rect_position(x0, x1, *args):
     l.append("    grestore")
     l.append("    stroke")
     l.append("grestore")
-    return NL.join(l)
+    return l
 
 
 def draw_rect_size(x0, size, *args):
@@ -133,7 +134,7 @@ def draw_axis(x0, x1):
     l.append("    %f %f lineto" % (x0.x, x1.y))
     l.append("    stroke")
     l.append("grestore")
-    return NL.join(l)
+    return l
 
 
 def place_grid(x, y):
@@ -156,7 +157,7 @@ def place_grid(x, y):
     l.append("    closepath")
     l.append("    stroke")
     l.append("grestore")
-    return NL.join(l)
+    return l
 
 
 def _place_text(text, position):
@@ -184,7 +185,7 @@ def place_text(text, position):
     @param position position to place (specify left bottom)
     """
     l = _place_text(text, position)
-    return NL.join(l)
+    return l
 
 
 def place_colourlegend(colourdic, x0, size):
@@ -200,6 +201,7 @@ def place_colourlegend(colourdic, x0, size):
     l.append("%% Colour Legend")
     l.append("gsave")
     l.append("    0 0 0 1 setcmykcolor")
+    l.append("    0.1 setlinewidth")
     l.append("    newpath")
     l.append("    %d %d moveto" % (x0.x, x0.y))
     l.append("    %d %d rlineto" % (size.x, 0))
@@ -233,7 +235,7 @@ def place_colourlegend(colourdic, x0, size):
         text_position_lb = Position(
             x0.x + 4, x0.y + idx * distance_between_colour + 2)
         l.extend(_place_text(app, text_position_lb))
-    return NL.join(l)
+    return l
 
 
 if __name__ == '__main__':
