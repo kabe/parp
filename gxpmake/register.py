@@ -215,8 +215,8 @@ VALUES(%s);""" % (", ".join(columns),
 
     # Static
 
-    workerstr_re = re.compile(r"^(?P<worker>.+)-([?P<username>^-].+)" + \
-                                  "-\d{4}-\d{2}-\d{2}-" + \
+    workerstr_re = re.compile(r"^(?P<worker>.+)-(?P<username>[^-].+)" + \
+                                  r"-\d{4}-\d{2}-\d{2}-" + \
                                   r"\d{2}-\d{2}-\d{2}-\d{0,5}$")
     cmd2tuple_re = re.compile(r"^(?P<app>[^\s]+)\s+(?P<args>.+)\s*$")
 
@@ -246,10 +246,14 @@ VALUES(%s);""" % (", ".join(columns),
         >>> s = "mProjectPP  -X -x 1.01260 " \
                 "../../data/data2/2mass-atlas-981204n-j0320080.fits " \
                 "p2mass-atlas-981204n-j0320080.fits ../../data/data2/region.hdr"
+        >>> trargs = ('-X -x 1.01260 ' + \
+                     '../../data/data2/2mass-atlas-981204n-j0320080.fits ' + \
+                     'p2mass-atlas-981204n-j0320080.fits ' + \
+                     '../../data/data2/region.hdr')
         >>> GXPMakeRegister.cmd2tuple(s).group("app")
         'mProjectPP'
-        >>> GXPMakeRegister.cmd2tuple(s).group("args")
-        '-X -x 1.01260 ../../data/data2/2mass-atlas-981204n-j0320080.fits p2mass-atlas-981204n-j0320080.fits ../../data/data2/region.hdr'
+        >>> GXPMakeRegister.cmd2tuple(s).group("args") == trargs
+        True
         """
         m = GXPMakeRegister.cmd2tuple_re.match(cmdstr)
         return m
