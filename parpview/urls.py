@@ -24,6 +24,8 @@ urlpatterns = patterns('',
     # Workflow
     (r'^wf/?$', 'parpview.viewer.views.wf'),
     (r'^wfinfo/(?P<wf>\d+)', 'parpview.viewer.views.workflow_info'),
+    (r'^wfcinfo/(?P<wf>\d+)/(?P<wfc>\d+)',
+     'parpview.viewer.views.workflow_condinfo'),
     (r'^wfdiff/(?P<wf>\d+)/(?P<wfc1>\d+)/(?P<wfc2>\d+)',
      'parpview.viewer.views.wfdiff'),
     # Static

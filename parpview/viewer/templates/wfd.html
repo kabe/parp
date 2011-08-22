@@ -9,7 +9,6 @@
     <!-- Graph Generation -->
     <script type="text/javascript"> 
       var jsondata = {{jsondata|safe}};
-      //alert('{{jsondata|safe}}');
       var chart;
       $(document).ready(function() {
           chart = new Highcharts.Chart({
@@ -60,8 +59,14 @@
             },
             series: jsondata.series
           });
+          {% if userdefinedsql %}
+            chart.series[0].hide();
+          {% else %}
+            for(var i = 4; i < chart.series.length; i++) {
+                chart.series[i].hide();
+            }
+          {% endif %}
       });
-				
     </script> 
     <!-- Graph Generation End -->
   </head>
@@ -105,79 +110,81 @@
       </div>
       <div id="coldef_d">
         <h1 id="coldef">Column Definitions</h1>
-        <table id="coldef_table">
-          <tr>
-            {# 1 #}
-            <th>Use?</th>
-            {# 2 #}
-            <th>Column Name</th>
-            {# 3 #}
-            <th>Column definition SQL</th>
-            {# 4 #}
-            <th>ORDER BY</th>
-          </tr>
-          {# Columns Fixed #}
-          {% for column in columnsf %}
-          <tr>
-            <td>
-              <input type="checkbox" name="use_flag" value="{{ forloop.counter0 }}"
-                     checked="checked" class="fixedcolumn" disabled="disabled" />
-            </td>
-            <td>
-              <input type="text" name="colname_{{ forloop.counter0 }}" size="20"
-                     value="{{ column.1 }}" class="fixedcolumn" disabled="disabled" />
-            </td>
-            <td>
-              <input type="text" name="coldef_{{ forloop.counter0 }}" size="40"
-                     value="{{ column.0 }}" class="fixedcolumn" disabled="disabled" />
-            </td>
-            <td>
-              <input type="radio" name="order" value="{{ forloop.counter0 }}"/>
-            </td>
-          </tr>
-          {% endfor %}
-          {# Fixed columns End #}
-          {# Columns currently used #}
-          {% for column in columns %}
-          <tr>
-            <td>
-              <input type="checkbox" name="use_flag" value="{{ forloop.counter0 }}"
-                     checked="checked" />
-            </td>
-            <td>
-              <input type="text" name="colname_{{ forloop.counter0 }}" size="20"
-                     value="{{ column.1 }}" />
-            </td>
-            <td>
-              <input type="text" name="coldef_{{ forloop.counter0 }}" size="40"
-                     value="{{ column.0 }}" />
-            </td>
-            <td>
-              <input type="radio" name="order" value="{{ forloop.counter0 }}"
-                     />
-            </td>
-          </tr>
-          {% endfor %}
-          {# Columns currently used End #}
-          {# New Columns #}
-          {% for x in coldef_params.newcols %}
-          <tr>
-            <td>
-              <input type="checkbox" name="use_flag_new" value="{{ x }}" />
-            </td>
-            <td>
-              <input type="text" name="new_colname_{{ x }}" size="10" value="" />
-            </td>
-            <td>
-              <input type="text" name="new_coldef_{{ x }}" size="40" value="" />
-            </td>
-            <td>
-              <input type="radio" name="order" value="{{ cols|length|add:x }}" />
-            </td>
-          </tr>
-          {% endfor %}
-          {# New Columns End #}
-        </table>
+        <form method="POST">
+          <div>
+          <table id="coldef_table">
+            <tr>
+              <th>Column Name</th>
+              <th>Column definition SQL</th>
+              <th>ORDER BY</th>
+            </tr>
+            {# Columns Fixed #}
+            {% for column in columnsf %}
+            <tr>
+              <td>
+                <input type="text" name="colname_{{ forloop.counter0 }}" size="20"
+                       value="{{ column.1 }}" class="fixedcolumn" disabled="disabled" />
+              </td>
+              <td>
+                <input type="text" name="coldef_{{ forloop.counter0 }}" size="40"
+                       value="{{ column.0 }}" class="fixedcolumn" disabled="disabled" />
+              </td>
+              <td>
+                <input type="radio" name="order" value="{{ forloop.counter0 }}"/>
+              </td>
+            </tr>
+            {% endfor %}
+            {# Fixed columns End #}
+            {# Columns currently used #}
+            {% for column in columns %}
+            <tr>
+              <td>
+                <input type="text" name="colname_{{ forloop.counter0 }}" size="20"
+                       value="{{ column.1 }}" />
+              </td>
+              <td>
+                <input type="text" name="coldef_{{ forloop.counter0 }}" size="40"
+                       value="{{ column.0 }}" />
+              </td>
+              <td>
+                <input type="radio" name="order" value="{{ forloop.counter0 }}"
+                       />
+              </td>
+            </tr>
+            {% endfor %}
+            {# Columns currently used End #}
+            {# New Columns #}
+            {% for x in coldef_params.newcols %}
+            <tr>
+              <td>
+                <input type="checkbox" name="use_flag_new" value="{{ x }}" />
+              </td>
+              <td>
+                <input type="text" name="new_colname_{{ x }}" size="10" value="" />
+              </td>
+              <td>
+                <input type="text" name="new_coldef_{{ x }}" size="40" value="" />
+              </td>
+              <td>
+                <input type="radio" name="order" value="{{ cols|length|add:x }}" />
+              </td>
+            </tr>
+            {% endfor %}
+            {# New Columns End #}
+          </table>
+          </div>
+        </form>
+        <div style="float: left;">
+          <h3>Specify Your own SQL Query?</h3>
+          <form method="POST">
+            <div style="float: left;">
+              <textarea name="userdefinedsql" rows="50" cols="80">{{ sqlstring }}</textarea>
+              <p style="float: none;">
+                <input type="submit" value="Query">
+              </p>
+            </div>
+          </form>
+        </div>
         <div id="coldef_refs">
           <h2>View Definition</h2>
           <pre>{{vschema}}</pre>

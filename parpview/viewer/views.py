@@ -916,15 +916,116 @@ WHERE
 GROUP BY wft.workflow_condition
 """, wf)
     conds = cursor.fetchall()
-    print "conds"
-    print conds
+
+    cursor.execute("""
+SELECT
+ cv.workflow workflow,
+ cv.wf_condition wf_condition,
+ SUM(cv.app_count * cv.elapsed_local) elapsed_local,
+ SUM(cv.app_count * cv.time_user) time_user,
+ SUM(cv.app_count * (cv.elapsed_local - cv.time_user)) est_io
+FROM
+  condition_view cv
+WHERE
+  cv.workflow = ?
+GROUP BY
+  cv.workflow, cv.wf_condition
+""", wf)
+    agginfo = cursor.fetchall()
+
+    condagg = []
+    for cond in conds:
+        for agg in agginfo:
+            if cond.wfc_id == agg.wf_condition:
+                d = {}
+                for attr in ("id", "name", "wf_condition", "wfc_id",
+                             "location", "filesystem", "worker_num",
+                             "input_dataset", "num_trials", "elapsed"):
+                    d[attr] = getattr(cond, attr)
+                for attr in ("workflow", "wf_condition", "elapsed_local",
+                             "time_user", "est_io"):
+                    d[attr] = getattr(agg, attr)
+                condagg.append(d)
+
 
     return render_to_response(
         'workflowinfo.html',
         {
             "self_path": request.path,
             "workflow": workflow,
-            "conds": conds,
+            "conds": condagg,
+            "agginfo": agginfo,
+            "apps": apps,})
+
+
+def workflow_condinfo(request, wf, wfc):
+    """Workflow Condition Information.
+
+    @param Django request object
+    @param wf workflow id
+    @param wfc workflow condition id
+    """
+    cstr = config.db.connect_str
+    conn = pyodbc.connect(config.db.connect_str)
+    cursor = conn.cursor()
+    cursor.execute("""
+SELECT id, name FROM workflow WHERE id=?
+""", wf)
+    workflow = cursor.fetchone()
+    cursor.execute("""
+SELECT id, name FROM application
+WHERE workflow=?
+""", wf)
+    apps = cursor.fetchall()
+    
+    cursor.execute("""
+SELECT
+  wft.id id,
+  wf.name name,
+  wft.workflow_condition wf_condition,
+  wfc.id wfc_id,
+  wfc.location location,
+  wfc.filesystem filesystem,
+  wfc.worker_num worker_num,
+  wfc.input_dataset input_dataset,
+  TIME_TO_SEC(wft.elapsed_time) elapsed
+FROM
+  workflow_trial AS wft,
+  workflow AS wf,
+  workflow_condition AS wfc
+WHERE
+  wf.id = wft.workflow AND
+  wft.workflow_condition = wfc.id AND
+  wfc.id = ? AND
+  wf.id = ?
+""", wfc, wf)
+    trials = cursor.fetchall()
+    print "trials"
+    print trials
+
+    cursor.execute("""
+SELECT
+ SUM(cv.app_count * cv.elapsed_local) elapsed_local,
+ SUM(cv.app_count * cv.time_user) time_user,
+ SUM(cv.app_count * (cv.elapsed_local - cv.time_user)) est_io
+FROM
+  condition_view cv
+WHERE
+  cv.wf_condition = ? AND
+  cv.workflow = ?
+""", wfc, wf)
+    agginfo = cursor.fetchall()
+    print "agginfo"
+    print agginfo
+    agginfo = agginfo[0]
+
+    return render_to_response(
+        'workflowcondinfo.html',
+        {
+            "self_path": request.path,
+            "workflow": workflow,
+            "trials": trials,
+            "agginfo": agginfo,
             "apps": apps,})
 
 
@@ -936,23 +1037,43 @@ def wfdiff(request, wf, wfc1, wfc2):
     @param wft_1 Workflow condition ID 1
     @param wft_2 Workflow condition ID 2
     """
+    ## Init
     cstr = config.db.connect_str
     conn = pyodbc.connect(config.db.connect_str)
     cursor = conn.cursor()
+    ## Request Check
+    use_userdefined_sql = False
+    if "userdefinedsql" in request.POST:
+        use_userdefined_sql = True
+        print "*** REQUEST DEBUG START"
+        print request.POST["userdefinedsql"]
+        print "*** REQUEST DEBUG END"
     # Get workflow obj
     workflow = cursor.execute(
         "SELECT * FROM workflow WHERE id = ?", wf).fetchone()
     print "workflow"
     print workflow
-    #
-    sql, columns_fixed, columns, sqlparams = construct_wfdiff_sql(
-        request, wf, wfc1, wfc2)
+    # Choose SQL
+    sql, sqlparams, graphcols = "", (), None
+    columns, columns_fixed = (), ()
+    if use_userdefined_sql:
+        sql = request.POST["userdefinedsql"]
+        pass
+    else:
+        sql, columns_fixed, columns, sqlparams = construct_wfdiff_sql(
+            request, wf, wfc1, wfc2)
+    print "Executed SQL: "
     print sql
     cursor.execute(sql, *sqlparams)
     drows = cursor.fetchall()
-    print drows
-    jsoninfo = generate_wf_graph_json(drows, columns_fixed + columns, None)
-    print jsoninfo
+    if use_userdefined_sql:
+        print "*** drows"
+        cls = tuple(x[0] for x in cursor.description)
+        graphcols = cls
+        columns = tuple(("D/C", c)for c in graphcols)
+    #print drows
+    jsoninfo = generate_wf_graph_json(drows, columns_fixed + columns, graphcols)
+    #print jsoninfo
     jsondata = json.dumps(jsoninfo, cls=DecimalEncoder)
     return render_to_response(
         'wfd.html',
@@ -964,6 +1085,8 @@ def wfdiff(request, wf, wfc1, wfc2):
             "drows": drows,
             "jsondata": jsondata,
             "workflow": workflow,
+            "sqlstring": sql,
+            "userdefinedsql": use_userdefined_sql,
             })
 
 
@@ -1140,13 +1263,18 @@ def construct_wfdiff_sql(request, wf, wfc1, wfc2):
                      ("cv2.elapsed_local", "ElapsedL2"),
                      ("cv1.app_count", "AppCount1"),
                      ("cv2.app_count", "AppCount2"),)
+
     # TODO: configure columns using request argument
     columns = (("cv1.elapsed_remote", "ElapsedR1"),
                ("cv2.elapsed_remote", "ElapsedR2"),
                ("cv1.elapsed_local * cv1.app_count", "AccumL1"),
                ("cv2.elapsed_local * cv2.app_count", "AccumL2"),
+               ("cv1.time_user / cv1.elapsed_local", "CPUEff1"),
+               ("cv2.time_user / cv2.elapsed_local", "CPUEff2"),
                ("cv1.time_user", "UTime1"),
                ("cv2.time_user", "UTime2"),
+               ("(cv1.elapsed_local - cv1.time_user) * cv1.app_count", "IO1"),
+               ("(cv2.elapsed_local - cv2.time_user) * cv2.app_count", "IO2"),
                ("cv1.time_system", "STime1"),
                ("cv2.time_system", "STime2"),
                ("cv1.minor_faults", "MinFlt1"),
@@ -1171,6 +1299,8 @@ WHERE
   cv2.wf_condition = ? AND
   cv1.application = app.id AND
   cv1.workflow = ?
+ORDER BY
+  AccumL2 DESC
 """ % (sql_columns)
     return sql, columns_fixed, columns, (wfc1, wfc2, wf)
 
@@ -1205,13 +1335,23 @@ def generate_wf_graph_json(contents, columns, graph_cols):
             ),}
     graph_cols3 = {
         "y1": (
-            "AccumL1", "AccumL2",
+            "AccumL1", "IO1",
+            "AccumL2", "IO2",
             ),
         "y2": (
             "ElapsedL1", "ElapsedL2",
             ),
-        "y3": ("AppCount1",),}
-    graph_cols = graph_cols3
+        "y3": ("AppCount1",),
+        "y4": ("CPUEff1", "CPUEff2",),
+        "y5": ("UTime1", "UTime2",),
+        "y6": ("IO1", "IO2",),}
+    if graph_cols:  # Specified
+        print "*** graph columns specified in gwgj"
+        graph_cols = {
+            "y1": graph_cols,
+            }
+    else:
+        graph_cols = graph_cols3
     # ApplicationName s
     categories = tuple(content[0] for content in contents)[0:default.APP_NUM]
     # Values

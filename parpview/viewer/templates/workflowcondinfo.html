@@ -1,0 +1,52 @@
+{% load accessdic %}
+<!DOCTYPE HTML>
+<html lagn="en">
+  <head>
+    <title>Workflow Information</title>
+    <link rel="stylesheet" type="text/css" href="/style/style.css" />
+    <!--script type="text/javascript" src="/script/p.js"></script-->
+  </head>
+  <body>
+    <div id="container">
+      <h1>Workflow {{ workflow.name }}</h1>
+      <div>
+        <h2>Applications in {{ workflow.name }}</h2>
+        <table id="cmptable">
+          <tr>
+            <th>ID</th>
+            <th>Name</th>
+          </tr>
+          {% for app in apps %}
+          <tr>
+            <td class="numeric">{{ app.id }}</td>
+            <td>{{ app.name }}</td>
+          </tr>
+          {% endfor %}
+        </table>
+        <h2>Trials</h2>
+        <table id="cmptable">
+          <tr>
+            <th>Trial ID</th>
+            <th>Location</th>
+            <th>Filesystem</th>
+            <th>Worker #</th>
+            <th>Input Dataset</th>
+            <th>Average Time [sec]</th>
+          </tr>
+          {% for trial in trials %}
+          <tr>
+            <td class="numeric">{{ trial.id }}</td>
+            <td>{{ trial.location }}</td>
+            <td>{{ trial.filesystem }}</td>
+            <td class="numeric">{{ trial.worker_num }}</td>
+            <td>{{ trial.input_dataset }}</td>
+            <td class="numeric">{{ trial.elapsed }}</td>
+          </tr>
+          {% endfor %}
+        </table>
+        <h2>Metainfo</h2>
+        <p>Elapsed Local: {{ agginfo.elapsed_local }} sec, UserTime: {{ agginfo.time_user }}, Estimated I/O: {{agginfo.est_io}}</p>
+      </div>
+    </div>
+  </body>
+</html>

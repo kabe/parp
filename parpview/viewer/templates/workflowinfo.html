@@ -33,16 +33,26 @@
             <th>Input Dataset</th>
             <th>Average Time [sec]</th>
             <th># of Trials</th>
+            <th>SUM of elapsed local [sec]</th>
+            <th>User Time [sec]</th>
+            <th>Estimated I/O [sec]</th>
           </tr>
           {% for cond in conds %}
           <tr>
-            <td class="numeric">{{ cond.wfc_id }}</td>
+            <td class="numeric">
+              <a href="/wfcinfo/{{ workflow.id }}/{{ cond.wfc_id }}">
+                {{ cond.wfc_id }}
+              </a>
+            </td>
             <td>{{ cond.location }}</td>
             <td>{{ cond.filesystem }}</td>
             <td class="numeric">{{ cond.worker_num }}</td>
             <td>{{ cond.input_dataset }}</td>
             <td class="numeric">{{ cond.elapsed }}</td>
             <td class="numeric">{{ cond.num_trials }}</td>
+            <td class="numeric">{{ cond.elapsed_local|floatformat:2 }}</td>
+            <td class="numeric">{{ cond.time_user|floatformat:2 }}</td>
+            <td class="numeric">{{ cond.est_io|floatformat:2 }}</td>
           </tr>
           {% endfor %}
         </table>
