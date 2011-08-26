@@ -35,7 +35,7 @@ class ManInfo(gxpmake.model.Worker):
     def __init__(self, index, name, ncpus, memory, position=None):
         """
         """
-        super(self.__class__, self).__init__(index, name, ncpus, memory)
+        gxpmake.model.Worker.__init__(self, index, name, ncpus, memory)
         self._position = position
 
 
