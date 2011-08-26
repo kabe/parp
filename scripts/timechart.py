@@ -6,6 +6,7 @@ import datetime
 
 sys.path.append(os.path.join(os.path.dirname(__file__), "../"))
 from gxpmake import gxpmake, register
+import gxpmake.model
 import pyodbc
 import config
 import config.db
@@ -19,33 +20,22 @@ class FigureOption:
     Y_OFFSET = 100
 
 
-class ManInfo(object):
+class ManInfo(gxpmake.model.Worker):
     """Man's information to produce postscript.
     """
 
     def _get_position(self):
         return self._position
 
-    def _get_name(self):
-        return self._name
-
-    def _get_ncpus(self):
-        return self._ncpus
-
-    def _get_index(self):
-        return self._index
+    def _set_position(self, position):
+        self._position = position
 
     position = property(_get_position)
-    name = property(_get_name)
-    ncpus = property(_get_ncpus)
-    index = property(_get_index)
 
-    def __init__(self, index, name, ncpus, position):
+    def __init__(self, index, name, ncpus, memory, position=None):
         """
         """
-        self._index = index
-        self._name = name
-        self._ncpus = ncpus
+        super(self.__class__, self).__init__(index, name, ncpus, memory)
         self._position = position
 
 
@@ -84,13 +74,14 @@ Generate timechart of the specified trial.
     psd = []
     # Create Inverted Index
     iindex = {}
-    for idx, man in enumerate(workers):
+    for man in workers:
+        idx = man.index
         p = postscript.Position(
             0,
             (len(workers) - idx) * FigureOption.NODE_INTERVAL + \
                 FigureOption.Y_OFFSET)
-        m = ManInfo(index=idx, name=man, position=p)
-        iindex[man] = m
+        man.position = p
+        iindex[man.name] = man
     # Init
     psd.extend(postscript.begin())
     # Create colour chart for applications
@@ -100,7 +91,7 @@ Generate timechart of the specified trial.
             postscript.Position(200, 0),
             postscript.Position(100, 90)))
     # Max name length of workers
-    max_worker_length = max(len(man) for man in workers)
+    max_worker_length = max(len(man.name) for man in workers)
     # Place Axis
     origin_x = max_worker_length * 0.5 * postscript.FONT_SIZE
     origin = postscript.Position(
@@ -115,10 +106,10 @@ Generate timechart of the specified trial.
             origin_x + FigureOption.X_WIDTH,
             rt_y))
     # Place Node index
-    for idx, man in enumerate(workers):
-        m = iindex[man]
+    for man in workers:
+        m = iindex[man.name]
         psd.extend(postscript.place_text(
-                man, postscript.Position(0, m.position.y)))
+                man.name, postscript.Position(0, m.position.y)))
     # Place boxes
     records_time_max = max(
         [record.starttime + record.elapsedtime for record in records])
@@ -222,14 +213,14 @@ WHERE
     ## Workers list
     sql = """
 SELECT DISTINCT
-  job.worker worker
-FROM job
+  `index`, name, ncpus, memory
+FROM wf_worker
 WHERE
-  job.workflow_trial = ?
+  wf_worker.workflow_trial_id = ?
+ORDER BY
+  `index`
 """
-    workers = cursor.execute(sql, (options.trial,)).fetchall()
-    # shrink workers list
-    workers = sorted([w[0] for w in workers])
+    workers = [ManInfo(row[0], row[1], row[2], row[3]) for row in cursor]
     ## Trial metadata
     meta = None
     sql = """
