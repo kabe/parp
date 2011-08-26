@@ -4,10 +4,14 @@
 """GXPmake Result Register"""
 
 
+import sys
+import os
 import re
 import sqlite3
-import model
 
+sys.path.append(os.path.join(os.path.dirname(__file__), "../"))
+import model
+import parpdb
 
 class GXPMakeRegister(object):
     """
@@ -32,7 +36,7 @@ class GXPMakeRegister(object):
             pass
     
     def _get_odbc_connection(self):
-        return self._odbc_connection
+        return self._DBI.odbc_connection
 
     odbc_connection = property(_get_odbc_connection)
 
@@ -46,7 +50,7 @@ class GXPMakeRegister(object):
     def __init__(self, odbc_connection):
         """
         """
-        self._odbc_connection = odbc_connection
+        self._DBI = parpdb.dbi.DBI(odbc_connection)
         self._cursor = self._odbc_connection.cursor()
         self._odbc_connection.autocommit = False
 
@@ -69,7 +73,7 @@ class GXPMakeRegister(object):
         if row:
             return int(row[0]), True
         # Fail
-        self._odbc_connection.rollback()
+        self.odbc_connection.rollback()
         raise RegisterException("Workflow")
 
     def process_workflow_condition(
@@ -103,7 +107,7 @@ VALUES (?, ?, ?, ?);""", filesystem, location, worker_num, input_dataset)
         if row:
             return int(row[0]), True
         # Fail
-        self._odbc_connection.rollback()
+        self.odbc_connection.rollback()
         raise RegisterException("Workflow Condition")
 
     def process_workflow_trial(self, wf_id, wfc_id, startts, elapsed):
@@ -123,7 +127,7 @@ VALUES(?, ?, ?, ?);""", wf_id, wfc_id, startts, elapsed)
         if row:
             return int(row[0])
         # Fail
-        self._odbc_connection.rollback()
+        self.odbc_connection.rollback()
         raise RegisterException("Workflow Trial")
 
     def process_worker(self, trial_id, worker):
@@ -164,7 +168,7 @@ VALUES(?, ?);""", wf_id, appname)
         if row:
             return int(row[0]), True
         # Fail
-        self._odbc_connection.rollback()
+        self.odbc_connection.rollback()
         raise RegisterException("Application")
 
     def process_job(self, wf_id, wft_id, app_id, row, appargs):
@@ -218,18 +222,18 @@ VALUES(%s);""" % (", ".join(columns),
         if row:
             return int(row[0]), True
         # Fail
-        self._odbc_connection.rollback()
+        self.odbc_connection.rollback()
         raise RegisterException("Job")
 
     def commit(self, ):
         """Commit transaction.
         """
-        self._odbc_connection.commit()
+        self.odbc_connection.commit()
 
     def rollback(self, ):
         """Rollback transaction.
         """
-        self._odbc_connection.rollback()
+        self.odbc_connection.rollback()
 
     # Static
 
