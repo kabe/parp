@@ -31,13 +31,10 @@ class ManInfo(gxpmake.model.Worker):
     def _set_position(self, position):
         self._position = position
 
-    def _set_records(self, value):
-        self._records = value
-
     def _get_records(self):
         return self._records
 
-    records = property(_get_records, _set_records)
+    records = property(_get_records)
     position = property(_get_position)
 
     def __init__(self, index, name, ncpus, memory, position=None):
@@ -131,20 +128,20 @@ Generate timechart of the specified trial.
     for record in records:
         m = iindex[record.worker]
         m.records.append(record)
-        x0 = postscript.Position(
-            origin_x + TIMESCALE * record.start_time,
-            m.position.y)
-        size = postscript.Position(
-            TIMESCALE * record.elapsed,
-            FigureOption.NODE_INTERVAL)
-        try:
-            assert(x0.x + size.x - 0.01 <= origin_x + FigureOption.X_WIDTH)
-        except AssertionError, e:
-            #print >>sys.stderr, "x0.x=%f size.x=%f idx=%d" % (x0.x, size.x, idx)
-            print >>sys.stderr, "starttime=%f elapsedsec=%f" % (
-                record.start_time, record.elapsed)
-        psd.extend(
-            postscript.draw_rect_size(x0, size, apps_colour_d[record.appname]))
+        # x0 = postscript.Position(
+        #     origin_x + TIMESCALE * record.start_time,
+        #     m.position.y)
+        # size = postscript.Position(
+        #     TIMESCALE * record.elapsed,
+        #     FigureOption.NODE_INTERVAL)
+        # try:
+        #     assert(x0.x + size.x - 0.01 <= origin_x + FigureOption.X_WIDTH)
+        # except AssertionError, e:
+        #     #print >>sys.stderr, "x0.x=%f size.x=%f idx=%d" % (x0.x, size.x, idx)
+        #     print >>sys.stderr, "starttime=%f elapsedsec=%f" % (
+        #         record.start_time, record.elapsed)
+        # psd.extend(
+        #     postscript.draw_rect_size(x0, size, apps_colour_d[record.appname]))
     # Finalize
     psd.extend(postscript.finalize())
     print postscript.NL.join(psd)
