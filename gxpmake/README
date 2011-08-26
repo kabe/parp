@@ -1,0 +1,16 @@
+-*- org -*-
+
+* Table Definitions
+
+** Trial
+| Column Name     | Column Type |
+| start_timestamp | DATETIME    |
+| elapsed_time    | DOUBLE      |
+
+** Worker
+| Column Name | Column Type |
+| idx         | INT         |
+| name        | TEXT        |
+| cpu         | INT         |
+| memory      | INT         |
+

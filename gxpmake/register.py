@@ -6,6 +6,7 @@
 
 import re
 import sqlite3
+import model
 
 
 class GXPMakeRegister(object):
@@ -124,6 +125,23 @@ VALUES(?, ?, ?, ?);""", wf_id, wfc_id, startts, elapsed)
         # Fail
         self._odbc_connection.rollback()
         raise RegisterException("Workflow Trial")
+
+    def process_worker(self, trial_id, worker):
+        """Process a worker registration.
+        
+        @param trial_id Workflow trial ID
+        @param worker model.Worker instance to register
+        """
+        print "Register " + str(worker) + " for trial %d" % (trial_id) + \
+            "(worker=%s)" % (worker.name)
+        self.cursor.execute("""
+INSERT INTO wf_worker
+    (`index`, workflow_trial_id, name, ncpus, memory)
+VALUES(?, ?, ?, ?, ?);""",
+                            worker.index, trial_id, worker.name,
+                            worker.ncpus, worker.memory)
+        row = self.cursor.execute("SELECT LAST_INSERT_ID();").fetchone()
+        print row
 
     def process_application(self, wf_id, appname):
         """Registers application.
@@ -258,15 +276,63 @@ VALUES(%s);""" % (", ".join(columns),
         m = GXPMakeRegister.cmd2tuple_re.match(cmdstr)
         return m
 
-    @staticmethod
-    def dbfile2info(dbfile_path):
-        """Pick info from DB file of GXPMake.
 
-        @param dbfile_path path to database
+class WFPARPDB(object):
+    """O/R Mapper class for Workflow PARP DB.
+    """
+    def _get_connection(self):
+        if not self._accessed_connection:
+            self._connection = sqlite3.connect(self.dbfile)
+            self._accessed_connection = True
+        return self._connection
+
+    def _set_start_ts(self, value):
+        self._start_ts = value
+
+    def _get_start_ts(self):
+        if not self._accessed_trial:
+            self.get_trial_info()
+        return self._start_ts
+
+    def _set_elapsed(self, value):
+        self._elapsed = value
+
+    def _get_elapsed(self):
+        if not self._accessed_trial:
+            self.get_trial_info()
+        return self._elapsed
+
+    def _get_workers(self):
+        if not self._accessed_worker:
+            self.get_worker_info()
+        return self._workers
+    
+    def _get_dbfile(self):
+        return self._dbfile
+
+    connection = property(_get_connection)
+    start_ts = property(_get_start_ts, _set_start_ts)
+    elapsed = property(_get_elapsed, _set_elapsed)
+    dbfile = property(_get_dbfile)
+    workers = property(_get_workers)
+
+    # Flags
+    _accessed_trial = False
+    _accessed_worker = False
+    _accessed_connection = False
+
+    def __init__(self, dbfile):
+        """Constructor.
+
+        @param dbfile Path to the Database file
+        """
+        self._dbfile = dbfile
+
+    def get_trial_info(self, ):
+        """Access DB and get information from the "trial" table.
         """
         import datetime
-        conn = sqlite3.connect(dbfile_path)
-        cursor = conn.cursor()
+        cursor = self.connection.cursor()
         cursor.execute("""
 SELECT start_timestamp, elapsed_time
 FROM trial;
@@ -280,8 +346,30 @@ FROM trial;
                 int((td.seconds % 3600) / 60),
                 int(td.seconds % 60),
                 td.microseconds)
-            return (start_ts, elapsed)
-        raise DBError()
+            self.start_ts = start_ts
+            self.elapsed = elapsed
+            self._accessed_trial = True
+            return self
+        raise GXPMakeRegister.DBError()
+
+    def get_worker_info(self, ):
+        """Access DB and get information from the "worker" table.
+        """
+        self._workers = []
+        try:
+            cursor = self.connection.cursor()
+            cursor.execute("""
+SELECT idx, name, cpu, memory FROM worker ORDER BY idx;
+    """)
+            for row in cursor:
+                w = model.Worker(row[0], row[1], row[2], row[3])
+                self._workers.append(w)
+        except sqlite3.DatabaseError, e:
+            mes = e.message
+            raise e
+            raise GXPMakeRegister.DBError(mes)
+        self._accessed_worker = True
+
 
 if __name__ == '__main__':
     import doctest

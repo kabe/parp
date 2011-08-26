@@ -65,6 +65,7 @@ Registers the database file into the database.
     gmdb = gxpmake.GxpMakeDB(datafile)
     cn = pyodbc.connect(config.db.connect_str)
     reg = register.GXPMakeRegister(cn)
+    workparpdb = register.WFPARPDB(dbfile)
     assert(cn)
     # Registration
     # TABLE WORKFLOW
@@ -80,11 +81,14 @@ Registers the database file into the database.
     print "Workflow Condition ID = %d, New: %s" % (
         workflow_condition_id, str(isnew))
     # TABLE WORKFLOW_TRIAL (Always new)
-    start_timestamp, elapsed_time = register.GXPMakeRegister.dbfile2info(dbfile)
+    start_timestamp, elapsed_time = workparpdb.start_ts, workparpdb.elapsed
     print start_timestamp, elapsed_time
     workflow_trial_id = reg.process_workflow_trial(
         workflow_id, workflow_condition_id, start_timestamp, elapsed_time)
     print "WorkflowTrial ID = %d" % (workflow_trial_id)
+    ## Workers
+    for w in workparpdb.workers:
+        reg.process_worker(workflow_trial_id, w)
     ## For each job
     for row in gmdb.csvreader:  # row has an inteface of csv.DictReader
         # TABLE APPLICATION
