@@ -7,6 +7,7 @@ import datetime
 sys.path.append(os.path.join(os.path.dirname(__file__), "../"))
 from gxpmake import gxpmake, register
 import gxpmake.model
+from gxpmake.model import Record
 import pyodbc
 import config
 import config.db
@@ -30,6 +31,13 @@ class ManInfo(gxpmake.model.Worker):
     def _set_position(self, position):
         self._position = position
 
+    def _set_records(self, value):
+        self._records = value
+
+    def _get_records(self):
+        return self._records
+
+    records = property(_get_records, _set_records)
     position = property(_get_position)
 
     def __init__(self, index, name, ncpus, memory, position=None):
@@ -37,6 +45,7 @@ class ManInfo(gxpmake.model.Worker):
         """
         gxpmake.model.Worker.__init__(self, index, name, ncpus, memory)
         self._position = position
+        self._records = []
 
 
 def parse_opt():
@@ -78,7 +87,7 @@ Generate timechart of the specified trial.
         idx = man.index
         p = postscript.Position(
             0,
-            (len(workers) - idx) * FigureOption.NODE_INTERVAL + \
+            (len(workers) - idx) * FigureOption.NODE_INTERVAL * man.ncpus + \
                 FigureOption.Y_OFFSET)
         man.position = p
         iindex[man.name] = man
@@ -112,27 +121,28 @@ Generate timechart of the specified trial.
                 man.name, postscript.Position(0, m.position.y)))
     # Place boxes
     records_time_max = max(
-        [record.starttime + record.elapsedtime for record in records])
+        [record.start_time + record.elapsed for record in records])
     maximum_time = max(records_time_max, meta.time)
     #print >>sys.stderr, maximum_time, records_time_max, meta.time
     TIMESCALE = (1.0 * FigureOption.X_WIDTH) / maximum_time
     #print >>sys.stderr, meta
     #print >>sys.stderr, "origin_x=%f X_WIDTH=%f" % (
     #    origin_x, FigureOption.X_WIDTH,)
-    for idx, record in enumerate(records):
+    for record in records:
         m = iindex[record.worker]
+        m.records.append(record)
         x0 = postscript.Position(
-            origin_x + TIMESCALE * record.starttime,
+            origin_x + TIMESCALE * record.start_time,
             m.position.y)
         size = postscript.Position(
-            TIMESCALE * record.elapsedtime,
+            TIMESCALE * record.elapsed,
             FigureOption.NODE_INTERVAL)
         try:
             assert(x0.x + size.x - 0.01 <= origin_x + FigureOption.X_WIDTH)
         except AssertionError, e:
-            print >>sys.stderr, "x0.x=%f size.x=%f idx=%d" % (x0.x, size.x, idx)
+            #print >>sys.stderr, "x0.x=%f size.x=%f idx=%d" % (x0.x, size.x, idx)
             print >>sys.stderr, "starttime=%f elapsedsec=%f" % (
-                record.starttime, record.elapsedtime)
+                record.start_time, record.elapsed)
         psd.extend(
             postscript.draw_rect_size(x0, size, apps_colour_d[record.appname]))
     # Finalize
@@ -191,7 +201,6 @@ def prepare_data():
     cursor = cn.cursor()
     # Here trial number is specified.
     ## Records for each tasks
-    res = None
     sql = """
 SELECT
   app.name appname,
@@ -209,7 +218,10 @@ WHERE
  AND
   wft.id = ?
 """
-    res = cursor.execute(sql, (options.trial,)).fetchall()
+    #res = cursor.execute(sql, (options.trial,)).fetchall()
+    cursor.execute(sql, (options.trial,))
+    records = [Record(appname=r[0], worker=r[1], start_time=r[2], elapsed=r[3])
+               for r in cursor]
     ## Workers list
     sql = """
 SELECT DISTINCT
@@ -260,11 +272,11 @@ WHERE
     apps = [rec.appname
             for rec in cursor.execute(sql, (options.trial,)).fetchall()]
     # Assertion
-    if not res:
-        raise Exception("Preparation of data failed: res None.")
+    if not records:
+        raise Exception("Preparation of data failed: records None.")
     if not workers:
         raise Exception("Preparation of data failed: workers None.")
-    return (res, workers, m, apps)
+    return (records, workers, m, apps)
 
 
 def mk_apps_colourd(apps):
