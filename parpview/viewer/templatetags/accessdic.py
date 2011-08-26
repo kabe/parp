@@ -33,3 +33,4 @@ def remove_func_paren(obj):
         return obj
 
 register.filter('remove_func_paren', remove_func_paren)
+

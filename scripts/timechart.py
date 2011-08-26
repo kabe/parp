@@ -29,18 +29,23 @@ class ManInfo(object):
     def _get_name(self):
         return self._name
 
+    def _get_ncpus(self):
+        return self._ncpus
+
     def _get_index(self):
         return self._index
 
     position = property(_get_position)
     name = property(_get_name)
+    ncpus = property(_get_ncpus)
     index = property(_get_index)
 
-    def __init__(self, index, name, position):
+    def __init__(self, index, name, ncpus, position):
         """
         """
         self._index = index
         self._name = name
+        self._ncpus = ncpus
         self._position = position
 
 
