@@ -220,6 +220,7 @@ WHERE
 ORDER BY
   `index`
 """
+    cursor.execute(sql, (options.trial,))
     workers = [ManInfo(row[0], row[1], row[2], row[3]) for row in cursor]
     ## Trial metadata
     meta = None
@@ -259,8 +260,10 @@ WHERE
     apps = [rec.appname
             for rec in cursor.execute(sql, (options.trial,)).fetchall()]
     # Assertion
-    if not res or not workers:
-        raise Exception("Preparation of data failed.")
+    if not res:
+        raise Exception("Preparation of data failed: res None.")
+    if not workers:
+        raise Exception("Preparation of data failed: workers None.")
     return (res, workers, m, apps)
 
 
