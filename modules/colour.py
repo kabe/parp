@@ -75,6 +75,17 @@ class Colour(object):
             else:
                 raise IndexError("Colour index out of range")
 
+        def __len__(self, ):
+            """Length.
+            """
+            return 3
+
+        def __iter__(self, ):
+            """Iteration Generator.
+            """
+            for x in (self.r, self.g, self.b):
+                yield x
+
         def toYUV(self, ):
             """Convert RGB to YUV.
 
@@ -178,6 +189,17 @@ class Colour(object):
             else:
                 raise IndexError("Colour index out of range")
 
+        def __len__(self, ):
+            """Length.
+            """
+            return 4
+
+        def __iter__(self, ):
+            """Iteration Generator.
+            """
+            for x in (self.c, self.m, self.y, self.k):
+                yield x
+
         def toRGB(self, ):
             """Convert to RGB.
             """
@@ -249,6 +271,17 @@ class Colour(object):
                 return self.b
             else:
                 raise IndexError("Colour index out of range")
+
+        def __len__(self, ):
+            """Length.
+            """
+            return 3
+
+        def __iter__(self, ):
+            """Iteration Generator.
+            """
+            for x in (self.y, self.u, self.v):
+                yield x
 
         def toRGB(self, ):
             """Convert YUV to RGB.
@@ -328,9 +361,9 @@ class Colour(object):
         """Representation form.
         """
         s = "<colour.Colour %s>"
-        rgbform = "rgb=#%02X%02X%02X" % (min(255, int(self.rgb.r * 256.0)),
-                                         min(255, int(self.rgb.g * 256.0)),
-                                         min(255, int(self.rgb.b * 256.0)))
+        rgbform = "rgb=#%02X%02X%02X" % (min(255, int(self.rgb.r * 255.0)),
+                                         min(255, int(self.rgb.g * 255.0)),
+                                         min(255, int(self.rgb.b * 255.0)))
         return s % (rgbform)
 
 
