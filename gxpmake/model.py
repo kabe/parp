@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 
-class Worker():
+class Worker(object):
     """Worker Class.
     """
     def _get_index(self):
@@ -24,10 +24,10 @@ class Worker():
     def __init__(self, index, name, ncpus, memory):
         """Constructor.
         """
-        self.index = index
-        self.name = name
-        self.ncpus = ncpus
-        self.memory = memory
+        self._index = index
+        self._name = name
+        self._ncpus = ncpus
+        self._memory = memory
 
     def __repr__(self, ):
         """Representation form.
