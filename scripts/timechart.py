@@ -11,7 +11,7 @@ from gxpmake.model import Record
 import pyodbc
 import config
 import config.db
-from modules import postscript
+from modules import postscript, colour
 
 
 # Figure Options
@@ -283,14 +283,10 @@ def mk_apps_colourd(apps):
     """
     d = {}  # To-be-returned dictionary
     n = len(apps)
-    c0 = [1, 0, 0, 0]
-    c1 = [0, 0, 1, 0]
-    for idx, app in enumerate(apps):
-        c = [0] * len(c0)
-        for cel in range(len(c0)):
-            c[cel] = (
-                1.0 * idx * c0[cel] + (n - 1.0 - idx) * c1[cel]) / (n - 1.0)
-        d[app] = c
+    c0 = colour.cmyk(1, 0, 0, 0)
+    c1 = colour.cmyk(0, 0, 1, 0)
+    colours = colour.yuv_gradation(n, c0, c1)
+    d = dict(zip(apps, colours))
     #print >>sys.stderr, d
     return d
 

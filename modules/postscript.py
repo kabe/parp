@@ -215,7 +215,7 @@ def place_colourlegend(colourdic, x0, size):
     csize = Position(size.x, distance_between_colour)
     for idx, app in enumerate(colourdic):
         position_lb = Position(x0.x, x0.y + idx * distance_between_colour)
-        colour = colourdic[app]
+        colour = colourdic[app].cmyk
         l.append("gsave")
         l.append("    0 0 0 1 setcmykcolor")
         l.append("    newpath")
