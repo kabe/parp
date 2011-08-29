@@ -92,7 +92,7 @@ def draw_rect_position(x0, x1, *args):
     l.append("    closepath")
     l.append("    gsave")
     if args:
-        colour = args[0]
+        colour = args[0].cmyk
         l.append("        %f %f %f %f setcmykcolor" % (
                 colour[0], colour[1], colour[2], colour[3]))
     else:

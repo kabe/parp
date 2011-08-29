@@ -67,6 +67,7 @@ class Record(object):
         @param **dic dictionary of attributes
         >>> r = Record(a="b", c="d")
         """
+        self._dic = {}
         for k, v in dic.iteritems():
             self._dic[k] = v
 
