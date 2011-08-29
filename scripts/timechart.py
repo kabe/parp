@@ -12,6 +12,7 @@ import pyodbc
 import config
 import config.db
 from modules import postscript, colour
+import tau.util
 
 
 # Figure Options
@@ -34,15 +35,61 @@ class ManInfo(gxpmake.model.Worker):
     def _get_records(self):
         return self._records
 
+    def _get_slots(self):
+        return self._slots
+
+    # size should be the number of CPUs
+    slots = property(_get_slots)
+    # List of all records on the man
     records = property(_get_records)
-    position = property(_get_position)
+    # Position of the man name
+    position = property(_get_position, _set_position)
 
     def __init__(self, index, name, ncpus, memory, position=None):
         """
         """
-        gxpmake.model.Worker.__init__(self, index, name, ncpus, memory)
+        #gxpmake.model.Worker.__init__(self, index, name, ncpus, memory)
+        super(self.__class__, self).__init__(index, name, ncpus, memory)
         self._position = position
         self._records = []
+        self._slots = [[] for x in xrange(self.ncpus)]
+
+    def __repr__(self, ):
+        """Representation of Man.
+        """
+        name_repr = self.name if len(self.name) < 10 else self.name[:10] + "..."
+        s = "<Maninfo index=%d ncpus=%d name='%s' records=%d>"
+        return s % (self.index, self.ncpus, name_repr, len(self.records))
+    
+    def setup_slots(self, ):
+        """Determine where to place rectangles, without overlapping.
+        """
+        # This array contains the last timestamp for each cpu slot
+        last_cpu_time = [0.0] * self.ncpus
+        cpu_index = 0
+        counter = 0
+        for record in self.records:
+            inslot_ok = False
+            # Try to add process in the CPU indexed
+            first_cpu_index = (cpu_index) % self.ncpus
+            # loop index array
+            lia = [x for x in xrange(len(self.slots))]
+            lia = lia[first_cpu_index:len(lia)] + lia[0:first_cpu_index]
+            for cpu_index in lia:
+                if last_cpu_time[cpu_index] > record.start_time:
+                    continue
+                counter += 1
+                self.slots[cpu_index].append(record)
+                last_cpu_time[cpu_index] = record.start_time + record.elapsed
+                inslot_ok = True
+                break
+            if not inslot_ok:
+                # Unfortunately the placement without overlapping failed.
+                # Here I choose to append an additional slot.
+                self.slots.append([record])
+                last_cpu_time.append(record.start_time + record.elapsed)
+                tau.util.err("Warning: Not in slot Man=%d Record=%f-%f" % (
+                        self.index, record.start_time, record.elapsed))
 
 
 def parse_opt():
@@ -64,7 +111,7 @@ def parse_opt():
     if args:
         pass
     if not options.trial:
-        parser.error("Specify condition number")
+        parser.error("Specify trial number")
     return options, args
 
 
@@ -73,21 +120,47 @@ def main():
 
 Generate timechart of the specified trial.
     """
-    records, workers, meta, apps = prepare_data()
+    options, args, records, workers, meta, apps = prepare_data()
     # Determine x axis and y axis
     # X-axis: time from 0 to End of the run
     # Y-axis: worker sorted
     psd = []
+    ########################################
+    ###  Data Preparation                ###
+    ########################################
     # Create Inverted Index
     iindex = {}
     for man in workers:
         idx = man.index
-        p = postscript.Position(
-            0,
-            (len(workers) - idx) * FigureOption.NODE_INTERVAL * man.ncpus + \
-                FigureOption.Y_OFFSET)
-        man.position = p
         iindex[man.name] = man
+    for record in records:
+        m = iindex[record.worker]
+        m.records.append(record)
+    for man in workers:
+        man.setup_slots()
+    if options.verbose > 0:
+        tau.util.err("Worker Information:")
+        tau.util.err(workers)
+    # Assertion
+    try:
+        assert(sum(len(m.records) for m in workers) ==
+               sum(sum(len(s) for s in m.slots) for m in workers))
+    except AssertionError, e:
+        tau.util.err("sum(workers.m.records)=%d sum(workers.m.slots)=%d" % (
+                sum(len(m.records) for m in workers),
+                sum(sum(len(s) for s in m.slots) for m in workers)))
+        raise e
+    ########################################
+    ###  Graph Draw                      ###
+    ########################################
+    for iman in xrange(len(workers)):  # Not pythonic but necessary
+        man = workers[iman]
+        nr_slots_below = sum(len(m.slots) for m in workers if m.index > iman)
+        nr_slots_my = len(man.slots) - 1
+        man_y = FigureOption.Y_OFFSET + \
+            (nr_slots_below + nr_slots_my) * FigureOption.NODE_INTERVAL
+        p = postscript.Position(0, man_y)
+        man.position = p
     # Init
     psd.extend(postscript.begin())
     # Create colour chart for applications
@@ -98,15 +171,22 @@ Generate timechart of the specified trial.
             postscript.Position(100, 90)))
     # Max name length of workers
     max_worker_length = max(len(man.name) for man in workers)
+    # Sum of #slots
+    nr_slots = sum(len(man.slots) for man in workers)
     # Place Axis
     origin_x = max_worker_length * 0.5 * postscript.FONT_SIZE
     origin = postscript.Position(
         origin_x,
         FigureOption.Y_OFFSET)
     rt_y = FigureOption.Y_OFFSET + \
-        FigureOption.NODE_INTERVAL * (len(workers) + 2)
+        FigureOption.NODE_INTERVAL * (nr_slots + 2)
     rt = postscript.Position(origin_x + FigureOption.X_WIDTH, rt_y)
     psd.extend(postscript.draw_axis(origin, rt))
+    if options.verbose > 1:
+        tau.util.err("Axis: origin=(%f, %f)" % (
+                origin_x, FigureOption.Y_OFFSET))
+        tau.util.err("Rect: dst=(%f, %f)" % (
+                origin_x + FigureOption.X_WIDTH, rt_y))
     # Place grid
     psd.extend(postscript.place_grid(
             origin_x + FigureOption.X_WIDTH,
@@ -116,32 +196,24 @@ Generate timechart of the specified trial.
         m = iindex[man.name]
         psd.extend(postscript.place_text(
                 man.name, postscript.Position(0, m.position.y)))
-    # Place boxes
+    # Calc timescale: for outline box
     records_time_max = max(
         [record.start_time + record.elapsed for record in records])
     maximum_time = max(records_time_max, meta.time)
-    #print >>sys.stderr, maximum_time, records_time_max, meta.time
     TIMESCALE = (1.0 * FigureOption.X_WIDTH) / maximum_time
-    #print >>sys.stderr, meta
-    #print >>sys.stderr, "origin_x=%f X_WIDTH=%f" % (
-    #    origin_x, FigureOption.X_WIDTH,)
-    for record in records:
-        m = iindex[record.worker]
-        m.records.append(record)
-        # x0 = postscript.Position(
-        #     origin_x + TIMESCALE * record.start_time,
-        #     m.position.y)
-        # size = postscript.Position(
-        #     TIMESCALE * record.elapsed,
-        #     FigureOption.NODE_INTERVAL)
-        # try:
-        #     assert(x0.x + size.x - 0.01 <= origin_x + FigureOption.X_WIDTH)
-        # except AssertionError, e:
-        #     #print >>sys.stderr, "x0.x=%f size.x=%f idx=%d" % (x0.x, size.x, idx)
-        #     print >>sys.stderr, "starttime=%f elapsedsec=%f" % (
-        #         record.start_time, record.elapsed)
-        # psd.extend(
-        #     postscript.draw_rect_size(x0, size, apps_colour_d[record.appname]))
+    # Place boxes For each worker
+    for man in workers:
+        for islot, slot in enumerate(man.slots):
+            y = man.position.y - islot * FigureOption.NODE_INTERVAL
+            for record in slot:
+                x = origin_x + TIMESCALE * record.start_time
+                x0 = postscript.Position(x, y)
+                colourinfo = apps_colour_d[record.appname]
+                size = postscript.Position(
+                    TIMESCALE * record.elapsed,
+                    FigureOption.NODE_INTERVAL)
+                psd.extend(
+                    postscript.draw_rect_size(x0, size, colourinfo))
     # Finalize
     psd.extend(postscript.finalize())
     print postscript.NL.join(psd)
@@ -214,11 +286,18 @@ WHERE
   job.application = app.id
  AND
   wft.id = ?
+ORDER BY
+  job.local_start_time
 """
-    #res = cursor.execute(sql, (options.trial,)).fetchall()
-    cursor.execute(sql, (options.trial,))
-    records = [Record(appname=r[0], worker=r[1], start_time=r[2], elapsed=r[3])
-               for r in cursor]
+    res = cursor.execute(sql, (options.trial,)).fetchall()
+    #cursor.execute(sql, (options.trial,))
+    #records = [Record(appname=r[0], worker=r[1], start_time=r[2], elapsed=r[3])
+    #           for r in cursor]
+    records = []
+    for row in res:
+        r = Record(appname=row.appname, worker=row.worker,
+                   start_time=row.starttime, elapsed=row.elapsedtime)
+        records.append(r)
     ## Workers list
     sql = """
 SELECT DISTINCT
@@ -273,7 +352,7 @@ WHERE
         raise Exception("Preparation of data failed: records None.")
     if not workers:
         raise Exception("Preparation of data failed: workers None.")
-    return (records, workers, m, apps)
+    return (options, args, records, workers, m, apps)
 
 
 def mk_apps_colourd(apps):
