@@ -10,7 +10,7 @@ import resource
 import math
 import time
 import string
-import subprocess
+from subprocess import Popen, PIPE
 import cPickle
 import json
 import operator
@@ -33,12 +33,14 @@ import tau.db
 import tau.nm.loader
 import tau.TauLoad.Loader
 import config.db
+from modules import postscript
 
 import default
 import memcachedwrapper
 import getraw
 import hashutil
 import tableutil
+
 
 # GXPmake
 
@@ -58,6 +60,7 @@ print memcached_conn
 # YAML
 e9n_function = "viewer/e9n/function.yaml"
 
+
 def helloworld(request):
     #return HttpResponse("Hello World")
     return HttpResponseRedirect("/pgdiff/1/1/")
@@ -65,7 +68,7 @@ def helloworld(request):
 
 def pgd1_dummy(request):
     """redirector
-    
+
     Arguments:
     - `request`:
     """
@@ -74,7 +77,7 @@ def pgd1_dummy(request):
 
 def pgd2_dummy(request):
     """redirector
-    
+
     Arguments:
     - `request`:
     """
@@ -99,7 +102,8 @@ def pgroupdiff(request, pg1, pg2):
     elif dbtype == "postgres":
         conn = tau.db.init("postgres", username="kabe", hostname="127.0.0.1")
     else:
-        return HttpResponseServerError(content="Cannot connect to the database")
+        return HttpResponseServerError(
+            content="Cannot connect to the database")
     # Param
     stranger_diff_thresh = params.susp_thresh
     t_params = {"stranger_diffpercent_thresh": stranger_diff_thresh * 100,
@@ -169,13 +173,12 @@ ORDER BY pg.id
                                "rnc_n": newc_colnames,
                                "rnc": r_newc2,
                                "rd": rd,
-                               "pg_maxs": (r1_max, r2_max)
-                               })
+                               "pg_maxs": (r1_max, r2_max)})
 
 
 def pgdiff2(request, params):
     """Test funtion for form paramteres.
-    
+
     @param request request object
     @param params get parameters
     """
@@ -363,8 +366,7 @@ ORDER BY pg.id
                                "imgfilename": imagefilename,
                                "reqparams": {"graphmode": graphmode,
                                              "order": order,
-                                             "sortmode": sortmode,}
-                               })
+                                             "sortmode": sortmode, }, })
 
 
 def pgd2(request, sortmode):
@@ -481,7 +483,8 @@ ORDER BY pg.app_viewname, pg.place, pg.id
     ## Sort order
     column_names = (x[1] for x in view_columns)
     if order not in column_names:
-        return HttpResponseServerError(content="Order %s not in columns" % (order))
+        return HttpResponseServerError(
+            content="Order %s not in columns" % (order))
     order_str = order
     ## Sort mode
     if sortmode == "asc":
@@ -566,13 +569,12 @@ ORDER BY ${order}
                                "imgfilename": imagefilename,
                                "reqparams": {"order": order,
                                              "sortmode": sortmode,
-                                             "path": request.path,},
+                                             "path": request.path, },
                                "checked_radios": checked_radios,
                                "coldef_params": coldef_params,
                                "graph_title": graphtitle,
                                "vschema": vschema,
-                               "functip": functip,
-                               })
+                               "functip": functip, })
 
 
 def pgd3(request, sortmode):
@@ -836,13 +838,12 @@ ORDER BY ${order}
                                "imgfilename": imagefilename,
                                "reqparams": {"order": order,
                                              "sortmode": sortmode,
-                                             "path": request.path,},
+                                             "path": request.path, },
                                "checked_radios": checked_radios,
                                "coldef_params": coldef_params,
                                "graph_title": graphtitle,
                                "vschema": vschema,
-                               "functip": functip,
-                               })
+                               "functip": functip, })
 
 
 ##################################################
@@ -870,7 +871,7 @@ ORDER BY name, id
         'wf.html',
         {
             "self_path": request.path,
-            "wfs": wfs,})
+            "wfs": wfs, })
 
 
 #@cache_page(60 * 5)
@@ -892,7 +893,7 @@ SELECT id, name FROM application
 WHERE workflow=?
 """, wf)
     apps = cursor.fetchall()
-    
+
     cursor.execute("""
 SELECT
   wft.id id,
@@ -947,7 +948,6 @@ GROUP BY
                     d[attr] = getattr(agg, attr)
                 condagg.append(d)
 
-
     return render_to_response(
         'workflowinfo.html',
         {
@@ -955,7 +955,7 @@ GROUP BY
             "workflow": workflow,
             "conds": condagg,
             "agginfo": agginfo,
-            "apps": apps,})
+            "apps": apps, })
 
 
 def workflow_condinfo(request, wf, wfc):
@@ -977,7 +977,7 @@ SELECT id, name FROM application
 WHERE workflow=?
 """, wf)
     apps = cursor.fetchall()
-    
+
     cursor.execute("""
 SELECT
   wft.id id,
@@ -1026,7 +1026,7 @@ WHERE
             "workflow": workflow,
             "trials": trials,
             "agginfo": agginfo,
-            "apps": apps,})
+            "apps": apps, })
 
 
 def wfdiff(request, wf, wfc1, wfc2):
@@ -1072,7 +1072,8 @@ def wfdiff(request, wf, wfc1, wfc2):
         graphcols = cls
         columns = tuple(("D/C", c)for c in graphcols)
     #print drows
-    jsoninfo = generate_wf_graph_json(drows, columns_fixed + columns, graphcols)
+    jsoninfo = generate_wf_graph_json(
+        drows, columns_fixed + columns, graphcols)
     #print jsoninfo
     jsondata = json.dumps(jsoninfo, cls=DecimalEncoder)
     return render_to_response(
@@ -1086,8 +1087,31 @@ def wfdiff(request, wf, wfc1, wfc2):
             "jsondata": jsondata,
             "workflow": workflow,
             "sqlstring": sql,
-            "userdefinedsql": use_userdefined_sql,
-            })
+            "userdefinedsql": use_userdefined_sql, })
+
+
+def get_wf_timechart(request, trial_id):
+    """Return the time chart of the workflow.
+
+    @param request
+    @param trial_id
+    """
+    # Execute timechart.py ... | gs ...
+    timechart_path = "../scripts/timechart.py"
+    assert(os.path.isfile(timechart_path))
+    sp_tc = Popen((timechart_path, "-t", trial_id),
+                  stdin=None, stdout=PIPE, stderr=PIPE)
+    tc_o, tc_e = sp_tc.communicate()
+    assert(tc_e == "")
+    size = postscript.getsize(tc_o, postscript.RAW)
+    resolution = "%dx%d" % (size[0] * 2, size[1] * 2)
+    gs = ("gs", "-sDEVICE=png256", "-r%s" % (resolution),
+          "-dEPSCrop", "-q", "-o", "-", "-")
+    sp_gs = Popen(gs, stdin=PIPE, stdout=PIPE, stderr=PIPE)
+    o, e = sp_gs.communicate(input=tc_o)
+    assert(e == "")
+    assert(o != "")
+    return HttpResponse(o, mimetype="image/png")
 
 
 ##################################################
@@ -1097,7 +1121,7 @@ def wfdiff(request, wf, wfc1, wfc2):
 
 def gengraph(index_A, index_B, funcs, order, colinfo, cols):
     """Generate GNUPLOT Graph.
-    
+
     @param index_A index for A
     @param index_B index for B
     @param funcs
@@ -1120,7 +1144,8 @@ ${y2tics}
 plot \
     ${plines}
 """
-    pl_template = '"${datafile}" using ($1${goffset}):${col_index}:(${gwidth})' \
+    pl_template = '"${datafile}" ' \
+        'using ($1${goffset}):${col_index}:(${gwidth})' \
         ' title "${colname}" w boxes fs solid 1 axis ${axis}'
     template = string.Template(plot_template)
     pltemplate = string.Template(pl_template)
@@ -1130,9 +1155,11 @@ plot \
     # Graph title
     # title = "%s \\n (order %s)" % \
     #     (", ".join(cols["y1"]  + cols["y2"]).replace("_", "\\\\_"), order)
-    title = "";  # "Order by %s" % (order)
-    y1label = "set ylabel \"%s\"" % (", ".join(cols["y1"]).replace("_", "\\\\_"))
-    y2label = "set y2label \"%s\"" % (", ".join(cols["y2"]).replace("_", "\\\\_"))
+    title = ""  # "Order by %s" % (order)
+    y1label = "set ylabel \"%s\"" % (
+        ", ".join(cols["y1"]).replace("_", "\\\\_"))
+    y2label = "set y2label \"%s\"" % (
+        ", ".join(cols["y2"]).replace("_", "\\\\_"))
     y2tics = "set y2tics"
     # Graph scale calc
     graph_interval = 4 * (len(cols["y1"]) + len(cols["y2"])) + 4
@@ -1145,10 +1172,12 @@ plot \
     for i, t in enumerate(funcs):
         goffset = i * graph_interval
         #print i, t
-        if i >= 10: break
+        if i >= 10:
+            break
         ts = "%d " % (goffset) + " ".join(str(x) for x in t) + "\n"
         timedata += ts
-        xtics_list.append('"' + t[0][:-2] + '"' + " " + str(i * graph_interval))
+        xtics_list.append(
+            '"' + t[0][:-2] + '"' + " " + str(i * graph_interval))
     tmpfilename = os.tmpnam()
     xtics_conf = xtics_tt.substitute(
         conf=",".join(xtics_list).replace("_", "\\\\_"))
@@ -1194,7 +1223,6 @@ plot \
         plines = lines["y2"]
         y1label = ""
     else:
-        #return HttpResponseServerError(content="Graph generation: lines error")
         raise Exception("Nothing to display in graph")
     # Main
     s = template.safe_substitute(title=title,
@@ -1208,13 +1236,13 @@ plot \
     with open(tmpfilename, "w") as f:
         f.write(timedata.strip())
         f.close()
-        sp = subprocess.Popen(("gnuplot",), stdin=subprocess.PIPE)
+        sp = Popen(("gnuplot",), stdin=PIPE)
         sp.stdin.write(s)
         sp.stdin.close()
         sp.wait()
-        sp2 = subprocess.Popen(("convert",
-                                "out.eps",
-                                os.path.join("viewer", "data", image_filename)))
+        sp2 = Popen(("convert",
+                     "out.eps",
+                     os.path.join("viewer", "data", image_filename)))
         sp2.wait()
     try:
         os.unlink(tmpfilename)
@@ -1328,11 +1356,11 @@ def generate_wf_graph_json(contents, columns, graph_cols):
             "AccumL1", "AccumL2",
             ),
         "y2": ("MinFlt1", "MinFlt2",),
-        "y3": ("AppCount1",),}
+        "y3": ("AppCount1", ), }
     graph_cols2 = {
         "y1": (
             "ElapsedL1", "ElapsedL2",
-            ),}
+            ), }
     graph_cols3 = {
         "y1": (
             "AccumL1", "IO1",
@@ -1344,12 +1372,11 @@ def generate_wf_graph_json(contents, columns, graph_cols):
         "y3": ("AppCount1",),
         "y4": ("CPUEff1", "CPUEff2",),
         "y5": ("UTime1", "UTime2",),
-        "y6": ("IO1", "IO2",),}
+        "y6": ("IO1", "IO2", ), }
     if graph_cols:  # Specified
         print "*** graph columns specified in gwgj"
         graph_cols = {
-            "y1": graph_cols,
-            }
+            "y1": graph_cols, }
     else:
         graph_cols = graph_cols3
     # ApplicationName s
@@ -1361,7 +1388,7 @@ def generate_wf_graph_json(contents, columns, graph_cols):
         if axis in graph_cols.keys():
             yaxis.append({
                     "title": {"align": "middle",
-                              "text": ", ".join(graph_cols[axis]),},
+                              "text": ", ".join(graph_cols[axis]), },
                     # Odd-number axis will be placed right
                     "opposite": True if axis_idx % 2 else False})
             for col in graph_cols[axis]:
@@ -1369,7 +1396,7 @@ def generate_wf_graph_json(contents, columns, graph_cols):
                     {
                         "name": col,
                         "data": contents_to_appmap[col],
-                        "yAxis": axis_idx,})
+                        "yAxis": axis_idx, })
             axis_idx += 1
     #print "Categories"
     #print categories
@@ -1378,8 +1405,7 @@ def generate_wf_graph_json(contents, columns, graph_cols):
     return {
         "categories": categories,
         "series": series,
-        "yaxis": yaxis,
-        }
+        "yaxis": yaxis, }
 
 
 ##################################################
@@ -1389,7 +1415,7 @@ def generate_wf_graph_json(contents, columns, graph_cols):
 
 def getpng(request, imgpath):
     """Return image response.
-    
+
     Arguments:
     - `request`:
     - `imgpath`:

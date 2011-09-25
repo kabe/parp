@@ -28,6 +28,8 @@ urlpatterns = patterns('',
      'parpview.viewer.views.workflow_condinfo'),
     (r'^wfdiff/(?P<wf>\d+)/(?P<wfc1>\d+)/(?P<wfc2>\d+)',
      'parpview.viewer.views.wfdiff'),
+    (r'^wft-tc/(?P<trial_id>\d+)',
+     'parpview.viewer.views.get_wf_timechart'),
     # Static
     (r'^img/(?P<imgpath>.+\.png)$', 'parpview.viewer.views.getpng'),
     (r'^script/(?P<path>.+\.js)$', 'parpview.viewer.views.getjs'),

@@ -1,6 +1,9 @@
 #!/usr/bin/env python
 
 
+from subprocess import Popen, PIPE
+
+
 # Postscript module
 
 # Newline code
@@ -11,6 +14,11 @@ DATA_DIMENSION = 2
 FONT_NAME = "Times-Roman"
 # Font size
 FONT_SIZE = 4
+
+# Constants
+FILE = 0
+RAW = 1
+
 
 # Exception class
 class PostScriptException(Exception):
@@ -238,6 +246,71 @@ def place_colourlegend(colourdic, x0, size):
     return l
 
 
-if __name__ == '__main__':
-    pass
+def _get_size(bboxdata):
+    """Get size information from BBox data.
 
+    @param bboxdata
+    >>> s = '''%%BoundingBox: 0 0 589 771
+    ... %%HiResBoundingBox: 0.000000 0.000000 588.059982 770.057976'''
+    >>> _get_size(s)
+    (589, 771)
+    """
+    assert(bboxdata != "")
+    bb = bboxdata.split("\n")[0]
+    t = bb.split(" ")[1:]
+    nt = [int(k) for k in t]
+    try:
+        size = (nt[2] - nt[0], nt[3] - nt[1])
+        return size
+    except IndexError, e:
+        raise PostScriptException("Invalid bbox data: \"%s\"" % (bboxdata))
+
+
+def getsize(content, mode=FILE):
+    """Get the size of the postscript image file.
+
+    @param content Image path(FILE) or data(RAW)
+    @param mode FILE or RAW
+    >>> s = '''%!PS
+    ... gsave
+    ... newpath
+    ... 100 200 moveto
+    ... 200 0 rlineto
+    ... 0 100 rlineto
+    ... -200 0 rlineto
+    ... 0 -100 rlineto
+    ... closepath
+    ... fill
+    ... 0 0 0 1 setcmykcolor
+    ... stroke
+    ... showpage
+    ... grestore'''
+    >>> getsize(s, mode=RAW)
+    (202, 102)
+    >>> getsize(s, mode=3)  # not FILE nor RAW
+    Traceback (most recent call last):
+    ...
+    PostScriptException: Unknown getsize mode
+    """
+    if mode not in (FILE, RAW):
+        raise PostScriptException("Unknown getsize mode")
+    gst = ()
+    assert(content != "")
+    if mode == FILE:
+        import os.path
+        path = content
+        content = ""
+        assert(os.path.isfile(path) == True)
+        gst = ("gs", "-sDEVICE=bbox", "-q", "-o", "-", path)
+    elif mode == RAW:
+        gst = ("gs", "-sDEVICE=bbox", "-q", "-o", "-", "-")
+    sp = Popen(gst, stdin=PIPE, stdout=PIPE, stderr=PIPE)
+    o, e = sp.communicate(input=content)
+    assert(o == "")
+    size = _get_size(e)
+    return size
+
+
+if __name__ == '__main__':
+    import doctest
+    doctest.testmod()

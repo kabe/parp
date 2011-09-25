@@ -117,8 +117,12 @@ def parse_opt():
 
 def main():
     """Main routine.
+    """
+    print generate_postscript()
 
-Generate timechart of the specified trial.
+
+def generate_postscript():
+    """Generate timechart of the specified trial.
     """
     options, args, records, workers, meta, apps = prepare_data()
     # Determine x axis and y axis
@@ -216,7 +220,7 @@ Generate timechart of the specified trial.
                     postscript.draw_rect_size(x0, size, colourinfo))
     # Finalize
     psd.extend(postscript.finalize())
-    print postscript.NL.join(psd)
+    return postscript.NL.join(psd)
 
 
 def prepare_data():

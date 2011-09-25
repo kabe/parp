@@ -32,6 +32,7 @@
             <th>Worker #</th>
             <th>Input Dataset</th>
             <th>Average Time [sec]</th>
+            <th>TimeChart Link</th>
           </tr>
           {% for trial in trials %}
           <tr>
@@ -41,6 +42,7 @@
             <td class="numeric">{{ trial.worker_num }}</td>
             <td>{{ trial.input_dataset }}</td>
             <td class="numeric">{{ trial.elapsed }}</td>
+            <td><a href="/wft-tc/{{ trial.id }}">Timechart</a></td>
           </tr>
           {% endfor %}
         </table>
