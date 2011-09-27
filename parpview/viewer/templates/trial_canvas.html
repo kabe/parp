@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" type="text/css" href="/style/style.css" />
+    <title>Timechart {{ trial_id }}</title>
+    <script type="application/x-javascript">
+      function drawcanvas() {
+        var canvas = document.getElementById("tccanvas");
+        var ctx = canvas.getContext("2d");
+        ctx.fillStyle = "rgb(200,0,0)";
+        ctx.fillRect(20, 40, 50, 100);
+      }
+    </script>
+    <style>
+      #tccanvas {
+      }
+    </style>
+  </head>
+  <body onLoad="drawcanvas();">
+    <div id="container">
+      <h1>Timechart of Trial #{{ trial_id }}</h1>
+      <canvas id="tccanvas"
+              width="{{ canvas.width }}"
+              height="{{ canvas.height }}">
+        Cannot place a Canvas with this browser.</canvas>
+    </div>
+  </body>
+</html>

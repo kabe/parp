@@ -1090,6 +1090,7 @@ def wfdiff(request, wf, wfc1, wfc2):
             "userdefinedsql": use_userdefined_sql, })
 
 
+@cache_page(60 * 5)
 def get_wf_timechart(request, trial_id):
     """Return the time chart of the workflow.
 
@@ -1112,6 +1113,33 @@ def get_wf_timechart(request, trial_id):
     assert(e == "")
     assert(o != "")
     return HttpResponse(o, mimetype="image/png")
+
+
+def wf_timechart_img(request, trial_id):
+    """Returns rendered HTML with PNG image.
+
+    @param request
+    @param trial_id
+    """
+    return render_to_response(
+        'trial_img.html',
+        {
+            "self_path": request.path,
+            "trial_id": trial_id, })
+
+
+def wf_timechart_canvas(request, trial_id):
+    """Draw the timechart on a canvas view.
+    TODO: not implemented
+
+    @param request
+    @param trial_id
+    """
+    return render_to_response(
+                'trial_canvas.html',
+                {
+                    "self_path": request.path,
+                    "trial_id": trial_id, })
 
 
 ##################################################
