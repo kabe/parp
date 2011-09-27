@@ -118,13 +118,17 @@ def parse_opt():
 def main():
     """Main routine.
     """
-    print generate_postscript()
+    options, args = parse_opt()
+    print generate_postscript(options.trial, options.verbose)
 
 
-def generate_postscript():
+def generate_postscript(trial_id, verbose):
     """Generate timechart of the specified trial.
+
+    @param trial_id
+    @param verbose
     """
-    options, args, records, workers, meta, apps = prepare_data()
+    records, workers, meta, apps = prepare_data(trial_id)
     # Determine x axis and y axis
     # X-axis: time from 0 to End of the run
     # Y-axis: worker sorted
@@ -142,7 +146,7 @@ def generate_postscript():
         m.records.append(record)
     for man in workers:
         man.setup_slots()
-    if options.verbose > 0:
+    if verbose > 0:
         tau.util.err("Worker Information:")
         tau.util.err(workers)
     # Assertion
@@ -186,7 +190,7 @@ def generate_postscript():
         FigureOption.NODE_INTERVAL * (nr_slots + 2)
     rt = postscript.Position(origin_x + FigureOption.X_WIDTH, rt_y)
     psd.extend(postscript.draw_axis(origin, rt))
-    if options.verbose > 1:
+    if verbose > 1:
         tau.util.err("Axis: origin=(%f, %f)" % (
                 origin_x, FigureOption.Y_OFFSET))
         tau.util.err("Rect: dst=(%f, %f)" % (
@@ -223,7 +227,7 @@ def generate_postscript():
     return postscript.NL.join(psd)
 
 
-def prepare_data():
+def prepare_data(trial_id):
     # Class
     class Meta(object):
         """Meta info of the trial.
@@ -269,7 +273,6 @@ def prepare_data():
             return s
 
     # Preparation
-    options, args = parse_opt()
     cn = pyodbc.connect(config.db.connect_str)
     cursor = cn.cursor()
     # Here trial number is specified.
@@ -293,10 +296,7 @@ WHERE
 ORDER BY
   job.local_start_time
 """
-    res = cursor.execute(sql, (options.trial,)).fetchall()
-    #cursor.execute(sql, (options.trial,))
-    #records = [Record(appname=r[0], worker=r[1], start_time=r[2], elapsed=r[3])
-    #           for r in cursor]
+    res = cursor.execute(sql, (trial_id,)).fetchall()
     records = []
     for row in res:
         r = Record(appname=row.appname, worker=row.worker,
@@ -312,7 +312,7 @@ WHERE
 ORDER BY
   `index`
 """
-    cursor.execute(sql, (options.trial,))
+    cursor.execute(sql, (trial_id,))
     workers = [ManInfo(row[0], row[1], row[2], row[3]) for row in cursor]
     ## Trial metadata
     meta = None
@@ -332,7 +332,7 @@ WHERE
  AND
   wft.id = ?
 """
-    meta = cursor.execute(sql, (options.trial,)).fetchone()
+    meta = cursor.execute(sql, (trial_id,)).fetchone()
     m = Meta(meta.name, meta.workers, meta.time)
     ## Applications list
     sql = """
@@ -350,13 +350,13 @@ WHERE
   wft.id = ?
 """
     apps = [rec.appname
-            for rec in cursor.execute(sql, (options.trial,)).fetchall()]
+            for rec in cursor.execute(sql, (trial_id,)).fetchall()]
     # Assertion
     if not records:
         raise Exception("Preparation of data failed: records None.")
     if not workers:
         raise Exception("Preparation of data failed: workers None.")
-    return (options, args, records, workers, m, apps)
+    return (records, workers, m, apps)
 
 
 def mk_apps_colourd(apps):
