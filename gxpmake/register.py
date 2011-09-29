@@ -12,6 +12,8 @@ import sqlite3
 sys.path.append(os.path.join(os.path.dirname(__file__), "../"))
 import model
 import parpdb
+import parpdb.dbi
+
 
 class GXPMakeRegister(object):
     """
@@ -50,6 +52,7 @@ class GXPMakeRegister(object):
     def __init__(self, odbc_connection):
         """
         """
+        self._odbc_connection = odbc_connection
         self._DBI = parpdb.dbi.DBI(odbc_connection)
         self._cursor = self._odbc_connection.cursor()
         self._odbc_connection.autocommit = False
