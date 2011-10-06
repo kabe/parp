@@ -48,6 +48,8 @@
         </table>
         <h2>Metainfo</h2>
         <p>Elapsed Local: {{ agginfo.elapsed_local }} sec, UserTime: {{ agginfo.time_user }}, Estimated I/O: {{agginfo.est_io}}</p>
+        <h2>Resource Usage</h2>
+        <p>User: {{ rusage.utime }}, System: {{ rusage.stime }}</p>
       </div>
     </div>
   </body>

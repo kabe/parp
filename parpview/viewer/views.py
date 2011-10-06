@@ -34,6 +34,7 @@ import tau.nm.loader
 import tau.TauLoad.Loader
 import config.db
 from modules import postscript
+from modules.time import RStopWatch
 
 import default
 import memcachedwrapper
@@ -965,6 +966,9 @@ def workflow_condinfo(request, wf, wfc):
     @param wf workflow id
     @param wfc workflow condition id
     """
+    stopwatch = RStopWatch()
+    stopwatch.start()
+
     cstr = config.db.connect_str
     conn = pyodbc.connect(config.db.connect_str)
     cursor = conn.cursor()
@@ -1000,8 +1004,6 @@ WHERE
   wf.id = ?
 """, wfc, wf)
     trials = cursor.fetchall()
-    print "trials"
-    print trials
 
     cursor.execute("""
 SELECT
@@ -1015,10 +1017,9 @@ WHERE
   cv.workflow = ?
 """, wfc, wf)
     agginfo = cursor.fetchall()
-    print "agginfo"
-    print agginfo
     agginfo = agginfo[0]
 
+    stopwatch.stop()
     return render_to_response(
         'workflowcondinfo.html',
         {
@@ -1026,6 +1027,7 @@ WHERE
             "workflow": workflow,
             "trials": trials,
             "agginfo": agginfo,
+            "rusage": stopwatch.rsrc,
             "apps": apps, })
 
 
