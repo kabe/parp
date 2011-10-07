@@ -145,10 +145,9 @@ VALUES(?, ?, ?, ?);""", wf_id, wfc_id, startts, elapsed)
 INSERT INTO wf_worker
     (`index`, workflow_trial_id, name, ncpus, memory)
 VALUES(?, ?, ?, ?, ?);""",
-                            worker.index, trial_id, worker.name,
+                            worker.index, trial_id, str(worker.name),
                             worker.ncpus, worker.memory)
         row = self.cursor.execute("SELECT LAST_INSERT_ID();").fetchone()
-        print row
 
     def process_application(self, wf_id, appname):
         """Registers application.
