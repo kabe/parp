@@ -34,7 +34,7 @@ import tau.nm.loader
 import tau.TauLoad.Loader
 import config.db
 from modules import postscript
-from modules.time import RStopWatch
+from modules.ptime import RStopWatch
 
 import default
 import memcachedwrapper
