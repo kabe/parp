@@ -12,7 +12,7 @@
       var csrf_token = "{% csrf_token %}";
     </script>
     <div id="container">
-      <h1>Workflow {{ workflow.name }}</h1>
+      <h1>Workflow <a href="/wfinfo/{{ workflow.id }}">{{ workflow.name }}</a></h1>
       <div>
         <h2>Applications in {{ workflow.name }}</h2>
         <table id="cmptable">
