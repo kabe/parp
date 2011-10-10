@@ -4,9 +4,13 @@
   <head>
     <title>Workflow Information</title>
     <link rel="stylesheet" type="text/css" href="/style/style.css" />
-    <!--script type="text/javascript" src="/script/p.js"></script-->
+    <script type="text/javascript" src="/resources/js/jquery-1.5.1.min.js"></script>
+    <script type="text/javascript" src="/script/condinfo.js"></script>
   </head>
   <body>
+    <script type="text/javascript">
+      var csrf_token = "{% csrf_token %}";
+    </script>
     <div id="container">
       <h1>Workflow {{ workflow.name }}</h1>
       <div>
@@ -33,6 +37,7 @@
             <th>Input Dataset</th>
             <th>Execution Time [sec]</th>
             <th>TimeChart Link</th>
+            <th>Enabled</th>
           </tr>
           {% for trial in trials %}
           <tr>
@@ -43,8 +48,25 @@
             <td>{{ trial.input_dataset }}</td>
             <td class="numeric">{{ trial.elapsed }}</td>
             <td><a href="/wft-tcw/{{ trial.id }}">Timechart</a></td>
+            <td class="cb">
+              <input name="wf_enable" type="checkbox" id="wfe_{{ trial.id }}" onChange="javascript:valueChanged({{ trial.id }});"
+                     {% if trial.enabled == 1 %}
+                     checked="checked"
+                     {% endif %}
+                     />
+            </td>
           </tr>
           {% endfor %}
+          <tr>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td class="cb"><input type="button" value="Switch" onClick="javascript:submitChanges();" /></td>
+          </tr>
         </table>
         <h2>Metainfo</h2>
         <p>Elapsed Local: {{ agginfo.elapsed_local }} sec, UserTime: {{ agginfo.time_user }}, Estimated I/O: {{agginfo.est_io}}</p>

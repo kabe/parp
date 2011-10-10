@@ -4,6 +4,7 @@ from django.http import Http404
 from django.http import HttpResponseRedirect
 from django.shortcuts import render_to_response
 from django.views.decorators.cache import cache_page
+from django.template import RequestContext
 from parpview.viewer.models import ViewParam
 
 import resource
@@ -41,6 +42,7 @@ import memcachedwrapper
 import getraw
 import hashutil
 import tableutil
+import strutil
 
 
 # GXPmake
@@ -984,6 +986,37 @@ WHERE workflow=?
 """, wf)
     apps = cursor.fetchall()
 
+    # Update trial enable flags
+    if request.method == "POST":
+        s_changed_indeces = (str(request.POST["wf_changed"])
+                           if "wf_changed" in request.POST
+                           else "")
+        s_enabled_indeces = (str(request.POST["wf_enabled"])
+                           if "wf_enabled" in request.POST
+                           else "")
+        s_disabled_indeces = (str(request.POST["wf_disabled"])
+                            if "wf_disabled" in request.POST
+                            else "")
+        changed_indeces = strutil.strint_maplist(s_changed_indeces)
+        enabled_indeces = strutil.strint_maplist(s_enabled_indeces)
+        disabled_indeces = strutil.strint_maplist(s_disabled_indeces)
+        print (changed_indeces, enabled_indeces, disabled_indeces)
+        # Update enabled-flags
+        sql = """UPDATE workflow_trial SET enabled = 1 WHERE id IN (%s);""" % (
+            ", ".join(map(str, enabled_indeces)))
+        if enabled_indeces:
+            print sql
+            cursor.execute(sql)
+            conn.commit()
+        # Update disabled-flags
+        sql = """UPDATE workflow_trial SET enabled = 0 WHERE id IN (%s);""" % (
+            ", ".join(map(str, disabled_indeces)))
+        if disabled_indeces:
+            print sql
+            cursor.execute(sql)
+            conn.commit()
+    # Update trial enable flags END
+
     cursor.execute("""
 SELECT
   wft.id id,
@@ -994,7 +1027,8 @@ SELECT
   wfc.filesystem filesystem,
   wfc.worker_num worker_num,
   wfc.input_dataset input_dataset,
-  TIME_TO_SEC(wft.elapsed_time) elapsed
+  TIME_TO_SEC(wft.elapsed_time) elapsed,
+  wft.enabled enabled
 FROM
   workflow_trial AS wft,
   workflow AS wf,
@@ -1032,7 +1066,8 @@ WHERE
             "agginfo": agginfo,
             "processingtime": stopwatch.total_second(),
             "rusage": rstopwatch.rsrc,
-            "apps": apps, })
+            "apps": apps, },
+        context_instance=RequestContext(request), )
 
 
 def wfdiff(request, wf, wfc1, wfc2):

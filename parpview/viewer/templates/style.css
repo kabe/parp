@@ -63,6 +63,10 @@ tr.showing td {
 td.numeric {
     text-align: right;
 }
+td.cb {
+    /* td that only contains Checkbox */
+    text-align: center;
+}
 /* form */
 p.submit_p {
     text-align: right;
