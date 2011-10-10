@@ -34,29 +34,13 @@ function submitChanges() {
     var changed_str = changed_indeces.join(" ");
     var enabled_str = enabled_indeces.join(" ");
     var disabled_str = disabled_indeces.join(" ");
-    // Create form
-    var form = document.createElement("form");
-    document.body.appendChild(form);
-    var cinput = document.createElement("input");
-    cinput.setAttribute("type", "hidden");
-    cinput.setAttribute("name", "wf_changed");
-    cinput.setAttribute("value", changed_str);
-    form.appendChild(cinput);
-    var einput = document.createElement("input");
-    einput.setAttribute("type", "hidden");
-    einput.setAttribute("name", "wf_enabled");
-    einput.setAttribute("value", enabled_str);
-    form.appendChild(einput);
-    var dinput = document.createElement("input");
-    dinput.setAttribute("type", "hidden");
-    dinput.setAttribute("name", "wf_disabled");
-    dinput.setAttribute("value", disabled_str);
-    form.appendChild(dinput);
-    form.setAttribute("action", "");
-    form.setAttribute("method", "post");
-    $(form).append(csrf_token);
-    // Submit form
-    form.submit();
+    // Async POST
+    $.post("",
+           {
+               wf_changed: changed_str,
+               wf_enabled: enabled_str,
+               wf_disabled: disabled_str
+           });
     // Clear
     changed_indeces = new Array();
     enabled_indeces = new Array();
