@@ -907,6 +907,7 @@ SELECT
   wfc.filesystem filesystem,
   wfc.worker_num worker_num,
   wfc.input_dataset input_dataset,
+  SUM(wft.enabled) num_enabled,
   COUNT(*) num_trials,
   AVG(TIME_TO_SEC(wft.elapsed_time)) elapsed
 FROM
@@ -944,7 +945,8 @@ GROUP BY
                 d = {}
                 for attr in ("id", "name", "wf_condition", "wfc_id",
                              "location", "filesystem", "worker_num",
-                             "input_dataset", "num_trials", "elapsed"):
+                             "input_dataset", "num_enabled","num_trials",
+                             "elapsed"):
                     d[attr] = getattr(cond, attr)
                 for attr in ("workflow", "wf_condition", "elapsed_local",
                              "time_user", "est_io"):
