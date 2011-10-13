@@ -1380,7 +1380,7 @@ def construct_wfdiff_sql(request, wf, wfc1, wfc2):
                ("cv2.minor_faults", "MinFlt2"),
                ("cv1.major_faults", "MajFlt1"),
                ("cv2.major_faults", "MajFlt2"),)
-    sql_columns = ", ".join(
+    sql_columns = ",\n  ".join(
         " ".join((col[0], col[1]))
         for col in columns_fixed + columns)
     # TODO: Check the SQL sentence is valid/secure.
