@@ -1,0 +1,20 @@
+Paratrac Python-API
+
+This is a Python API for Paratrac.
+
+* Build
+
+$ make
+
+will generate paratracmodule.so.
+
+* Usage
+
+ 1. add paratracmodule.so to the python library directory.
+    (You may use PYTHONPATH variable).
+ 2. from your Python script, import module "paratrac".
+        import paratrac
+ 3. you can use some methods from paratrac module.
+        h = paratrac.str_hash(mountpoint_path)
+
+
