@@ -30,16 +30,15 @@ class GxpMakeDB(object):
     def main(self, ):
         """Main function for testing. Only dumps the contents of the CSV.
         """
-        print "There are %d lines." % (self.csvreader.line_num)
         print "Fields"
         print self.csvreader.fieldnames
         print "Contents"
         for row in self.csvreader:
             if row["work_idx"] == "#":  # Skip Comment line
                 continue
-            for field, value in row.iteritems():
-                sys.stdout.write(value + " ")
+            sys.stdout.write(" ".join(row.values()))
             sys.stdout.write("\n")
+        print "There were %d lines." % (self.csvreader.line_num)
 
 
 def testfile():
