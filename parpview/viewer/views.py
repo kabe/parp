@@ -1081,7 +1081,6 @@ def wfdiff(request, wf, wfc1, wfc2):
     @param wft_2 Workflow condition ID 2
     """
     ## Init
-    cstr = config.db.connect_str
     conn = pyodbc.connect(config.db.connect_str)
     cursor = conn.cursor()
     ## Request Check
@@ -1113,12 +1112,15 @@ def wfdiff(request, wf, wfc1, wfc2):
         print "*** drows"
         cls = tuple(x[0] for x in cursor.description)
         graphcols = cls
-        columns = tuple(("D/C", c)for c in graphcols)
+        columns = tuple(("D/C", c) for c in graphcols)
     #print drows
     jsoninfo = generate_wf_graph_json(
         drows, columns_fixed + columns, graphcols)
     #print jsoninfo
     jsondata = json.dumps(jsoninfo, cls=DecimalEncoder)
+    # Column Grouping Data
+    column_names = (x[1] for x in columns)
+
     return render_to_response(
         'wfd.html',
         {
@@ -1130,7 +1132,8 @@ def wfdiff(request, wf, wfc1, wfc2):
             "jsondata": jsondata,
             "workflow": workflow,
             "sqlstring": sql,
-            "userdefinedsql": use_userdefined_sql, })
+            "userdefinedsql": use_userdefined_sql,
+            "column_names": column_names, })
 
 
 @cache_page(60 * 5)
