@@ -39,6 +39,9 @@ def parse_opt():
     parser.add_option("-w", "--workflow", dest="workflow_name",
                       help="name of workflow",
                       metavar="WORKFLOW")
+    parser.add_option("-p", "--paratrac", dest="paratrac",
+                      help="prefix of paratrac databases",
+                      metavar="DBS_PREFIX")
     (options, args) = parser.parse_args()
     if args:
         if len(args) != 2:
@@ -107,6 +110,7 @@ Registers the database file into the database.
             print "Job ID = %d, New: %s" % (job_id, str(isnew))
         # TODO: prepare data for metric
         # TABLE METRIC
+    # ParaTrac DB if exists
     # COMMIT
     if options.finally_abort:
         reg.rollback()
