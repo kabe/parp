@@ -1,0 +1,14 @@
+version:0.4
+platform:Linux 2.6.26-2-amd64 #1 SMP Thu Nov 5 02:23:12 UTC 2009
+hostname:huscs015
+clktck:100
+sysbtime:1315795389
+cmdline:ftrac /data/local/kabe/workflow/fmpt -obig_writes
+mountpoint:/data/local/kabe/workflow/fmpt
+user:kabe
+uid:10246
+gid:10246
+pid:22920
+iid:0
+start:1324274558.107855320
+end:1324274572.368520021

@@ -1,0 +1,4 @@
+set terminal png
+set style fill solid
+set ylabel "Resident Set Size (MB)"
+plot "rss.dat" using 1:2 title "" with lines linewidth 3

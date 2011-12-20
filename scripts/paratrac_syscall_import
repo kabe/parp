@@ -1,0 +1,86 @@
+#!/usr/bin/env python
+
+# This script imports system call ID to system call name translation table
+
+import sys
+import os
+sys.path.append(os.path.join(os.path.dirname(__file__), "../"))
+from gxpmake import gxpmake, register
+import pyodbc
+import config
+import config.db
+from modules.paratrac import ptimporter
+
+
+def parse_opt():
+    """Parse Command Line Arguments.
+    """
+    from optparse import OptionParser
+    usage = "Usage: %prog [options]"
+    parser = OptionParser(usage=usage, version="%prog " + config.version)
+    parser.add_option("-v", "--verbose", dest="verbose",
+                      action="count", default=0,
+                      help="verbose output (more -v shows more output)")
+    parser.add_option("-b", "--abort", dest="finally_abort",
+                      action="store_true", default=False,
+                      help="finally abort (thus no side-effect)")
+    parser.add_option("-p", "--paratrac-dir", dest="paratracdir",
+                      help="path to paratrac top directory",
+                      metavar="PARATRAC_DIR")
+    (options, args) = parser.parse_args()
+    if not options.paratracdir:
+        parser.error("specify -p: see -h")
+    return options, args
+
+
+def main():
+    """Main routine.
+
+    Registers the database file into the database.
+    """
+    # Preparation
+    options, args = parse_opt()
+    cn = pyodbc.connect(config.db.connect_str)
+    reg = register.GXPMakeRegister(cn)
+    assert(cn)
+    # SQL
+    syscall_check_sql = """
+SELECT syscall_id, syscall_name FROM paratrac_syscall_name
+WHERE syscall_id = ?
+"""
+    syscall_insert_sql = """
+INSERT INTO paratrac_syscall_name (
+syscall_id, syscall_name
+)
+VALUES (
+?, ?
+);
+"""
+    # Registration
+    c = cn.cursor()
+    pt_dirpath = os.path.normpath(os.path.join(
+            os.path.dirname(__file__), options.paratracdir, "../"))
+    sys.path.append(pt_dirpath)
+    from paratrac.modules import utils as pt_utils
+    syscall_names = pt_utils.SYSCALL_FILESYSTEM
+    for k, v in syscall_names.items():
+        if isinstance(k, int): continue
+        if options.verbose > 0: print (k, v)
+        # Existence check
+        r = c.execute(syscall_check_sql, (v)).fetchone()
+        if r:
+            assert(r[1] == k)
+            continue
+        # Insert
+        c.execute(syscall_insert_sql, (v, k))
+    # COMMIT
+    if options.finally_abort:
+        reg.rollback()
+        print "Abort OK"
+    else:
+        reg.commit()
+        print "Registration OK"
+
+
+if __name__ == '__main__':
+    main()

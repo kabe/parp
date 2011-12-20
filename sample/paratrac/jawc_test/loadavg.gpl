@@ -1,0 +1,4 @@
+set terminal png
+set style fill solid
+set ylabel "Last 1 min. Load Average"
+plot "loadavg.dat" using 1:2 title "" with lines linewidth 3
