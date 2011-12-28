@@ -17,47 +17,43 @@ def parse_opt():
     """Parse Command Line Arguments.
     """
     from optparse import OptionParser
-    usage = "Usage: %prog [options] WORK_TXT WORK_DB"
+    usage = "Usage: %prog [options]"
     parser = OptionParser(usage=usage, version="%prog " + config.version)
     parser.add_option("-v", "--verbose", dest="verbose",
                       action="count", default=0,
                       help="verbose output (more -v shows more output)")
     parser.add_option("-b", "--abort", dest="finally_abort",
-                      action="store_true", default=False,
-                      help="finally abort (thus no side-effect)")
-    parser.add_option("-l", "--location", dest="location",
-                      help="specify execution location",
-                      default="",
-                      metavar="LOCATION")
-    parser.add_option("-n", "--worker-num", dest="worker_num",
-                      help="number of workers",
-                      metavar="WORKER_NUM")
-    parser.add_option("-i", "--input-dataset", dest="input_dataset",
-                      help="input dataset name",
-                      metavar="INPUT_DATASET")
-    parser.add_option("-f", "--filesystem", dest="filesystem",
-                      help="filesystem",
-                      default="",
-                      metavar="FILESYSTEM")
-    parser.add_option("-w", "--workflow", dest="workflow_name",
-                      help="name of workflow",
-                      metavar="WORKFLOW")
+                      action="store_true", default=True,
+                      help="finally abort" \
+                          " (thus no side-effect, Enabled by default)")
     parser.add_option("-p", "--paratrac", dest="paratrac",
                       help="prefix of paratrac databases",
                       metavar="DBS_PREFIX")
+    parser.add_option("-d", "--workflow-trial-id", dest="wt_id",
+                      help="workflow trial's id",
+                      metavar="WORKFLOW_TRIAL_ID")
     (options, args) = parser.parse_args()
-    if args:
-        if len(args) != 2:
-            parser.error("incorrect number of arguments: run with -h")
-    if not options.workflow_name:
-        parser.error("workflow name must be specified")
-    if not options.worker_num:
-        parser.error("worker # not specified")
     return options, args
 
 
+def import_paratrac(cn, reg, workflow_trial_id, paratrac_prefix):
+    """Import ParaTrac database.
+
+    @param cn Main DB Connection
+    @param reg GXPMake Register Object
+    @param workflow_trial_id Primary Key ID of Table workflow_trial
+    @param paratrac_prefix ParaTrac databases glob string
+    """
+    print dir(ptimporter.ParaTracImporter)
+    paths = ptimporter.ParaTracImporter.expand_globs(paratrac_prefix)
+    print paths
+    importer = ptimporter.ParaTracImporter(cn, paths)
+    importer.prepare_all()
+    importer.register_all(workflow_trial_id)
+
+
 def main():
-    """Main routine. ***TEST***
+    """Main routine.
 
     Registers the database file into the database.
     """
@@ -72,17 +68,14 @@ def main():
     reg = register.GXPMakeRegister(cn)
     assert(cn)
     # Registration
+    workflow_trial_id = 9999
+    if options.wt_id:
+        workflow_trial_id = options.wt_id
+    paratrac_prefix = options.paratrac
     # ParaTrac DB if exists
     if options.paratrac:
-        workflow_trial_id = 9999
-        print dir(ptimporter.ParaTracImporter)
-        paths = ptimporter.ParaTracImporter.expand_globs(options.paratrac)
-        print paths
-        importer = ptimporter.ParaTracImporter(cn, paths)
-        importer.prepare_all()
-        importer.register_all(workflow_trial_id)
+        import_paratrac(cn, reg, workflow_trial_id, paratrac_prefix)
     # COMMIT
-    options.finally_abort = True
     if options.finally_abort:
         reg.rollback()
         print "Abort OK"
