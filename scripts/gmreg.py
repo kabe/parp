@@ -8,6 +8,7 @@ import pyodbc
 import tau.db
 import config
 import config.db
+from modules.paratrac import ptimporter
 
 
 def parse_opt():
@@ -111,6 +112,8 @@ Registers the database file into the database.
         # TODO: prepare data for metric
         # TABLE METRIC
     # ParaTrac DB if exists
+    if options.paratrac:
+        ptreg.import_paratrac(cn, reg, workflow_trial_id, options.paratrac)
     # COMMIT
     if options.finally_abort:
         reg.rollback()
