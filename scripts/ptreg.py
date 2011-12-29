@@ -36,18 +36,19 @@ def parse_opt():
     return options, args
 
 
-def import_paratrac(cn, reg, workflow_trial_id, paratrac_prefix):
+def import_paratrac(cn, reg, workflow_trial_id, paratrac_prefix, verbose=0):
     """Import ParaTrac database.
 
     @param cn Main DB Connection
     @param reg GXPMake Register Object
     @param workflow_trial_id Primary Key ID of Table workflow_trial
     @param paratrac_prefix ParaTrac databases glob string
+    @param verbose verbosity
     """
     print dir(ptimporter.ParaTracImporter)
     paths = ptimporter.ParaTracImporter.expand_globs(paratrac_prefix)
     print paths
-    importer = ptimporter.ParaTracImporter(cn, paths)
+    importer = ptimporter.ParaTracImporter(cn, paths, verbose=verbose)
     importer.prepare_all()
     importer.register_all(workflow_trial_id)
 

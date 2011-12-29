@@ -123,7 +123,7 @@ VALUES (
 """
             for row in sc:
                 _iid, fid, path = int(row[0]), int(row[1]), str(row[2])
-                if self.verbose > 1: print iid, fid, path, workflow_trial_id
+                if self.verbose > 1: print slave.hostname, iid, fid, path, workflow_trial_id
                 c.execute(fileinsert_sql,
                           (fid, path, iid, workflow_trial_id))
             # Syscalls

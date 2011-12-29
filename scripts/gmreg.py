@@ -8,6 +8,7 @@ import pyodbc
 import tau.db
 import config
 import config.db
+import ptreg
 from modules.paratrac import ptimporter
 
 
@@ -113,7 +114,8 @@ Registers the database file into the database.
         # TABLE METRIC
     # ParaTrac DB if exists
     if options.paratrac:
-        ptreg.import_paratrac(cn, reg, workflow_trial_id, options.paratrac)
+        ptreg.import_paratrac(cn, reg, workflow_trial_id, options.paratrac,
+                              verbose=options.verbose)
     # COMMIT
     if options.finally_abort:
         reg.rollback()
