@@ -1,0 +1,153 @@
+*** local/gxp3/gxp_js.py	2011-06-06 18:54:56.000000000 +0900
+--- workspace/gxp3/gxp_js.py	2011-06-15 21:38:15.000000000 +0900
+***************
+*** 2202,2207 ****
+--- 2202,2263 ----
+          cls = work_db_text
+      return cls(conf)
+  
++ 
++ class parp_db():
++     """PARP's DB class.
++     
++     @author Tomoya KABE <kabe@logos.ic.i.u-tokyo.ac.jp>
++     """
++     def __init__(self, js):
++         conf = js.conf
++         self.server = js
++         self.db_file = "workparp.db"
++         self.db_path = os.path.join(conf.state_dir, self.db_file)
++         self.db_conn = None
++         self.db_cur = None
++ 
++     def record_parp_gxpdb(self, force):
++         """Create a DB for PARP.
++ 
++ This DB contains runs and workers' information.
++ Works only in the final call (i.e. only if force is True).
++ 
++         @param force Works if True
++ """
++         if not force:
++             return
++         import sqlite3
++         if os.path.exists(self.db_path):
++             os.remove(self.db_path)
++         self.db_conn = sqlite3.connect(self.db_path)
++         self.db_cur = self.db_conn.cursor()
++         # Create tables
++         self.db_cur.execute("""
++         CREATE TABLE worker (
++         idx INT,
++         name TEXT,
++         cpu INT,
++         memory INT
++          );
++          """)
++         self.db_cur.execute("""
++         CREATE TABLE trial (
++         start_timestamp DATETIME,
++         elapsed_time DOUBLE
++          );
++          """)
++         for manname, man in self.server.men.iteritems():
++             self.db_cur.execute("""
++             INSERT INTO worker (idx, name, cpu, memory)
++             VALUES (?, ?, ?, ?);
++             """, (man.man_idx, man.name,
++                   man.capacity["cpu"], man.capacity["mem"]))
++         self.db_cur.execute("""
++         INSERT INTO trial (start_timestamp, elapsed_time)
++         VALUES (?, ?)""",
++         (self.server.time_start, self.server.cur_time()))
++         self.db_conn.commit()
++ 
+  class time_series_data:
+      def __init__(self, server, directory, file_prefix, 
+                   section_title, graph_title, line_spec, line_titles):
+***************
+*** 2403,2408 ****
+--- 2459,2472 ----
+          else:
+              return "<a href=%s>%s</a> (%s)" % (db, db, cls)
+  
++     def mk_link_to_workers(self):
++         parpdb = self.server.parpdb
++         db = parpdb.db_file
++         if db is None:
++             return "(not available in worker db configuration %s)" % cls
++         else:
++             return "<a href=%s>%s</a>" % (db, db)
++ 
+      def expandpath(self, p):
+          return os.path.expanduser(os.path.expandvars(p))
+  
+***************
+*** 2424,2429 ****
+--- 2488,2494 ----
+          for such,_ in self.server.works.table_spec:
+              D["%s_jobs_table" % such] = self.mk_work_run_table(such)
+          D["all_jobs"] = self.mk_link_to_work_runs()
++         D["workers_db"] = self.mk_link_to_workers()
+          D["workers_table"] = self.mk_men_table()
+          ttt = int(time.time() * 10)
+          html = os.path.join(self.conf.state_dir, "index.html")
+***************
+*** 2600,2605 ****
+--- 2665,2671 ----
+          self.record_rss(t0, force)
+          self.record_mem(t0, force)
+          self.record_loadavg(t0, force)
++         self.parpdb.record_parp_gxpdb(force)
+          if self.generate_html(t0, force):
+              dt = self.cur_time() - t0
+              overhead = self.conf.gen_html_overhead
+***************
+*** 2610,2616 ****
+              self.next_update_time = self.next_update_time + time_until_next
+              self.gen_html_time = dt
+  
+- 
+      def receive_works(self, wkg, ws):
+          self.LOG("receive_works from %s\n" % ws)
+          works = wkg.read_works(ws)
+--- 2676,2681 ----
+***************
+*** 3265,3270 ****
+--- 3330,3336 ----
+          self.mang = man_generator(self.conf, self)
+          self.mon = men_monitor(self.conf, self)
+          self.works = mk_work_db(self.conf)
++         self.parpdb = parp_db(self)
+          self.runs_todo = [] # runs received, but not yet matched with man
+          self.matches = {}   # matches[man] = [ run,run,.. ]
+          self.n_pending_matches = 0
+*** local/gxp3/gxpbin/gxp_js_template.html	2011-05-02 23:04:53.000000000 +0900
+--- workspace/gxp3/gxpbin/gxp_js_template.html	2011-06-12 01:52:01.000000000 +0900
+***************
+*** 4,10 ****
+  <meta http-equiv="content-type" content="text/html; charset=utf-8"/>
+  %(reload_directive)s
+  
+! <title>GXP make jobs and parallelismm</title>
+  <style>
+  <!--
+  h1 {
+--- 4,10 ----
+  <meta http-equiv="content-type" content="text/html; charset=utf-8"/>
+  %(reload_directive)s
+  
+! <title>GXP make jobs and parallelism</title>
+  <style>
+  <!--
+  h1 {
+***************
+*** 230,235 ****
+--- 230,236 ----
+  <a href="#">page top</a><br><br>
+  last_ping_time = 0.000<br>
+  
++ <p>%(workers_db)s</p>
+  <table>
+  %(workers_table)s
+  </table>
