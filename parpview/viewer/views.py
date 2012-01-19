@@ -43,6 +43,7 @@ import getraw
 import hashutil
 import tableutil
 import strutil
+import util
 
 
 # GXPmake
@@ -404,7 +405,7 @@ SELECT pg.id,
        pg.library,
        pg.app_viewname,
        pgm.avg_dtime,
-       pgm.dvar
+       pgm.dvar dvar
 FROM profgroup AS pg,
      pgroup_meta AS pgm
 WHERE pg.id = pgm.profgroup_id
@@ -414,13 +415,14 @@ ORDER BY pg.app_viewname, pg.place, pg.id
     r_newc = conn.select(newc)
     #print r_newc
     ## stddev
-    r_newc2 = (r[0:-1] + (math.sqrt(r[-1]),) for r in r_newc)
+    r_newc2 = (r[0:-1] + (math.sqrt(float(r[-1])),) for r in r_newc)
     ###################
     ##### Request #####
     ###################
     ## Request mode
     graph_cols = {"y1": [], "y2": []}
     pgs = []
+    g_styles = []
     if request.method == "POST":
         print "POST Parameters:"
         print request.POST
@@ -430,13 +432,15 @@ ORDER BY pg.app_viewname, pg.place, pg.id
         ##### Column definitions #####
         existing_usecol_indeces = request.POST.getlist("use_flag")
         existing_usecols = tuple((request.POST["coldef_%s" % (ind)],
-                                  request.POST["colname_%s" % (ind)])
+                                  request.POST["colname_%s" % (ind)],
+                                  request.POST["style_%s" % (ind)],)
                                  for ind in existing_usecol_indeces)
         print "existing_usecols:"
         print existing_usecols
         new_usecol_indeces = request.POST.getlist("use_flag_new")
         new_usecols = tuple((request.POST["new_coldef_%s" % (ind)],
-                             request.POST["new_colname_%s" % (ind)])
+                             request.POST["new_colname_%s" % (ind)],
+                             request.POST["style_%s" % (ind)],)
                             for ind in new_usecol_indeces)
         print "new_usecol"
         print new_usecols
@@ -444,6 +448,18 @@ ORDER BY pg.app_viewname, pg.place, pg.id
         ## Order
         post_order_idx = int(request.POST["order"])
         order = view_columns[post_order_idx][1]
+        ## Graph style
+        gen_graph_styles = tuple(request.POST.getlist("style_%s" % (ind))[0]
+                                 for ind in existing_usecol_indeces
+                                 if request.POST["colname_%s" % (ind)]
+                                 in graph_cols["y1"] + graph_cols["y2"])
+        gen_new_graph_styles = tuple(request.POST.getlist("style_%s" % (ind))[0]
+                                     for ind in new_usecol_indeces
+                                     if request.POST["colname_%s" % (ind)]
+                                     in graph_cols["y1"] + graph_cols["y2"])
+        print "graph styles"
+        print gen_graph_styles, gen_new_graph_styles
+        g_styles = gen_graph_styles + gen_new_graph_styles
     else:  # default mode
         graph_cols = default.graph_cols
         pgs = [1, 1]
@@ -468,7 +484,7 @@ ORDER BY pg.app_viewname, pg.place, pg.id
     ##### Main comparison SQL generation #####
     # define view columns
     ## dictionary of strings tuple: (key, value) = (definition, name)
-    view_columns_joined_str = ", ".join(" AS ".join(vc)
+    view_columns_joined_str = ", ".join(" AS ".join((vc[0], vc[1]))
                                         for vc in view_columns)
     #print view_columns_joined_str
     checked_radios = determine_checked_radios(view_columns, graph_cols)
@@ -545,7 +561,8 @@ ORDER BY ${order}
     if pgs[0] != pgs[1]:
         try:
             graphtitle, imagefilename = gengraph(pgs[0], pgs[1], r_main, order,
-                                                 view_columns, graph_cols)
+                                                 view_columns, graph_cols,
+                                                 g_styles,)
         except Exception, e:
             pass
     ## Schema Info
@@ -569,6 +586,8 @@ ORDER BY ${order}
                                "rnc_n": newc_colnames,
                                "rnc": r_newc2,
                                "rd": rd,
+                               "default_graph_style": default.graph_style,
+                               "graph_styles": default.graph_styles,
                                "imgfilename": imagefilename,
                                "reqparams": {"order": order,
                                              "sortmode": sortmode,
@@ -697,7 +716,7 @@ ORDER BY pg.app_viewname, pg.place, pg.id
     # define view columns
     ## dictionary of strings tuple: (key, value) = (definition, name)
 
-    view_columns_joined_str = ", ".join(" AS ".join(vc)
+    view_columns_joined_str = ", ".join(" AS ".join((vc[0], vc[1]))
                                         for vc in view_columns)
     #print view_columns_joined_str
     checked_radios = determine_checked_radios(view_columns, graph_cols)
@@ -1193,7 +1212,7 @@ def wf_timechart_canvas(request, trial_id):
 ##################################################
 
 
-def gengraph(index_A, index_B, funcs, order, colinfo, cols):
+def gengraph(index_A, index_B, funcs, order, colinfo, cols, styles):
     """Generate GNUPLOT Graph.
 
     @param index_A index for A
@@ -1202,6 +1221,7 @@ def gengraph(index_A, index_B, funcs, order, colinfo, cols):
     @param order sort order column name
     @param colinfo names of columns
     @param cols column names of y1 and y2
+    @param styles graph styles for columns
     """
     graph_width = 4
     plot_template = """reset
@@ -1220,7 +1240,7 @@ plot \
 """
     pl_template = '"${datafile}" ' \
         'using ($1${goffset}):${col_index}:(${gwidth})' \
-        ' title "${colname}" w boxes fs solid 1 axis ${axis}'
+        ' title "${colname}" w ${style} ${style_attr} axis ${axis}'
     template = string.Template(plot_template)
     pltemplate = string.Template(pl_template)
     # Determine image file name
@@ -1262,13 +1282,17 @@ plot \
     for i, valcolumn in enumerate(cols["y1"]):
         graph_offset = graph_width * (i + 0.5) - \
             ((graph_interval - graph_width / 2) / 2)
+        style = styles[i]
+        style_attr = util.get_graph_attr(style)
         ss.append(pltemplate.safe_substitute(
                 col_index=str([x[1] for x in colinfo].index(valcolumn) + 2),
                 axis="x1y1",
                 datafile=tmpfilename,
                 goffset="%+d" % (graph_offset),
                 gwidth=graph_width,
-                colname=valcolumn,))
+                colname=valcolumn,
+                style=style,
+                style_attr=style_attr,))
     lines["y1"] = ", ".join(ss)
     ## Y
     ss = []
@@ -1276,13 +1300,17 @@ plot \
         k = i + len(cols["y1"])
         graph_offset = graph_width * (k + 0.5) - \
             ((graph_interval - graph_width / 2) / 2)
+        style = styles[k]
+        style_attr = util.get_graph_attr(style)
         ss.append(pltemplate.safe_substitute(
                 col_index=str([x[1] for x in colinfo].index(valcolumn) + 2),
                 axis="x1y2",
                 datafile=tmpfilename,
                 goffset="%+d" % (graph_offset),
                 gwidth=graph_width,
-                colname=valcolumn,))
+                colname=valcolumn,
+                style=style,
+                style_attr=style_attr,))
     lines["y2"] = ", ".join(ss)
     setgrid = ""
     if lines["y1"] and lines["y2"]:
@@ -1307,6 +1335,7 @@ plot \
                                  y1label=y1label,
                                  y2label=y2label,
                                  y2tics=y2tics,)
+    print s
     with open(tmpfilename, "w") as f:
         f.write(timedata.strip())
         f.close()
