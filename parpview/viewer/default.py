@@ -12,7 +12,7 @@ view_columns = (
     ("pr1.excl_pe_rank_avg", "exectime1"),
     ("pr2.excl_pe_rank_avg", "exectime2"),
     ("(pr1.excl_pe_rank_avg - pr2.excl_pe_rank_avg)", "timediff"),
-    ("(pr1.excl_pe_rank_avg / pr2.excl_pe_rank_avg)", "speedup"),
+    ("(pr1.excl_pe_rank_avg / pr2.excl_pe_rank_avg)", "ratio"),
     )
 
 order = "exectime1"
