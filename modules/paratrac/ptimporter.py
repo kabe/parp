@@ -150,7 +150,7 @@ VALUES (
             for row in sc:
                 stamp, pid, sysc, fid, res, elapsed, aux1, aux2 = (
                     float(row[1]), int(row[2]), int(row[3]), int(row[4]),
-                    int(row[4]), float(row[5]), int(row[6]), int(row[7]))
+                    int(row[5]), float(row[6]), int(row[7]), int(row[8]))
                 try:
                     c.execute(syscinsert_sql, (
                             iid, workflow_trial_id,
