@@ -555,6 +555,24 @@ ORDER BY ${order}
             functip = y[appviewname]
         except KeyError:
             functip = {}
+    ### 2011/04/29 Special Order
+    ## Re-Ordering
+    ### by t1 * log(t1 / t2)
+    ### t1 = x[1], t2 = x[2]
+    special_order = False
+    if special_order:
+        r_main = sorted(r_main,
+                        lambda x, y: cmp(x[1] * math.log(x[1] / x[2]),
+                                         y[1] * math.log(y[1] / y[2])),
+                        None,
+                        True)
+        r_main = tableutil.add_column(r_main,
+                                      [math.log(x[1]) * math.log(x[1] / x[2])
+                                       for x in r_main])
+        r_main = tableutil.add_column(r_main,
+                                      [x[1] * math.log(x[1] / x[2])
+                                       for x in r_main])
+
     ### Graph generation
     imagefilename = ""
     graphtitle = "Column for graph unspecified"
@@ -1169,6 +1187,9 @@ def get_wf_timechart(request, trial_id):
                   stdin=None, stdout=PIPE, stderr=PIPE)
     tc_o, tc_e = sp_tc.communicate()
     assert(tc_e == "")
+    # output postscript (for thesis)
+    #with open("/tmp/out.ps", "w") as f:
+    #    f.write(tc_o)
     size = postscript.getsize(tc_o, postscript.RAW)
     resolution = "%dx%d" % (size[0] * 2, size[1] * 2)
     gs = ("gs", "-sDEVICE=png256", "-r%s" % (resolution),
