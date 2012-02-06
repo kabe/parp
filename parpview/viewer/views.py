@@ -433,14 +433,14 @@ ORDER BY pg.app_viewname, pg.place, pg.id
         existing_usecol_indeces = request.POST.getlist("use_flag")
         existing_usecols = tuple((request.POST["coldef_%s" % (ind)],
                                   request.POST["colname_%s" % (ind)],
-                                  request.POST["style_%s" % (ind)],)
+                                  request.POST.getlist("style_%s" % (ind))[0],)
                                  for ind in existing_usecol_indeces)
         print "existing_usecols:"
         print existing_usecols
         new_usecol_indeces = request.POST.getlist("use_flag_new")
         new_usecols = tuple((request.POST["new_coldef_%s" % (ind)],
                              request.POST["new_colname_%s" % (ind)],
-                             request.POST["style_%s" % (ind)],)
+                             request.POST.getlist("style_%s" % (ind))[0],)
                             for ind in new_usecol_indeces)
         print "new_usecol"
         print new_usecols
@@ -448,18 +448,6 @@ ORDER BY pg.app_viewname, pg.place, pg.id
         ## Order
         post_order_idx = int(request.POST["order"])
         order = view_columns[post_order_idx][1]
-        ## Graph style
-        gen_graph_styles = tuple(request.POST.getlist("style_%s" % (ind))[0]
-                                 for ind in existing_usecol_indeces
-                                 if request.POST["colname_%s" % (ind)]
-                                 in graph_cols["y1"] + graph_cols["y2"])
-        gen_new_graph_styles = tuple(request.POST.getlist("style_%s" % (ind))[0]
-                                     for ind in new_usecol_indeces
-                                     if request.POST["colname_%s" % (ind)]
-                                     in graph_cols["y1"] + graph_cols["y2"])
-        print "graph styles"
-        print gen_graph_styles, gen_new_graph_styles
-        g_styles = gen_graph_styles + gen_new_graph_styles
     else:  # default mode
         graph_cols = default.graph_cols
         pgs = [1, 1]
@@ -561,8 +549,7 @@ ORDER BY ${order}
     if pgs[0] != pgs[1]:
         try:
             graphtitle, imagefilename = gengraph(pgs[0], pgs[1], r_main, order,
-                                                 view_columns, graph_cols,
-                                                 g_styles,)
+                                                 view_columns, graph_cols)
         except Exception, e:
             pass
     ## Schema Info
@@ -1112,8 +1099,7 @@ def wfdiff(request, wf, wfc1, wfc2):
     # Get workflow obj
     workflow = cursor.execute(
         "SELECT * FROM workflow WHERE id = ?", wf).fetchone()
-    print "workflow"
-    print workflow
+    print "workflow=%s" % (workflow)
     # Choose SQL
     sql, sqlparams, graphcols = "", (), None
     columns, columns_fixed = (), ()
@@ -1123,8 +1109,9 @@ def wfdiff(request, wf, wfc1, wfc2):
     else:
         sql, columns_fixed, columns, sqlparams = construct_wfdiff_sql(
             request, wf, wfc1, wfc2)
-    print "Executed SQL: "
+    print "Executed SQL: <<< EOS"
     print sql
+    print "EOS"
     cursor.execute(sql, *sqlparams)
     drows = cursor.fetchall()
     if use_userdefined_sql:
@@ -1212,7 +1199,7 @@ def wf_timechart_canvas(request, trial_id):
 ##################################################
 
 
-def gengraph(index_A, index_B, funcs, order, colinfo, cols, styles):
+def gengraph(index_A, index_B, funcs, order, colinfo, cols, styles=[]):
     """Generate GNUPLOT Graph.
 
     @param index_A index for A
@@ -1279,10 +1266,13 @@ plot \
     lines = {"y1": "", "y2": ""}
     ## X
     ss = []
+    print "*** colinfo"
+    print colinfo
+    print cols["y1"]
     for i, valcolumn in enumerate(cols["y1"]):
         graph_offset = graph_width * (i + 0.5) - \
             ((graph_interval - graph_width / 2) / 2)
-        style = styles[i]
+        style = colinfo[i][2]  ## FIXME: it should be determined like col_index below
         style_attr = util.get_graph_attr(style)
         ss.append(pltemplate.safe_substitute(
                 col_index=str([x[1] for x in colinfo].index(valcolumn) + 2),
@@ -1300,7 +1290,7 @@ plot \
         k = i + len(cols["y1"])
         graph_offset = graph_width * (k + 0.5) - \
             ((graph_interval - graph_width / 2) / 2)
-        style = styles[k]
+        style = colinfo[k][2]
         style_attr = util.get_graph_attr(style)
         ss.append(pltemplate.safe_substitute(
                 col_index=str([x[1] for x in colinfo].index(valcolumn) + 2),
@@ -1481,6 +1471,7 @@ def generate_wf_graph_json(contents, columns, graph_cols):
         graph_cols = {
             "y1": graph_cols, }
     else:
+        print "*** graph columns not specified: using default"
         graph_cols = graph_cols3
     # ApplicationName s
     categories = tuple(content[0] for content in contents)[0:default.APP_NUM]
