@@ -1,6 +1,6 @@
-GXPmake における DB の作られ方を解析していく
+What call-path is used to create performance DB in GXP Make?
 
-2011/06/11 における Call Graph
+Call Graph on 2011/06/11
 
 gxpc.cmd_interpreter.main
   gxpc.init_and_dispatch

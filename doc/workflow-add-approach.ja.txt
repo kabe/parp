@@ -1,28 +1,28 @@
-ワークフローアプリケーションを PARPDB に追加する際の手順
+The sequence to add a workflow application into PARP Database
 
-CRT は常に新規作成する
-NCR はなければ作成する
+CRT: Always newly create
+NCR: Create if not exists
 
 * TABLE WORKFLOW
-workflow_name = ??? どこかで取得
+workflow_name = ??? (Get at somewhere)
 workflow_id = NCR(workflow.id=workflow_name)
 
 * TABLE WORKFLOW_CONDITION
-filesystem = CMDLINE ??? データを配置しているFilesystem
-location = CMDLINE ??? クラスタ名 or 環境名
-worker_num = CMDLINE ??? ワーカー数 gxpmake DB から取れる？
+filesystem = CMDLINE ??? Filesystem that has data
+location = CMDLINE ??? Environment name or cluster name
+worker_num = CMDLINE ??? Number of worker: from the modified GXP Make
 workflow_condition_id = NCR(workflow_condition.id=(filesystem, location, worker_num))
 
 * TABLE WORKFLOW_TRIAL
 workflow_trial_id = CRT(workflow_trial_id=(workflow_id, workflow_condition_id))
 
 * TABLE APPLICATION
-application_name = GXPDB から取得
-application_id = workflow_id 中の最大値 + 1 (NCR)
+application_name = From GXP DB
+application_id = Max value in workflow_id + 1 (NCR)
 
 * TABLE JOB
-残りデータを GXPDB から取得
-job_id = CRT(全部)
+Retrieve rest data from GXP DB
+job_id = CRT(all)
 
 * TABLE METRIC
 
