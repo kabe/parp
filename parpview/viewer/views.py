@@ -1311,7 +1311,9 @@ plot \
         k = i + len(cols["y1"])
         graph_offset = graph_width * (k + 0.5) - \
             ((graph_interval - graph_width / 2) / 2)
-        style = colinfo[k][2]
+        # Fixed on 2012/02/10
+        colindex = [x[1] for x in colinfo].index(valcolumn)
+        style = colinfo[colindex][2]
         style_attr = util.get_graph_attr(style)
         ss.append(pltemplate.safe_substitute(
                 col_index=str([x[1] for x in colinfo].index(valcolumn) + 2),
@@ -1459,14 +1461,15 @@ def generate_wf_graph_json(contents, columns, graph_cols):
     for i, column in enumerate(columns):
         contents_to_appmap[column[1]] = tuple(map(
                 operator.itemgetter(i), contents))[0: default.APP_NUM]
-    #print "contents_to_appmap"
-    #print contents_to_appmap
+    print "contents_to_appmap"
+    print contents_to_appmap
     # Fixed graph columns
     graph_cols1 = {
         "y1": (
             "ElapsedL1", "ElapsedL2",
             "ElapsedR1", "ElapsedR2",
             "UTime1", "UTime2", "STime1", "STime2",
+#            "User1", "User2",
             "AccumL1", "AccumL2",
             ),
         "y2": ("MinFlt1", "MinFlt2",),
@@ -1479,6 +1482,7 @@ def generate_wf_graph_json(contents, columns, graph_cols):
         "y1": (
             "AccumL1", "IO1",
             "AccumL2", "IO2",
+#            "User1", "User2",
             ),
         "y2": (
             "ElapsedL1", "ElapsedL2",
