@@ -8,7 +8,6 @@ urlpatterns = patterns('',
     # Example:
     # (r'^parpview/', include('parpview.foo.urls')),
     (r'^$', 'parpview.viewer.views.pgd2_dummy'),
-    (r'^ut/$', 'parpview.viewer.views.usetemplate'),
     (r'^style/(?P<stylefile>[^/]+)$', 'parpview.viewer.views.getstyle'),
     (r'^pgdiff/(?P<pg1>\d+)/(?P<pg2>\d+)/$', 'parpview.viewer.views.pgroupdiff'),
     (r'^pgd1/$', 'parpview.viewer.views.pgd1_dummy'),
